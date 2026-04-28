@@ -133,7 +133,8 @@ class Sequencer {
       }
     });
 
-    if (this.onUpdate) this.onUpdate();
+    // Playhead movement is animated by UIController's own rAF loop;
+    // only notify structural changes (add/remove/move/stop) via onUpdate.
     this._rafId = requestAnimationFrame(() => this._tick());
   }
 

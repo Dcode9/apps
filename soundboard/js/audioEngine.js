@@ -117,6 +117,11 @@ class AudioEngine {
   }
 
   _synthBuffer(freq, decay, kind) {
+    // Musical interval ratios used in chord/arp synthesis
+    const MAJOR_THIRD   = 1.25;  // 5:4
+    const PERFECT_FIFTH = 1.5;   // 3:2
+    const OCTAVE        = 2.0;   // 2:1
+
     const sr     = this.context.sampleRate;
     const dur    = Math.min(decay * 2.2, 2.5);
     const len    = Math.floor(sr * dur);
@@ -179,13 +184,13 @@ class AudioEngine {
             break;
           }
           case 'chord': {
-            [freq, freq * 1.25, freq * 1.5].forEach(f => {
+            [freq, freq * MAJOR_THIRD, freq * PERFECT_FIFTH].forEach(f => {
               s += Math.sin(2 * Math.PI * f * t) * env / 3;
             });
             break;
           }
           case 'arp': {
-            const steps = [freq, freq * 1.25, freq * 1.5, freq * 2];
+            const steps = [freq, freq * MAJOR_THIRD, freq * PERFECT_FIFTH, freq * OCTAVE];
             const si    = Math.floor(t * 8) % steps.length;
             s = Math.sin(2 * Math.PI * steps[si] * t) * env;
             break;

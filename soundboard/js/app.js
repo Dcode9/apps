@@ -71,13 +71,13 @@
       const soundId = ui.hotkeyMap.get(key);
       if (soundId) {
         e.preventDefault();
-        ui._onSoundActivate(soundId);
+        ui.onSoundActivate(soundId);
       }
     });
 
     // Auto-save on unload and every 30 s
-    window.addEventListener('beforeunload', () => ui._saveSettings());
-    setInterval(() => ui._saveSettings(), 30_000);
+    window.addEventListener('beforeunload', () => ui.saveSettings());
+    setInterval(() => ui.saveSettings(), 30_000);
   }
 
   /* ── First-interaction listener ───────────────────────────── */

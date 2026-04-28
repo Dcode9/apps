@@ -97,9 +97,9 @@ class UIController {
     const loopBtn  = wrapper.querySelector('.loop-toggle');
 
     // Click / keyboard play
-    btn.addEventListener('click',   () => this._onSoundActivate(sound.id));
+    btn.addEventListener('click',   () => this.onSoundActivate(sound.id));
     btn.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this._onSoundActivate(sound.id); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.onSoundActivate(sound.id); }
     });
 
     // Right-click context menu
@@ -121,9 +121,9 @@ class UIController {
     return wrapper;
   }
 
-  /* ── Sound Activation ────────────────────────────────────── */
+  /* ── Sound Activation (public) ──────────────────────────── */
 
-  _onSoundActivate(soundId) {
+  onSoundActivate(soundId) {
     if (this.queueMode) {
       const sound = this.audioEngine.sounds.find(s => s.id === soundId);
       if (sound) {
@@ -151,8 +151,9 @@ class UIController {
   _flashButton(soundId) {
     const btn = document.getElementById(`btn-${soundId}`);
     if (!btn) return;
-    btn.style.outline = '2px solid rgba(108,99,255,0.8)';
-    setTimeout(() => { btn.style.outline = ''; }, 180);
+    // Use CSS variable for accent colour (set as custom property on the element)
+    btn.style.setProperty('outline', '2px solid var(--accent)');
+    setTimeout(() => { btn.style.removeProperty('outline'); }, 180);
   }
 
   /* ── Loop Toggle ─────────────────────────────────────────── */
@@ -165,7 +166,7 @@ class UIController {
     if (!looping && this.audioEngine.isPlaying(soundId)) {
       this.audioEngine.stopSound(soundId);
     }
-    this._saveSettings();
+    this.saveSettings();
   }
 
   /* ── Header Bindings ─────────────────────────────────────── */
@@ -178,7 +179,7 @@ class UIController {
       const v = parseFloat(masterSlider.value);
       this.audioEngine.setMasterVolume(v);
       masterDisplay.textContent = `${Math.round(v * 100)}%`;
-      this._saveSettings();
+      this.saveSettings();
     });
 
     document.getElementById('panic-btn').addEventListener('click', () => {
@@ -195,7 +196,7 @@ class UIController {
     document.getElementById('loop-timeline-btn').addEventListener('click', () => {
       const looping = this.sequencer.toggleLoop();
       document.getElementById('loop-timeline-btn').classList.toggle('active', looping);
-      this._saveSettings();
+      this.saveSettings();
     });
   }
 
@@ -211,7 +212,7 @@ class UIController {
       const v = parseFloat(volSlider.value);
       this.audioEngine.setSoundGain(this._contextTarget, v);
       volDisplay.textContent = `${Math.round(v * 100)}%`;
-      this._saveSettings();
+      this.saveSettings();
     });
 
     loopCheck.addEventListener('change', () => {
@@ -227,7 +228,7 @@ class UIController {
       const sound = this.audioEngine.sounds.find(s => s.id === this._contextTarget);
       if (sound) {
         this.sequencer.addBlock(sound.id, sound.name, sound.buffer.duration, sound.color);
-        this._saveSettings();
+        this.saveSettings();
       }
       this._hideContextMenu();
     });
@@ -291,7 +292,7 @@ class UIController {
       this.sequencer.stop();
       this._updateSeqPlayBtn();
       this._renderTimeline();
-      this._saveSettings();
+      this.saveSettings();
     });
 
     document.getElementById('bpm-input').addEventListener('change', e => {
@@ -299,14 +300,22 @@ class UIController {
       if (v >= 40 && v <= 400) {
         this.sequencer.pixelsPerSecond = v;
         this._renderTimeline();
-        this._saveSettings();
+        this.saveSettings();
       }
     });
 
     // Timeline drag-and-drop (consolidated handler)
     const track = document.getElementById('timeline-track');
-    track.addEventListener('dragover',  e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; track.classList.add('drag-over'); });
-    track.addEventListener('dragleave', e => { if (!track.contains(e.relatedTarget)) track.classList.remove('drag-over'); });
+    const onDragOver = e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      track.classList.add('drag-over');
+    };
+    const onDragLeave = e => {
+      if (!track.contains(e.relatedTarget)) track.classList.remove('drag-over');
+    };
+    track.addEventListener('dragover',  onDragOver);
+    track.addEventListener('dragleave', onDragLeave);
     track.addEventListener('drop',      e => this._onTimelineDrop(e));
 
     // Wire callbacks from Sequencer → re-render
@@ -334,7 +343,7 @@ class UIController {
       const rect     = track.getBoundingClientRect();
       const x        = e.clientX - rect.left + track.parentElement.scrollLeft - offset;
       this.sequencer.moveBlock(blockId, this.sequencer.pixelToTime(x));
-      this._saveSettings();
+      this.saveSettings();
       return;
     }
 
@@ -352,7 +361,7 @@ class UIController {
         sound ? sound.color : '#6c63ff',
         this.sequencer.pixelToTime(x)
       );
-      this._saveSettings();
+      this.saveSettings();
     }
   }
 
@@ -425,7 +434,7 @@ class UIController {
     el.querySelector('.block-remove').addEventListener('click', ev => {
       ev.stopPropagation();
       this.sequencer.removeBlock(block.id);
-      this._saveSettings();
+      this.saveSettings();
     });
 
     // Allow dragging blocks within the timeline to reorder
@@ -492,9 +501,9 @@ class UIController {
     this._rafId = requestAnimationFrame(loop);
   }
 
-  /* ── State Persistence ───────────────────────────────────── */
+  /* ── State Persistence (public) ─────────────────────────── */
 
-  _saveSettings() {
+  saveSettings() {
     try {
       const gains = {}, loops = {};
       this.audioEngine.sounds.forEach(s => {
