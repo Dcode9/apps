@@ -1,130 +1,539 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Soundboard Pro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundboard - D'Verse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0a0a0a;
+            color: #ededed;
+            overflow: hidden;
+            background-image: radial-gradient(circle at 50% 50%, #1a1a24 0%, #0a0a0a 100%);
+        }
+
+        .glass-panel {
+            background: rgba(30, 30, 30, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Circular Button Styles */
+        .sound-btn {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            padding: 10px;
+        }
+
+        .sound-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+
+        .sound-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* SVG Progress Ring */
+        .progress-ring {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            transform: rotate(-90deg);
+            pointer-events: none;
+        }
+        
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.05s linear;
+        }
+
+        /* Loop Toggle Button */
+        .loop-toggle {
+            position: absolute;
+            top: 0px; right: 0px;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            opacity: 0.6;
+            transition: all 0.2s;
+            z-index: 20;
+        }
+        
+        .loop-toggle:hover { 
+            opacity: 1; 
+            transform: scale(1.1);
+        }
+
+        .loop-toggle.active { 
+            opacity: 1; 
+            background: rgba(56, 189, 248, 0.2); 
+            border-color: #38bdf8;
+            color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            animation: spin 4s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+    </style>
 </head>
-<body>
-
-  <!-- ── Audio Init Overlay ── -->
-  <div id="audio-init-overlay" class="overlay active">
-    <div class="overlay-content glass-panel">
-      <div class="overlay-icon">🎵</div>
-      <h2>Soundboard Pro</h2>
-      <p>Click to initialise the audio engine</p>
-      <button id="init-audio-btn" class="glass-btn primary">Initialize Audio</button>
-    </div>
-  </div>
-
-  <!-- ── Main Application ── -->
-  <div id="app" class="hidden">
+<body class="h-screen w-screen flex flex-col p-6 gap-6">
 
     <!-- Header -->
-    <header class="app-header glass-panel">
-      <div class="header-left">
-        <h1 class="app-title">🎵 Soundboard Pro</h1>
-        <span class="version-badge">v1.0</span>
-      </div>
-
-      <div class="header-center">
-        <div class="control-group">
-          <label for="master-volume" class="control-label">Master</label>
-          <input type="range" id="master-volume" min="0" max="1" step="0.01" value="0.8" class="volume-slider" />
-          <span id="master-volume-display" class="volume-value">80%</span>
+    <header class="glass-panel rounded-2xl p-5 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-4">
+            <button id="status-indicator" class="flex items-center gap-3 px-4 py-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 transition-all cursor-pointer hover:bg-opacity-20 z-10">
+                <div id="status-dot" class="w-3 h-3 rounded-full bg-yellow-500 animate-pulse shadow-[0_0_10px_rgba(234,179,8,0.6)]"></div>
+                <span id="status-text" class="text-xs font-bold text-yellow-500 tracking-widest uppercase">DOWNLOADING (0/5)</span>
+            </button>
         </div>
-        <div class="control-group">
-          <button id="queue-mode-btn" class="glass-btn toggle" title="Queue Mode — click buttons to append to timeline">
-            Queue Mode
-          </button>
-          <button id="loop-timeline-btn" class="glass-btn toggle" title="Loop the entire timeline">
-            Loop Timeline
-          </button>
+        
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-4">
+                <label class="text-xs text-neutral-400 font-bold tracking-widest">MASTER VOL</label>
+                <input type="range" id="master-vol" min="0" max="1" step="0.01" value="0.8" class="w-40 accent-neutral-300">
+            </div>
+            <button id="panic-btn" class="bg-red-500/10 hover:bg-red-500/30 text-red-400 border border-red-500/50 px-6 py-2.5 rounded-lg text-sm font-bold tracking-widest transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.4)]">
+                STOP ALL
+            </button>
         </div>
-      </div>
-
-      <div class="header-right">
-        <button id="panic-btn" class="glass-btn danger" title="Stop all audio immediately (Space)">
-          ⏹ Stop All
-        </button>
-      </div>
     </header>
 
-    <!-- Error State -->
-    <div id="error-state" class="error-state glass-panel hidden">
-      <div class="error-icon">🔇</div>
-      <h2>No sounds found</h2>
-      <p>No audio files were detected in the assets folder.</p>
-      <p class="error-hint">
-        Add <code>.mp3</code> or <code>.wav</code> files to
-        <code>soundboard/assets/sounds/</code> and list them in
-        <code>sounds.json</code>.
-      </p>
-    </div>
-
-    <!-- Soundboard Grid -->
-    <main id="soundboard-grid" class="soundboard-grid"></main>
-
-    <!-- ── Sequencer ── -->
-    <section class="sequencer-section glass-panel">
-      <div class="sequencer-header">
-        <h3 class="sequencer-title">Timeline Sequencer</h3>
-        <div class="sequencer-controls">
-          <button id="seq-play-btn" class="glass-btn" title="Play / Pause">▶ Play</button>
-          <button id="seq-stop-btn" class="glass-btn" title="Stop and reset playhead">⏹ Stop</button>
-          <button id="seq-clear-btn" class="glass-btn danger-soft" title="Clear all blocks">🗑 Clear</button>
-          <div class="control-group">
-            <label for="bpm-input" class="control-label">PPS</label>
-            <input type="number" id="bpm-input" min="40" max="400" value="100" class="bpm-input"
-                   title="Pixels per second (timeline zoom)" />
-          </div>
+    <!-- Main Grid -->
+    <main class="flex-1 glass-panel rounded-2xl p-8 flex flex-col justify-center items-center relative">
+        <div id="pad-grid" class="flex flex-wrap justify-center gap-10 max-w-5xl">
+            <!-- Pads injected by JS -->
         </div>
-      </div>
-
-      <div class="timeline-wrapper">
-        <div class="timeline-ruler" id="timeline-ruler"></div>
-        <div class="timeline-track" id="timeline-track">
-          <div class="playhead" id="playhead"></div>
-          <div class="drop-zone-hint" id="drop-zone-hint">
-            <span>Drag sounds here · or use Queue Mode to append</span>
-          </div>
+        
+        <p class="absolute bottom-16 text-neutral-500 text-xs tracking-wide text-center w-full">
+            Left-Click / Key: Exclusive Play &nbsp;|&nbsp; Right-Click / Shift+Key: Simultaneous Play<br>
+            Click '↻' to instantly start/stop loop. Hotkeys [1-5].
+        </p>
+        
+        <!-- Branding -->
+        <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-neutral-500 font-bold tracking-widest text-sm uppercase">
+            D'Verse by Dhairya
         </div>
-      </div>
-    </section>
+        <div class="absolute bottom-6 right-8 text-neutral-600 text-xs font-semibold tracking-widest uppercase">
+            Hosted on dverse.fun
+        </div>
+    </main>
 
-  </div><!-- /#app -->
+    <script>
+        /**
+         * APPLICATION STATE
+         */
+        const AppState = {
+            audioCtx: null,
+            masterGain: null,
+            buffers: {},
+            activeSources: [], // To track and stop all playing one-shots. Array of {source, padId}
+            loopingSources: new Map(), // padId -> source (for stopping specific loops)
+            animFrames: new Map(), 
+            hotkeys: ['1', '2', '3', '4', '5'],
+            isReady: false
+        };
 
-  <!-- ── Right-click Context Menu ── -->
-  <div id="context-menu" class="context-menu glass-panel hidden" role="menu">
-    <div class="context-menu-header">
-      <span id="context-sound-name">Sound</span>
-    </div>
-    <div class="context-menu-item">
-      <label class="context-label" for="context-volume">Volume</label>
-      <input type="range" id="context-volume" min="0" max="2" step="0.01" value="1"
-             class="volume-slider context-slider" />
-      <span id="context-volume-display" class="volume-value">100%</span>
-    </div>
-    <div class="context-menu-item">
-      <label class="context-label">Loop</label>
-      <label class="toggle-switch" title="Loop this sound">
-        <input type="checkbox" id="context-loop" />
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
-    <div class="context-menu-divider"></div>
-    <button id="context-add-to-timeline" class="context-menu-action">+ Add to Timeline</button>
-    <button id="context-close" class="context-menu-action close">Close</button>
-  </div>
+        // Configuration mapping GitHub URLs to UI buttons
+        // Note: URLs are converted to raw.githubusercontent.com for direct file access
+        const soundsConfig = [
+            { 
+                id: 'speech', 
+                name: 'Speech Walk-Up', 
+                color: '#38bdf8', // Blue
+                url: 'https://raw.githubusercontent.com/Dcode9/apps/0e47afa7ef70ad900ef698318286bb8a53c0c84e/soundboard/assets/sounds/Anyone%20going%20up%20for%20speech%20and%20while%20dignitaries%20go%20on%20stage.mpeg'
+            },
+            { 
+                id: 'dignitaries', 
+                name: 'Dignitaries Enter', 
+                color: '#c084fc', // Purple
+                url: 'https://raw.githubusercontent.com/Dcode9/apps/0e47afa7ef70ad900ef698318286bb8a53c0c84e/soundboard/assets/sounds/DIgnitaries%20entering%20the%20hall.mpeg'
+            },
+            { 
+                id: 'anthem', 
+                name: 'National Anthem', 
+                color: '#fb923c', // Orange
+                url: 'https://raw.githubusercontent.com/Dcode9/apps/0e47afa7ef70ad900ef698318286bb8a53c0c84e/soundboard/assets/sounds/Jana%20Gana%20Mana%20(HD)%20-%20National%20Anthem%20With%20Lyrics%20-%20Best%20Patriotic%20Song.mp3.mpeg'
+            },
+            { 
+                id: 'hb-hg', 
+                name: 'HB/HG Music', 
+                color: '#facc15', // Yellow
+                url: 'https://raw.githubusercontent.com/Dcode9/apps/0e47afa7ef70ad900ef698318286bb8a53c0c84e/soundboard/assets/sounds/Music%20for%20HB%20HG.mpeg'
+            },
+            { 
+                id: 'badge', 
+                name: 'SC Badge Walk-Up', 
+                color: '#34d399', // Green
+                url: 'https://raw.githubusercontent.com/Dcode9/apps/0e47afa7ef70ad900ef698318286bb8a53c0c84e/soundboard/assets/sounds/for%20all%20SC%20members%20going%20up%20till%20badge%20is%20given.mpeg'
+            }
+        ];
 
-  <!-- Scripts — order matters: engine → sequencer → ui → app -->
-  <script src="js/audioEngine.js"></script>
-  <script src="js/sequencer.js"></script>
-  <script src="js/uiController.js"></script>
-  <script src="js/app.js"></script>
+        /**
+         * AUDIO ENGINE & STATUS CONTROLLER
+         */
+        function setAudioStatus(state, text) {
+            const indicator = document.getElementById('status-indicator');
+            const dot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+            
+            if (!indicator || !dot || !statusText) return;
+
+            statusText.innerText = text;
+            indicator.className = 'flex items-center gap-3 px-4 py-2 rounded-xl transition-all cursor-pointer z-10 ';
+            dot.className = 'w-3 h-3 rounded-full animate-pulse ';
+
+            if (state === 'loading') {
+                indicator.className += 'bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20';
+                dot.className += 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.6)]';
+                statusText.className = 'text-xs font-bold text-yellow-500 tracking-widest uppercase';
+            } else if (state === 'suspended') {
+                indicator.className += 'bg-red-500/10 border border-red-500/30 hover:bg-red-500/20';
+                dot.className += 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]';
+                statusText.className = 'text-xs font-bold text-red-500 tracking-widest uppercase';
+            } else if (state === 'ready') {
+                indicator.className += 'bg-green-500/10 border border-green-500/30 hover:bg-green-500/20';
+                dot.className += 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]';
+                statusText.className = 'text-xs font-bold text-green-500 tracking-widest uppercase';
+            }
+        }
+
+        async function fetchAndDecodeAudio(soundObj, ctx, index) {
+            try {
+                const response = await fetch(soundObj.url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+                AppState.buffers[soundObj.id] = audioBuffer;
+                
+                setAudioStatus('loading', `DOWNLOADING (${index + 1}/${soundsConfig.length})`);
+            } catch (error) {
+                console.error(`Failed to load ${soundObj.name}:`, error);
+                alert(`Warning: Could not load audio file for "${soundObj.name}". Check network or URL.`);
+            }
+        }
+
+        async function initAudioEngine() {
+            if (AppState.audioCtx) return;
+
+            AppState.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            AppState.masterGain = AppState.audioCtx.createGain();
+            AppState.masterGain.connect(AppState.audioCtx.destination);
+            
+            const masterVol = document.getElementById('master-vol');
+            if (masterVol) AppState.masterGain.gain.value = masterVol.value;
+
+            setAudioStatus('loading', `DOWNLOADING (0/${soundsConfig.length})`);
+
+            // Fetch sounds immediately on load
+            for (let i = 0; i < soundsConfig.length; i++) {
+                await fetchAndDecodeAudio(soundsConfig[i], AppState.audioCtx, i);
+            }
+            
+            AppState.isReady = true;
+            checkAudioState();
+            renderGrid();
+            setupEventListeners();
+        }
+
+        function checkAudioState() {
+            if (!AppState.isReady) return;
+            if (AppState.audioCtx.state === 'suspended') {
+                setAudioStatus('suspended', 'CLICK TO START AUDIO');
+            } else if (AppState.audioCtx.state === 'running') {
+                setAudioStatus('ready', "Soundboard - D'Verse");
+            }
+        }
+
+        async function resumeAudio() {
+            if (AppState.audioCtx && AppState.audioCtx.state === 'suspended') {
+                await AppState.audioCtx.resume();
+                checkAudioState();
+            }
+        }
+
+        /**
+         * PLAYBACK LOGIC
+         */
+        function playSound(padId, forceLoop = false, exclusive = true) {
+            if (!AppState.audioCtx || !AppState.buffers[padId]) return null;
+            resumeAudio(); // Ensure context is running when button is pressed
+
+            const isLoopingSource = AppState.loopingSources.has(padId);
+            const isOneShotSource = AppState.activeSources.some(s => s.padId === padId);
+
+            // Toggle logic: If already playing and we clicked the main button, stop it and abort
+            if (!forceLoop && (isLoopingSource || isOneShotSource)) {
+                stopSpecificSound(padId);
+                return null; 
+            }
+
+            if (exclusive) {
+                stopAllSounds();
+            }
+
+            const buffer = AppState.buffers[padId];
+            const source = AppState.audioCtx.createBufferSource();
+            source.buffer = buffer;
+            
+            const isLooping = forceLoop || AppState.loopingSources.has(padId);
+            source.loop = isLooping;
+
+            const gainNode = AppState.audioCtx.createGain();
+            source.connect(gainNode);
+            gainNode.connect(AppState.masterGain);
+
+            source.start(0);
+
+            if (isLooping) {
+                if(AppState.loopingSources.has(padId)) {
+                    try { AppState.loopingSources.get(padId).stop(); } catch(e) {}
+                }
+                AppState.loopingSources.set(padId, source);
+            } else {
+                AppState.activeSources.push({ source, padId });
+            }
+            
+            source.onended = () => {
+                AppState.activeSources = AppState.activeSources.filter(s => s.source !== source);
+                if (AppState.loopingSources.get(padId) === source) {
+                    AppState.loopingSources.delete(padId);
+                }
+            };
+
+            triggerPadAnimation(padId, buffer.duration, isLooping);
+            return source;
+        }
+
+        function stopSpecificSound(padId) {
+            // Stop one-shots
+            const instances = AppState.activeSources.filter(s => s.padId === padId);
+            instances.forEach(s => { try { s.source.stop(); } catch(e) {} });
+            AppState.activeSources = AppState.activeSources.filter(s => s.padId !== padId);
+
+            // Stop loops
+            if (AppState.loopingSources.has(padId)) {
+                try { AppState.loopingSources.get(padId).stop(); } catch(e) {}
+                AppState.loopingSources.delete(padId);
+            }
+
+            stopPadAnimation(padId);
+        }
+
+        function stopAllSounds() {
+            AppState.activeSources.forEach(s => { try { s.source.stop(); } catch(e) {} });
+            AppState.activeSources = [];
+            
+            AppState.loopingSources.forEach(source => { try { source.stop(); } catch(e) {} });
+            AppState.loopingSources.clear();
+            
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                const padId = btn.getAttribute('data-id');
+                stopPadAnimation(padId);
+            });
+        }
+
+        /**
+         * UI CONTROLLER
+         */
+        function stopPadAnimation(padId) {
+            const btn = document.getElementById(`pad-${padId}`);
+            if (btn) {
+                btn.querySelector('.loop-toggle').classList.remove('active');
+                const circle = btn.querySelector('.progress-ring-circle');
+                
+                if (AppState.animFrames.has(padId)) {
+                    cancelAnimationFrame(AppState.animFrames.get(padId));
+                    AppState.animFrames.delete(padId);
+                }
+
+                circle.style.transition = 'none';
+                circle.style.strokeDashoffset = '326.7';
+                void circle.offsetWidth;
+                circle.style.transition = 'stroke-dashoffset 0.05s linear';
+            }
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('pad-grid');
+            grid.innerHTML = '';
+
+            soundsConfig.forEach((sound, index) => {
+                const hotkey = AppState.hotkeys[index];
+                
+                // SVG properties (Radius 52 = Circumference 326.73)
+                const radius = 52;
+                const circumference = 2 * Math.PI * radius; 
+                
+                const btnHTML = `
+                    <div class="sound-btn" data-id="${sound.id}" id="pad-${sound.id}">
+                        <svg class="progress-ring" width="140" height="140">
+                            <circle class="text-neutral-700/40" stroke-width="4" stroke="currentColor" fill="transparent" r="${radius}" cx="70" cy="70" />
+                            <circle class="progress-ring-circle" stroke="${sound.color}" stroke-width="4" stroke-linecap="round" fill="transparent" r="${radius}" cx="70" cy="70" 
+                                style="stroke-dasharray: ${circumference} ${circumference}; stroke-dashoffset: ${circumference};" />
+                        </svg>
+                        
+                        <span class="text-sm font-bold text-neutral-100 z-10 w-full px-2">${sound.name}</span>
+                        <span class="text-xs text-neutral-500 z-10 mt-1 font-semibold">[${hotkey}]</span>
+                        
+                        <!-- Loop Action Button -->
+                        <div class="loop-toggle" data-pad="${sound.id}" title="Start/Stop Loop">↻</div>
+                    </div>
+                `;
+                grid.insertAdjacentHTML('beforeend', btnHTML);
+            });
+
+            // Bind click events to pads (One-shot play)
+            document.querySelectorAll('.sound-btn').forEach(btn => {
+                btn.addEventListener('contextmenu', e => e.preventDefault());
+                
+                btn.addEventListener('mousedown', (e) => {
+                    if(e.target.classList.contains('loop-toggle')) return;
+                    
+                    const padId = btn.getAttribute('data-id');
+                    const isRightClick = e.button === 2;
+                    playSound(padId, false, !isRightClick); // Exclusive if NOT right click
+                });
+            });
+
+            // Bind Loop Toggle Logic
+            document.querySelectorAll('.loop-toggle').forEach(toggle => {
+                toggle.addEventListener('contextmenu', e => e.preventDefault());
+                toggle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    resumeAudio();
+                    const padId = toggle.getAttribute('data-pad');
+                    
+                    if (AppState.loopingSources.has(padId)) {
+                        stopSpecificSound(padId);
+                    } else {
+                        toggle.classList.add('active');
+                        playSound(padId, true, false); // Loop starts are non-exclusive
+                    }
+                });
+            });
+        }
+
+        function triggerPadAnimation(padId, duration, isLooping) {
+            const btn = document.getElementById(`pad-${padId}`);
+            if (!btn) return;
+            const circle = btn.querySelector('.progress-ring-circle');
+            const circumference = 2 * Math.PI * 52; // 326.7
+            
+            if (AppState.animFrames.has(padId)) {
+                cancelAnimationFrame(AppState.animFrames.get(padId));
+            }
+
+            const startTime = performance.now();
+            const durationMs = duration * 1000;
+
+            function animate(currentTime) {
+                // Abort if stopped manually
+                if (isLooping && !AppState.loopingSources.has(padId)) return;
+                if (!isLooping && !AppState.activeSources.some(s => s.padId === padId)) return;
+
+                const elapsed = currentTime - startTime;
+                let progress = elapsed / durationMs;
+                
+                if (isLooping) {
+                    progress = progress % 1; 
+                } else if (progress > 1) {
+                    progress = 1;
+                }
+
+                const offset = circumference - (progress * circumference);
+                circle.style.strokeDashoffset = offset;
+
+                if (progress < 1 || isLooping) {
+                    AppState.animFrames.set(padId, requestAnimationFrame(animate));
+                } else {
+                    circle.style.strokeDashoffset = circumference; 
+                    AppState.animFrames.delete(padId);
+                }
+            }
+
+            AppState.animFrames.set(padId, requestAnimationFrame(animate));
+        }
+
+        /**
+         * GLOBAL LISTENERS
+         */
+        function setupEventListeners() {
+            // Unsuspend audio context on any generic interaction
+            window.addEventListener('click', resumeAudio);
+            window.addEventListener('keydown', resumeAudio);
+
+            // Master Volume
+            document.getElementById('master-vol').addEventListener('input', (e) => {
+                if(AppState.masterGain) AppState.masterGain.gain.value = e.target.value;
+            });
+
+            // Panic Button
+            document.getElementById('panic-btn').addEventListener('click', stopAllSounds);
+
+            // Keyboard Hotkeys
+            window.addEventListener('keydown', (e) => {
+                if (e.repeat) return;
+                
+                let index = AppState.hotkeys.indexOf(e.key);
+                
+                // Fallback for Shift+Number (e.key becomes !@#$% on US keyboards)
+                if (index === -1 && e.code && e.code.startsWith('Digit')) {
+                    index = parseInt(e.code.replace('Digit', '')) - 1;
+                }
+                
+                if (index !== -1 && index < soundsConfig.length) {
+                    const padId = soundsConfig[index].id;
+                    playSound(padId, false, !e.shiftKey); // Exclusive if Shift is NOT pressed
+                    
+                    // Visual active state
+                    const btn = document.getElementById(`pad-${padId}`);
+                    if(btn) {
+                        btn.style.transform = 'scale(0.95)';
+                        btn.style.boxShadow = `0 0 20px ${soundsConfig[index].color}50`;
+                        setTimeout(() => {
+                            btn.style.transform = '';
+                            btn.style.boxShadow = '';
+                        }, 100);
+                    }
+                }
+            });
+        }
+
+        // Auto-Initialize App on Load
+        window.addEventListener('DOMContentLoaded', initAudioEngine);
+
+    </script>
 </body>
 </html>
