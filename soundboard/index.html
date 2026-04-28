@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soundboard Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── Audio Init Overlay ── -->
+  <div id="audio-init-overlay" class="overlay active">
+    <div class="overlay-content glass-panel">
+      <div class="overlay-icon">🎵</div>
+      <h2>Soundboard Pro</h2>
+      <p>Click to initialise the audio engine</p>
+      <button id="init-audio-btn" class="glass-btn primary">Initialize Audio</button>
+    </div>
+  </div>
+
+  <!-- ── Main Application ── -->
+  <div id="app" class="hidden">
+
+    <!-- Header -->
+    <header class="app-header glass-panel">
+      <div class="header-left">
+        <h1 class="app-title">🎵 Soundboard Pro</h1>
+        <span class="version-badge">v1.0</span>
+      </div>
+
+      <div class="header-center">
+        <div class="control-group">
+          <label for="master-volume" class="control-label">Master</label>
+          <input type="range" id="master-volume" min="0" max="1" step="0.01" value="0.8" class="volume-slider" />
+          <span id="master-volume-display" class="volume-value">80%</span>
+        </div>
+        <div class="control-group">
+          <button id="queue-mode-btn" class="glass-btn toggle" title="Queue Mode — click buttons to append to timeline">
+            Queue Mode
+          </button>
+          <button id="loop-timeline-btn" class="glass-btn toggle" title="Loop the entire timeline">
+            Loop Timeline
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <button id="panic-btn" class="glass-btn danger" title="Stop all audio immediately (Space)">
+          ⏹ Stop All
+        </button>
+      </div>
+    </header>
+
+    <!-- Error State -->
+    <div id="error-state" class="error-state glass-panel hidden">
+      <div class="error-icon">🔇</div>
+      <h2>No sounds found</h2>
+      <p>No audio files were detected in the assets folder.</p>
+      <p class="error-hint">
+        Add <code>.mp3</code> or <code>.wav</code> files to
+        <code>soundboard/assets/sounds/</code> and list them in
+        <code>sounds.json</code>.
+      </p>
+    </div>
+
+    <!-- Soundboard Grid -->
+    <main id="soundboard-grid" class="soundboard-grid"></main>
+
+    <!-- ── Sequencer ── -->
+    <section class="sequencer-section glass-panel">
+      <div class="sequencer-header">
+        <h3 class="sequencer-title">Timeline Sequencer</h3>
+        <div class="sequencer-controls">
+          <button id="seq-play-btn" class="glass-btn" title="Play / Pause">▶ Play</button>
+          <button id="seq-stop-btn" class="glass-btn" title="Stop and reset playhead">⏹ Stop</button>
+          <button id="seq-clear-btn" class="glass-btn danger-soft" title="Clear all blocks">🗑 Clear</button>
+          <div class="control-group">
+            <label for="bpm-input" class="control-label">PPS</label>
+            <input type="number" id="bpm-input" min="40" max="400" value="100" class="bpm-input"
+                   title="Pixels per second (timeline zoom)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-wrapper">
+        <div class="timeline-ruler" id="timeline-ruler"></div>
+        <div class="timeline-track" id="timeline-track">
+          <div class="playhead" id="playhead"></div>
+          <div class="drop-zone-hint" id="drop-zone-hint">
+            <span>Drag sounds here · or use Queue Mode to append</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <!-- ── Right-click Context Menu ── -->
+  <div id="context-menu" class="context-menu glass-panel hidden" role="menu">
+    <div class="context-menu-header">
+      <span id="context-sound-name">Sound</span>
+    </div>
+    <div class="context-menu-item">
+      <label class="context-label" for="context-volume">Volume</label>
+      <input type="range" id="context-volume" min="0" max="2" step="0.01" value="1"
+             class="volume-slider context-slider" />
+      <span id="context-volume-display" class="volume-value">100%</span>
+    </div>
+    <div class="context-menu-item">
+      <label class="context-label">Loop</label>
+      <label class="toggle-switch" title="Loop this sound">
+        <input type="checkbox" id="context-loop" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="context-menu-divider"></div>
+    <button id="context-add-to-timeline" class="context-menu-action">+ Add to Timeline</button>
+    <button id="context-close" class="context-menu-action close">Close</button>
+  </div>
+
+  <!-- Scripts — order matters: engine → sequencer → ui → app -->
+  <script src="js/audioEngine.js"></script>
+  <script src="js/sequencer.js"></script>
+  <script src="js/uiController.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
