@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollinations Arena - LLM Benchmarker</title>
+    <!-- FontAwesome Icons for modern dashboard graphics -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Self-Contained Premium Cyber-Neon Dark Mode Styles (Zero Tailwind CDN dependency) -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-base: #060913;
+            --bg-panel: #0d1527;
+            --bg-input: #020612;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --brand-primary: #8b5cf6;
+            --brand-hover: #a78bfa;
+            --text-main: #f3f4f6;
+            --text-muted: #6b7280;
+            --text-info: #9ca3af;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-base);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-primary);
+        }
+
+        /* Utility visibility classes */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Ambient Glow Backdrop */
+        .ambient-glow-1 {
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(139, 92, 246, 0.12);
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+        }
+
+        .ambient-glow-2 {
+            position: absolute;
+            bottom: -20%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(219, 39, 119, 0.08);
+            border-radius: 50%;
+            filter: blur(120px);
+            pointer-events: none;
+        }
+
+        /* Header Navigation */
+        .header {
+            background-color: rgba(13, 21, 39, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+            background: linear-gradient(135deg, var(--brand-primary), #db2777);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .header-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .header-subtitle {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-top: -0.125rem;
+        }
+
+        .header-actions-flex {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-badge {
+            background-color: rgba(139, 92, 246, 0.1);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--brand-hover);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .queue-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .queue-badge.parallel {
+            background-color: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            color: var(--brand-hover);
+        }
+
+        /* Workspace Grid Container */
+        .workspace-grid {
+            max-width: 1800px;
+            width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        /* Left Side Controls block */
+        .sidebar-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .side-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .side-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-info);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tab-menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-tab-btn {
+            width: 100%;
+            background-color: var(--bg-input);
+            color: var(--text-info);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 0.75rem;
+            padding: 0.875rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar-tab-btn:hover:not(:disabled) {
+            background-color: #1e293b;
+            color: #fff;
+        }
+
+        .sidebar-tab-btn.active {
+            background-color: var(--brand-primary);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+        }
+
+        .sidebar-tab-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Checked list styling */
+        .models-menu-scroller {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            overflow-y: auto;
+            max-height: 450px;
+        }
+
+        .model-option-card {
+            background-color: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 0.75rem;
+            padding: 0.875rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .model-option-card:hover:not(.locked) {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .model-option-card.selected {
+            background-color: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+
+        .model-option-card.locked {
+            border-color: rgba(16, 185, 129, 0.3);
+            background-color: rgba(16, 185, 129, 0.04);
+            cursor: default;
+        }
+
+        .checkbox-ui {
+            width: 1.15rem;
+            height: 1.15rem;
+            border: 2px solid #4b5563;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .model-option-card.selected .checkbox-ui {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+        }
+
+        .model-option-card.locked .checkbox-ui {
+            background-color: var(--accent-emerald);
+            border-color: var(--accent-emerald);
+        }
+
+        .checkbox-ui i {
+            font-size: 0.65rem;
+            color: #fff;
+            display: none;
+        }
+
+        .model-option-card.selected .checkbox-ui i,
+        .model-option-card.locked .checkbox-ui i {
+            display: block;
+        }
+
+        .model-option-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .model-option-name {
+            font-size: 0.815rem;
+            font-weight: 600;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Center Console Panel */
+        .console-workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .dashboard-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-accent {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: rgba(139, 92, 246, 0.03);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .dashboard-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .dashboard-label {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dashboard-label i {
+            color: var(--brand-primary);
+        }
+
+        .badge-status-mode {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-info);
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            letter-spacing: 0.05em;
+        }
+
+        .console-prompt-textarea {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            color: #fff;
+            font-size: 0.875rem;
+            font-family: var(--font-sans);
+            outline: none;
+            resize: vertical;
+            min-height: 110px;
+            transition: border-color 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+            line-height: 1.5;
+        }
+
+        .console-prompt-textarea:focus {
+            border-color: var(--brand-primary);
+        }
+
+        .console-prompt-textarea.coding-mode {
+            font-family: var(--font-mono);
+            color: #a5b4fc;
+        }
+
+        /* Image Drag & Drop visual */
+        .vision-flex-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 640px) {
+            .vision-flex-box {
+                flex-direction: row;
+            }
+        }
+
+        .vision-drop-target {
+            width: 100%;
+            height: 160px;
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            background-color: var(--bg-input);
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            padding: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        @media (min-width: 640px) {
+            .vision-drop-target {
+                width: 160px;
+                height: 160px;
+                flex-shrink: 0;
+            }
+        }
+
+        .vision-drop-target:hover {
+            border-color: var(--brand-primary);
+        }
+
+        .vision-drop-target i {
+            font-size: 1.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .vision-drop-target p {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.05em;
+        }
+
+        .preview-img-tag {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Action Buttons row */
+        .console-bottom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.25rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .dashboard-info-text {
+            font-size: 0.75rem;
+            color: var(--text-info);
+            max-width: 500px;
+            line-height: 1.4;
+        }
+
+        .dashboard-info-text i {
+            color: var(--brand-primary);
+            margin-right: 0.25rem;
+        }
+
+        .btn-benchmark-launcher {
+            background-color: var(--brand-primary);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.85rem 1.75rem;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+        }
+
+        .btn-benchmark-launcher:hover:not(:disabled) {
+            background-color: var(--brand-hover);
+        }
+
+        .btn-benchmark-launcher:disabled {
+            background-color: #1e293b;
+            color: #4b5563;
+            cursor: not-allowed;
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        /* Benchmark Grid Cards Layout */
+        .results-flex-layout {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: 1fr;
+        }
+
+        @media (min-width: 768px) {
+            .results-flex-layout.cols-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .results-flex-layout.cols-3 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            .results-flex-layout.cols-4 {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .benchmark-box-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            height: 640px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            transition: border-color 0.3s;
+        }
+
+        .benchmark-box-card.running {
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .benchmark-box-card.complete {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .benchmark-box-card.failed {
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        /* Card Header */
+        .card-header-flex {
+            background-color: rgba(2, 6, 23, 0.4);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            overflow: hidden;
+        }
+
+        .status-dot {
+            width: 0.65rem;
+            height: 0.65rem;
+            border-radius: 50%;
+            background-color: #4b5563;
+        }
+
+        .status-dot.queued {
+            background-color: #3b82f6;
+            box-shadow: 0 0 8px #3b82f6;
+        }
+
+        .status-dot.active {
+            background-color: #eab308;
+            box-shadow: 0 0 8px #eab308;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        .status-dot.done {
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        .status-dot.error {
+            background-color: var(--accent-rose);
+            box-shadow: 0 0 8px var(--accent-rose);
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        .card-model-name {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .badge-status-box {
+            width: 1.75rem;
+            height: 1.75rem;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-info);
+            font-size: 0.75rem;
+        }
+
+        /* Card Statistics Row */
+        .metrics-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(2, 6, 23, 0.2);
+        }
+
+        .metric-cell {
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .metric-cell:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .metric-cell-label {
+            font-size: 0.55rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-info);
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-cell-value {
+            font-size: 0.815rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        /* Stream Output Window */
+        .console-stream-terminal {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            background-color: rgba(2, 6, 23, 0.25);
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #d1d5db;
+        }
+
+        .console-stream-terminal.streaming {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: #cbd5e1;
+        }
+
+        .terminal-loading-placeholder {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            color: var(--text-info);
+            font-size: 0.815rem;
+            text-align: center;
+        }
+
+        .terminal-loading-placeholder i {
+            font-size: 1.25rem;
+            color: var(--brand-primary);
+        }
+
+        /* Inline styled Code box inside output */
+        .inline-rendered-block {
+            background-color: var(--bg-input);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .inline-rendered-header {
+            background-color: rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0.375rem 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-info);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inline-rendered-code {
+            padding: 0.875rem;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--brand-hover);
+        }
+
+        /* Card Action footer button */
+        .card-footer-action {
+            padding: 0.875rem;
+            background-color: rgba(2, 6, 23, 0.4);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-sandbox-launcher {
+            width: 100%;
+            background-color: var(--accent-emerald);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .btn-sandbox-launcher:hover {
+            background-color: #059669;
+        }
+
+        /* Fullscreen Secure Code Sandbox Modal */
+        .sandbox-fullscreen-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .sandbox-modal-container {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 1.25rem;
+            width: 100%;
+            max-width: 1400px;
+            height: 100%;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .sandbox-modal-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .sandbox-header-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sandbox-header-icon {
+            width: 2rem;
+            height: 2rem;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-emerald);
+        }
+
+        .sandbox-header-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .sandbox-header-desc {
+            font-size: 0.65rem;
+            color: var(--text-info);
+            margin-top: -0.125rem;
+        }
+
+        .btn-close-sandbox {
+            background-color: #1e293b;
+            color: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-close-sandbox:hover {
+            background-color: #334155;
+        }
+
+        .sandbox-iframe-wrapper {
+            flex-grow: 1;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .sandbox-iframe-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-glow-1"></div>
+    <div class="ambient-glow-2"></div>
+
+    <!-- Screen 2: Main Arena Screen (Direct Launch) -->
+    <div id="arena-screen">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-logo">
+                <div class="header-logo-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <h1 class="header-title">Pollinations Arena</h1>
+                    <p class="header-subtitle">Real-time Comparative Suite</p>
+                </div>
+            </div>
+            
+            <div class="header-actions-flex">
+                <div id="badge-queue-mode" class="queue-badge parallel">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Parallel Multithreading</span>
+                </div>
+                <div class="header-badge">
+                    <i class="fa-solid fa-key text-brand-primary"></i>
+                    <span id="badge-auth-state">Master Key Active</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Two Column Workspace Layout -->
+        <div class="workspace-grid">
+            
+            <!-- Left Side controls panel -->
+            <aside class="sidebar-panel">
+                <!-- Modes / Challenge tabs card -->
+                <div class="side-card">
+                    <div class="side-title">Benchmarking Mode</div>
+                    <div class="tab-menu-list">
+                        <button class="sidebar-tab-btn active" data-tab="chat">
+                            <i class="fa-regular fa-comment-dots"></i> Conversational Chat
+                        </button>
+                        <button class="sidebar-tab-btn" data-tab="coding">
+                            <i class="fa-solid fa-gamepad"></i> Code Snake Game
+                        </button>
+                        <button class="sidebar-tab-btn" data-tab="vision">
+                            <i class="fa-solid fa-eye"></i> Vision Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Only Your Explicitly Selected Models Grid -->
+                <div class="side-card">
+                    <div class="side-title">
+                        <span>Compare Models</span>
+                        <span id="selected-counter" style="color: var(--brand-primary);">2/4</span>
+                    </div>
+                    
+                    <div id="models-list-scroller" class="models-menu-scroller">
+                        <!-- Loaded statically dynamically -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center Console Output Workspace -->
+            <main class="console-workspace">
+                <!-- User Prompt Setting Console -->
+                <div class="dashboard-panel">
+                    <div class="dashboard-accent"></div>
+                    
+                    <div class="dashboard-top">
+                        <span class="dashboard-label" id="console-header-label">
+                            <i class="fa-regular fa-comment-dots"></i> Conversation Prompt Directive
+                        </span>
+                        <span class="badge-status-mode" id="console-mode-badge">Text Mode</span>
+                    </div>
+
+                    <!-- Chat prompting -->
+                    <textarea id="prompt-chat" class="console-prompt-textarea">Explain quantum physics to a 10-year-old using a vivid analogical model of an amusement park.</textarea>
+
+                    <!-- Snake coding prompting -->
+                    <textarea id="prompt-coding" class="console-prompt-textarea coding-mode hidden">Build a highly polished, single-file HTML/CSS/JS retro Snake game. 
+- Ensure a beautiful cyber-neon theme.
+- Add retro score counting and simple keyboard controls.
+- Create visual particle effects when eating food.
+- Implement mobile touchscreen control buttons overlay (Up, Down, Left, Right).
+- Write all CSS inside a &lt;style&gt; tag and all JS inside &lt;script&gt;. Output ONLY raw HTML code inside standard markdown blocks.</textarea>
+
+                    <!-- Vision processing inputs -->
+                    <div id="prompt-vision-wrapper" class="vision-flex-box hidden">
+                        <div class="vision-drop-target" id="vision-dropzone">
+                            <div id="vision-drop-prompt">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                                <p>Load Image</p>
+                            </div>
+                            <img id="vision-loaded-preview" class="preview-img-tag hidden" alt="vision_target">
+                            <input type="file" id="image-file-input" class="hidden" accept="image/*">
+                        </div>
+                        <textarea id="prompt-vision" class="console-prompt-textarea flex-grow" style="min-height: 160px;">Analyze this visual content. Highlight all principal subjects, key textures, dominant colors, and emotional aesthetic.</textarea>
+                    </div>
+
+                    <!-- Execute Actions Bottom Row -->
+                    <div class="console-bottom-bar">
+                        <div class="dashboard-info-text">
+                            <i class="fa-solid fa-info-circle"></i> Master API Key integrated. Running all selected models concurrently in Parallel mode.
+                        </div>
+                        <button id="btn-trigger-benchmark" class="btn-benchmark-launcher">
+                            <i class="fa-solid fa-gauge" id="trigger-btn-icon"></i>
+                            <span id="trigger-btn-label">Run Benchmarks</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Evaluation Output Area -->
+                <div id="results-layout-grid" class="results-flex-layout hidden">
+                    <!-- Dynamic comparison cards loaded on run -->
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Live execution modal code viewer -->
+    <div id="sandbox-modal" class="sandbox-fullscreen-modal hidden">
+        <div class="sandbox-modal-container">
+            <div class="sandbox-modal-header">
+                <div class="sandbox-header-info">
+                    <div class="sandbox-header-icon">
+                        <i class="fa-solid fa-gamepad"></i>
+                    </div>
+                    <div>
+                        <h3 class="sandbox-header-title">Live Code Sandbox</h3>
+                        <p class="sandbox-header-desc">Executing generated game inside a secure sandbox container</p>
+                    </div>
+                </div>
+                <button id="btn-close-sandbox" class="btn-close-sandbox">Close Sandbox</button>
+            </div>
+            <div class="sandbox-iframe-wrapper">
+                <iframe id="sandbox-output-frame" sandbox="allow-scripts allow-modals allow-same-origin allow-popups"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Benchmark Arena Client Controller -->
+    <script>
+        // Official authenticated API route 
+        const API_STREAM_ENDPOINT = "https://gen.pollinations.ai/v1/chat/completions";
+        
+        // Hardcoded Master API key
+        const MASTER_API_KEY = "sk_7KFlmv5B9osxLHlKgPrDBrGUYZG7UHZN";
+
+        // Required premium models to evaluate
+        const ALLOWED_MODELS = [
+            "polly", // Compulsory base
+            "perplexity-reasoning",
+            "glm",
+            "qwen-large",
+            "grok",
+            "openai-large",
+            "kimi-k2.6"
+        ];
+
+        const AppState = {
+            apiKey: MASTER_API_KEY,
+            activeTab: 'chat',
+            base64Image: null,
+            selectedModels: ["polly", "openai-large"], // default selections, polly must stay
+            testingRunning: false
+        };
+
+        const UI = {
+            arenaScreen: document.getElementById('arena-screen'),
+            sidebarTabs: document.querySelectorAll('.sidebar-tab-btn'),
+            consoleHeaderLabel: document.getElementById('console-header-label'),
+            consoleModeBadge: document.getElementById('console-mode-badge'),
+            
+            promptChat: document.getElementById('prompt-chat'),
+            promptCoding: document.getElementById('prompt-coding'),
+            promptVisionWrapper: document.getElementById('prompt-vision-wrapper'),
+            promptVision: document.getElementById('prompt-vision'),
+            
+            visionDropzone: document.getElementById('vision-dropzone'),
+            visionDropPrompt: document.getElementById('vision-drop-prompt'),
+            visionLoadedPreview: document.getElementById('vision-loaded-preview'),
+            imageFileInput: document.getElementById('image-file-input'),
+            
+            modelsListScroller: document.getElementById('models-list-scroller'),
+            selectedCounter: document.getElementById('selected-counter'),
+            
+            btnTriggerBenchmark: document.getElementById('btn-trigger-benchmark'),
+            triggerBtnIcon: document.getElementById('trigger-btn-icon'),
+            triggerBtnLabel: document.getElementById('trigger-btn-label'),
+            
+            resultsLayoutGrid: document.getElementById('results-layout-grid'),
+            
+            sandboxModal: document.getElementById('sandbox-modal'),
+            btnCloseSandbox: document.getElementById('btn-close-sandbox'),
+            sandboxOutputFrame: document.getElementById('sandbox-output-frame')
+        };
+
+        function initApp() {
+            // Initialize tabs
+            UI.sidebarTabs.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (AppState.testingRunning) return;
+                    
+                    const tabKey = btn.getAttribute('data-tab');
+                    AppState.activeTab = tabKey;
+                    
+                    UI.sidebarTabs.forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    // Set active visual input targets
+                    UI.promptChat.classList.add('hidden');
+                    UI.promptCoding.classList.add('hidden');
+                    UI.promptVisionWrapper.classList.add('hidden');
+
+                    if (tabKey === 'chat') {
+                        UI.promptChat.classList.remove('hidden');
+                        UI.consoleHeaderLabel.innerHTML = `<i class="fa-regular fa-comment-dots"></i> Conversation Prompt Directive`;
+                        UI.consoleModeBadge.textContent = "Text Mode";
+                    } else if (tabKey === 'coding') {
+                        UI.promptCoding.classList.remove('hidden');
+                        UI.consoleHeaderLabel.innerHTML = `<i class="fa-solid fa-gamepad"></i> Snake Coding Sandbox`;
+                        UI.consoleModeBadge.textContent = "Raw Code Block";
+                    } else if (tabKey === 'vision') {
+                        UI.promptVisionWrapper.classList.remove('hidden');
+                        UI.consoleHeaderLabel.innerHTML = `<i class="fa-solid fa-eye"></i> Vision Processing`;
+                        UI.consoleModeBadge.textContent = "Vision Model Only";
+                    }
+                });
+            });
+
+            // Vision drop target triggers
+            UI.visionDropzone.addEventListener('click', () => {
+                UI.imageFileInput.click();
+            });
+
+            UI.imageFileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        AppState.base64Image = reader.result;
+                        UI.visionLoadedPreview.src = reader.result;
+                        UI.visionLoadedPreview.classList.remove('hidden');
+                        UI.visionDropPrompt.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Global trigger execution
+            UI.btnTriggerBenchmark.addEventListener('click', executeBenchmarks);
+
+            // Sandbox modal triggers
+            UI.btnCloseSandbox.addEventListener('click', () => {
+                UI.sandboxModal.classList.add('hidden');
+                UI.sandboxOutputFrame.srcdoc = "";
+            });
+
+            renderAvailableModels();
+        }
+
+        // Render allowed models list with polly styled as locked / compulsory
+        function renderAvailableModels() {
+            UI.modelsListScroller.innerHTML = "";
+            
+            // Enforce that Polly model is strictly compulsory and remains selected
+            if (!AppState.selectedModels.includes("polly")) {
+                AppState.selectedModels.unshift("polly");
+            }
+
+            UI.selectedCounter.textContent = `${AppState.selectedModels.length}/4`;
+
+            ALLOWED_MODELS.forEach(mName => {
+                const isPolly = mName === "polly";
+                const isSelected = AppState.selectedModels.includes(mName);
+                
+                const card = document.createElement('div');
+                card.className = `model-option-card ${isSelected ? 'selected' : ''} ${isPolly ? 'locked' : ''}`;
+                
+                const canDoVision = ["openai-large", "perplexity-reasoning", "grok", "qwen-large"].includes(mName);
+                const visionBadgeHtml = canDoVision ? `<span style="font-size: 0.55rem; background-color: rgba(167, 139, 250, 0.2); color: var(--brand-hover); padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-weight: 800;">VISION</span>` : '';
+                const compulsoryBadgeHtml = isPolly ? `<span style="font-size: 0.55rem; background-color: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-weight: 800;">COMPULSORY</span>` : '';
+
+                card.innerHTML = `
+                    <div class="model-option-info">
+                        <div class="checkbox-ui">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <span class="model-option-name">${mName}</span>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem;">
+                        ${visionBadgeHtml}
+                        ${compulsoryBadgeHtml}
+                    </div>
+                `;
+
+                if (!isPolly) {
+                    card.addEventListener('click', () => {
+                        if (AppState.testingRunning) return;
+                        
+                        if (AppState.selectedModels.includes(mName)) {
+                            AppState.selectedModels = AppState.selectedModels.filter(m => m !== mName);
+                        } else {
+                            if (AppState.selectedModels.length >= 4) {
+                                alert("Maximum of 4 concurrent models allowed for visual stability.");
+                                return;
+                            }
+                            AppState.selectedModels.push(mName);
+                        }
+                        renderAvailableModels();
+                    });
+                }
+
+                UI.modelsListScroller.appendChild(card);
+            });
+        }
+
+        function setBenchmarkRunningState(isRunning) {
+            AppState.testingRunning = isRunning;
+            UI.btnTriggerBenchmark.disabled = isRunning;
+            UI.sidebarTabs.forEach(t => t.disabled = isRunning);
+            
+            if (isRunning) {
+                UI.triggerBtnIcon.className = "fa-solid fa-circle-notch fa-spin";
+                UI.triggerBtnLabel.textContent = "Evaluating Streams...";
+            } else {
+                UI.triggerBtnIcon.className = "fa-solid fa-gauge";
+                UI.triggerBtnLabel.textContent = "Run Benchmarks";
+            }
+        }
+
+        // Process generated HTML code securely
+        function extractCodeSnippet(text) {
+            if (!text) return "";
+            
+            const dynamicFenceRegex = new RegExp('`{3}(?:html|xml)?\\\\s*([\\\\s\\\\S]*?)`{3}', 'i');
+            const match = text.match(dynamicFenceRegex);
+            if (match && match[1]) {
+                return match[1].trim();
+            }
+
+            // Fallback direct parser
+            if (text.includes('<!DOCTYPE html>') || text.includes('<html')) {
+                const startIndex = text.indexOf('<!DOCTYPE html>') !== -1 ? text.indexOf('<!DOCTYPE html>') : text.indexOf('<html');
+                const endIndex = text.lastIndexOf('</html>');
+                if (endIndex !== -1) {
+                    return text.substring(startIndex, endIndex + 7).trim();
+                }
+                return text.substring(startIndex).trim();
+            }
+
+            return text.trim();
+        }
+
+        function escapeHTMLTags(unsafe) {
+            return unsafe
+                 .replace(/&/g, "&amp;")
+                 .replace(/</g, "&lt;")
+                 .replace(/>/g, "&gt;")
+                 .replace(/"/g, "&quot;")
+                 .replace(/'/g, "&#039;");
+        }
+
+        // Format code blocks inside streamed outputs cleanly
+        function formatMarkdownBlocks(text) {
+            const splitRegex = new RegExp('(`{3}[\\\\s\\\\S]*?`{3})', 'g');
+            const splitParts = text.split(splitRegex);
+            let responseHTML = "";
+
+            splitParts.forEach(block => {
+                const tickChar = '`';
+                const isBlock = block.startsWith(tickChar.repeat(3)) && block.endsWith(tickChar.repeat(3));
+                if (isBlock) {
+                    let extracted = block.slice(3, -3);
+                    const lineBreakIdx = extracted.indexOf('\n');
+                    let langLabel = "SOURCE CODE";
+                    
+                    if (lineBreakIdx !== -1 && lineBreakIdx < 15) {
+                        const parsedLabel = extracted.substring(0, lineBreakIdx).trim();
+                        if (parsedLabel) langLabel = parsedLabel.toUpperCase();
+                        extracted = extracted.substring(lineBreakIdx + 1);
+                    }
+
+                    responseHTML += `
+                        <div class="inline-rendered-block">
+                            <div class="inline-rendered-header">
+                                <span>${langLabel}</span>
+                                <i class="fa-solid fa-code"></i>
+                            </div>
+                            <pre class="inline-rendered-code custom-scrollbar">${escapeHTMLTags(extracted)}</pre>
+                        </div>
+                    `;
+                } else {
+                    responseHTML += `<span>${escapeHTMLTags(block)}</span>`;
+                }
+            });
+
+            return responseHTML;
+        }
+
+        // Programmatic addition of individual benchmarking comparison frames
+        function constructBenchmarkCard(mName) {
+            const container = document.createElement('div');
+            container.id = `card-wrap-${mName}`;
+            container.className = "benchmark-box-card";
+            
+            container.innerHTML = `
+                <div class="card-header-flex">
+                    <div class="card-header-left">
+                        <div id="dot-${mName}" class="status-dot"></div>
+                        <h4 class="card-model-name">${mName}</h4>
+                    </div>
+                    <div id="badge-${mName}" class="badge-status-box">
+                        <i class="fa-solid fa-clock text-slate-500"></i>
+                    </div>
+                </div>
+
+                <div class="metrics-board">
+                    <div class="metric-cell">
+                        <span class="metric-cell-label">Latency (TTFT)</span>
+                        <span id="metric-ttft-${mName}" class="metric-cell-value">--</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="metric-cell-label">Throughput</span>
+                        <span id="metric-speed-${mName}" class="metric-cell-value" style="color: var(--brand-hover);">--</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="metric-cell-label">Total Time</span>
+                        <span id="metric-total-${mName}" class="metric-cell-value">--</span>
+                    </div>
+                </div>
+
+                <div id="terminal-${mName}" class="console-stream-terminal streaming">
+                    <div class="terminal-loading-placeholder">
+                        <i class="fa-solid fa-clock animate-pulse"></i>
+                        <span>Awaiting turn in queue...</span>
+                    </div>
+                </div>
+
+                <div id="footer-actions-${mName}" class="card-footer-action hidden">
+                    <button id="btn-run-${mName}" class="btn-sandbox-launcher">
+                        <i class="fa-solid fa-play"></i> Run Sandbox Simulation
+                    </button>
+                </div>
+            `;
+            
+            UI.resultsLayoutGrid.appendChild(container);
+        }
+
+        async function executeBenchmarks() {
+            if (AppState.selectedModels.length === 0) return alert("Select at least one model to benchmark.");
+            if (AppState.activeTab === 'vision' && !AppState.base64Image) {
+                return alert("Please upload or load an target image for vision benchmarking first.");
+            }
+
+            setBenchmarkRunningState(true);
+
+            // Fetch prompt
+            let activePrompt = "";
+            if (AppState.activeTab === 'chat') activePrompt = UI.promptChat.value;
+            else if (AppState.activeTab === 'coding') activePrompt = UI.promptCoding.value;
+            else if (AppState.activeTab === 'vision') activePrompt = UI.promptVision.value;
+
+            // Align Layout Columns
+            UI.resultsLayoutGrid.classList.remove('hidden');
+            let colsClass = "cols-1";
+            if (AppState.selectedModels.length === 2) colsClass = "cols-2";
+            else if (AppState.selectedModels.length === 3) colsClass = "cols-3";
+            else if (AppState.selectedModels.length >= 4) colsClass = "cols-4";
+            
+            UI.resultsLayoutGrid.className = `results-flex-layout ${colsClass}`;
+            UI.resultsLayoutGrid.innerHTML = "";
+
+            AppState.selectedModels.forEach(constructBenchmarkCard);
+
+            // Construct payload formats
+            let messagesPayload = [];
+            if (AppState.activeTab === 'vision') {
+                messagesPayload = [{
+                    role: "user",
+                    content: [
+                        { type: "text", text: activePrompt },
+                        { type: "image_url", image_url: { url: AppState.base64Image } }
+                    ]
+                }];
+            } else {
+                messagesPayload = [{ role: "user", content: activePrompt }];
+            }
+
+            // Run in concurrent parallel mode as master token is loaded
+            const jobs = AppState.selectedModels.map(mName => streamModelBenchmark(mName, messagesPayload));
+            await Promise.allSettled(jobs);
+            
+            setBenchmarkRunningState(false);
+        }
+
+        async function streamModelBenchmark(modelName, messages) {
+            const tStart = performance.now();
+            let tFirstToken = null;
+            let gatheredText = "";
+
+            const DOMCard = document.getElementById(`card-wrap-${modelName}`);
+            const DOMDot = document.getElementById(`dot-${modelName}`);
+            const DOMBadge = document.getElementById(`badge-${modelName}`);
+            const DOMTtft = document.getElementById(`metric-ttft-${modelName}`);
+            const DOMSpeed = document.getElementById(`metric-speed-${modelName}`);
+            const DOMTotal = document.getElementById(`metric-total-${modelName}`);
+            const DOMTerminal = document.getElementById(`terminal-${modelName}`);
+            const DOMFooter = document.getElementById(`footer-actions-${modelName}`);
+            const DOMRunBtn = document.getElementById(`btn-run-${modelName}`);
+
+            try {
+                DOMCard.className = "benchmark-box-card running";
+                DOMDot.className = "status-dot active";
+                DOMBadge.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-brand-primary"></i>`;
+                DOMTerminal.innerHTML = `
+                    <div class="terminal-loading-placeholder">
+                        <i class="fa-solid fa-hourglass-start animate-spin"></i>
+                        <span>Awaiting Response Stream...</span>
+                    </div>
+                `;
+                
+                const headers = { 'Content-Type': 'application/json' };
+                if (AppState.apiKey) {
+                    headers['Authorization'] = `Bearer ${AppState.apiKey}`;
+                }
+
+                const res = await fetch(API_STREAM_ENDPOINT, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        model: modelName,
+                        messages,
+                        stream: true,
+                        temperature: 0.6
+                    })
+                });
+
+                if (!res.ok) {
+                    const errMsg = await res.text();
+                    throw new Error(`HTTP Error ${res.status}: ${errMsg}`);
+                }
+
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let finished = false;
+                let textBuffer = "";
+
+                DOMTerminal.innerHTML = "";
+
+                while (!finished) {
+                    const { value, done } = await reader.read();
+                    if (done) {
+                        finished = true;
+                        break;
+                    }
+
+                    if (value) {
+                        if (!tFirstToken) {
+                            tFirstToken = performance.now();
+                            const ttft = (tFirstToken - tStart).toFixed(0);
+                            DOMTtft.textContent = `${ttft}ms`;
+                        }
+
+                        textBuffer += decoder.decode(value, { stream: true });
+                        const lines = textBuffer.split('\n');
+                        textBuffer = lines.pop(); // Hold onto incomplete items
+
+                        for (const line of lines) {
+                            const trimmed = line.trim();
+                            if (!trimmed || trimmed === 'data: [DONE]') continue;
+
+                            if (trimmed.startsWith('data: ')) {
+                                try {
+                                    const parsed = JSON.parse(trimmed.slice(6));
+                                    const nextChunk = parsed.choices?.[0]?.delta?.content || "";
+                                    if (nextChunk) {
+                                        gatheredText += nextChunk;
+                                        DOMTerminal.textContent = gatheredText;
+                                        DOMTerminal.scrollTop = DOMTerminal.scrollHeight;
+                                    }
+                                } catch(e) {}
+                            }
+                        }
+                    }
+                }
+
+                // Append remaining items in buffer
+                if (textBuffer && textBuffer.startsWith('data: ')) {
+                    try {
+                        const parsed = JSON.parse(textBuffer.trim().slice(6));
+                        const nextChunk = parsed.choices?.[0]?.delta?.content || "";
+                        if (nextChunk) {
+                            gatheredText += nextChunk;
+                            DOMTerminal.textContent = gatheredText;
+                        }
+                    } catch(e) {}
+                }
+
+                // Evaluation Finished
+                const tEnd = performance.now();
+                const durationSec = ((tEnd - tStart) / 1000).toFixed(2);
+                const estimatedTokens = Math.round(gatheredText.length / 4);
+                const tokensPerSecond = durationSec > 0 ? (estimatedTokens / durationSec).toFixed(1) : 0;
+
+                DOMTotal.textContent = `${durationSec}s`;
+                DOMSpeed.textContent = `${tokensPerSecond} t/s`;
+
+                // Render pretty formatted Markdown inside Terminal
+                DOMTerminal.innerHTML = formatMarkdownBlocks(gatheredText);
+                DOMTerminal.className = "console-stream-terminal custom-scrollbar";
+
+                // Success Styles updates
+                DOMCard.className = "benchmark-box-card complete";
+                DOMDot.className = "status-dot done";
+                DOMBadge.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+
+                // Render compilation trigger if HTML/code sandbox is generated
+                const extractedHtmlCode = extractCodeSnippet(gatheredText);
+                const hasHtmlContent = extractedHtmlCode.includes('</html>') || extractedHtmlCode.includes('<!DOCTYPE html>') || AppState.activeTab === 'coding';
+                
+                if (hasHtmlContent && extractedHtmlCode.trim().length > 0) {
+                    DOMFooter.classList.remove('hidden');
+                    DOMRunBtn.onclick = () => {
+                        UI.sandboxOutputFrame.srcdoc = extractedHtmlCode;
+                        UI.sandboxModal.classList.remove('hidden');
+                    };
+                }
+
+            } catch (err) {
+                DOMTerminal.innerHTML = `
+                    <div style="background-color: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); border-radius: 0.5rem; padding: 1rem; color: var(--accent-rose); font-family: var(--font-sans); font-size: 0.75rem;">
+                        <strong style="display: block; margin-bottom: 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Evaluation Interrupted</strong>
+                        ${err.message}
+                    </div>
+                `;
+
+                DOMCard.className = "benchmark-box-card failed";
+                DOMDot.className = "status-dot error";
+                DOMBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-500"></i>`;
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
