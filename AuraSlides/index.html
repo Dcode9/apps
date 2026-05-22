@@ -1,1197 +1,636 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraSlides powered by D’Ai — Next-Gen AI Slide Compiler</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for High-Tech Aesthetic -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        orbitron: ['Orbitron', 'sans-serif'],
-                        rajdhani: ['Rajdhani', 'sans-serif'],
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        cyber: {
-                            bg: '#070913',
-                            panel: 'rgba(13, 17, 39, 0.7)',
-                            border: 'rgba(99, 102, 241, 0.2)',
-                            accent: '#6366F1',
-                            neonPink: '#D946EF',
-                            neonCyan: '#06B6D4',
-                            neonGreen: '#10B981',
-                        }
-                    },
-                    boxShadow: {
-                        'neon-blue': '0 0 15px rgba(6, 182, 212, 0.4)',
-                        'neon-pink': '0 0 15px rgba(217, 70, 239, 0.4)',
-                        'neon-green': '0 0 15px rgba(16, 185, 129, 0.4)',
-                        'neon-purple': '0 0 15px rgba(99, 102, 241, 0.4)',
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Custom scrollbar for deep space layout */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(7, 9, 19, 0.8);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.3);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.6);
-        }
-        
-        /* Backdrop glow effect */
-        .glow-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.15;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        /* Glassmorphism styling */
-        .glass-panel {
-            background: rgba(10, 12, 26, 0.65);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .glow-border-cyan:focus {
-            outline: none;
-            border-color: rgba(6, 182, 212, 0.8);
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
-        }
-
-        /* Loading progress animation */
-        @keyframes compileGlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        .compile-bar {
-            background: linear-gradient(-45deg, #06B6D4, #D946EF, #6366F1, #10B981);
-            background-size: 400% 400%;
-            animation: compileGlow 4s ease infinite;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>AuraSlides IGUI powered by D’Ai</title>
+  <style>
+    :root{
+      --bg:#f7f8fb;
+      --bg-soft:#eef2f8;
+      --surface:rgba(255,255,255,.74);
+      --surface-2:rgba(255,255,255,.58);
+      --field:rgba(255,255,255,.86);
+      --text:#182033;
+      --muted:#667085;
+      --line:rgba(15,23,42,.12);
+      --line-2:rgba(15,23,42,.18);
+      --accent:#3767f4;
+      --accent-2:#8b5cf6;
+      --accent-3:#06b6d4;
+      --good:#059669;
+      --warn:#b45309;
+      --bad:#dc2626;
+      --shadow:0 24px 70px rgba(15,23,42,.11);
+      --radius:30px;
+      color-scheme:light;
+    }
+    html[data-theme="dark"]{
+      --bg:#070a14;
+      --bg-soft:#0d1222;
+      --surface:rgba(18,24,42,.72);
+      --surface-2:rgba(255,255,255,.055);
+      --field:rgba(255,255,255,.07);
+      --text:#f5f7fb;
+      --muted:#9aa7bd;
+      --line:rgba(255,255,255,.105);
+      --line-2:rgba(255,255,255,.18);
+      --accent:#78a6ff;
+      --accent-2:#b392ff;
+      --accent-3:#67e8f9;
+      --shadow:0 28px 80px rgba(0,0,0,.34);
+      color-scheme:dark;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      min-height:100dvh;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 18% 12%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 32%),
+        radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 32%),
+        radial-gradient(circle at 52% 92%, color-mix(in srgb, var(--accent-3) 10%, transparent), transparent 30%),
+        linear-gradient(135deg,var(--bg),var(--bg-soft));
+      color:var(--text);
+      font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+    }
+    body::before{
+      content:"";
+      position:fixed;inset:0;pointer-events:none;opacity:.55;
+      background-image:
+        linear-gradient(color-mix(in srgb, var(--text) 4%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--text) 4%, transparent) 1px, transparent 1px);
+      background-size:42px 42px;
+      mask-image:radial-gradient(circle at center, #000, transparent 74%);
+    }
+    button,textarea{font:inherit}
+    button{border:0;cursor:pointer;color:inherit}
+    .ambient{
+      position:fixed;inset:-20%;pointer-events:none;filter:blur(24px);opacity:.64;
+      background:
+        radial-gradient(circle at var(--mx,30%) var(--my,28%), color-mix(in srgb, var(--accent) 18%, transparent), transparent 22%),
+        radial-gradient(circle at calc(100% - var(--mx,30%)) calc(100% - var(--my,28%)), color-mix(in srgb, var(--accent-2) 15%, transparent), transparent 24%);
+      animation:ambientFloat 14s ease-in-out infinite alternate;
+    }
+    @keyframes ambientFloat{from{transform:translate3d(-1%,0,0) scale(1)}to{transform:translate3d(1%,1%,0) scale(1.04)}}
+    .click-pulse{
+      position:fixed;left:50%;top:50%;width:22rem;height:22rem;border-radius:999px;pointer-events:none;
+      background:radial-gradient(circle,color-mix(in srgb,var(--accent) 18%, transparent),transparent 66%);
+      transform:translate(-50%,-50%) scale(.6);opacity:0;z-index:0;
+    }
+    .click-pulse.run{animation:pulseOnce .65s ease-out}
+    @keyframes pulseOnce{0%{opacity:.75;transform:translate(-50%,-50%) scale(.55)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.16)}}
+    .app{position:relative;z-index:1;display:grid;min-height:100dvh;place-items:center;padding:88px 18px 24px}
+    .topbar{position:fixed;z-index:10;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px max(16px,env(safe-area-inset-left)) 10px}
+    .brand,.mode-btn,.tiny-pill{
+      border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 8px 32px rgba(0,0,0,.08)
+    }
+    .brand{display:flex;align-items:center;gap:11px;border-radius:19px;padding:8px 11px}
+    .logo{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;color:white;background:linear-gradient(135deg,#3767f4,#8b5cf6);font-weight:780;letter-spacing:-.05em}
+    .brand-title{font-size:14px;font-weight:680;letter-spacing:-.035em;line-height:1.05}
+    .brand-sub{font-size:11px;color:var(--muted);font-weight:620;margin-top:2px}
+    .top-actions{display:flex;align-items:center;gap:8px}
+    .tiny-pill{display:flex;align-items:center;gap:7px;border-radius:999px;padding:9px 12px;font-size:12px;font-weight:650;color:var(--muted)}
+    .mode-btn{height:42px;width:42px;border-radius:15px;display:grid;place-items:center;transition:.2s ease}
+    .mode-btn:hover{border-color:var(--line-2);transform:translateY(-1px);background:var(--surface-2)}
+    .screen{width:min(940px,100%);display:none}
+    .screen.active{display:block}
+    .hero{text-align:center;margin:0 auto 26px;max-width:780px}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);backdrop-filter:blur(18px);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:720;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin-bottom:16px}
+    h1{margin:0;font-size:clamp(42px,7vw,82px);line-height:.93;letter-spacing:-.07em;font-weight:640;color:var(--text)}
+    .hero p{margin:16px auto 0;max-width:620px;color:var(--muted);line-height:1.55;font-size:clamp(15px,1.8vw,18px);font-weight:450}
+    .panel{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow), inset 0 1px rgba(255,255,255,.12);backdrop-filter:blur(24px) saturate(1.08);-webkit-backdrop-filter:blur(24px) saturate(1.08)}
+    .prompt-panel{width:min(760px,100%);margin:0 auto;padding:12px}
+    .prompt-box{position:relative;border:1px solid var(--line);background:var(--field);border-radius:23px;overflow:hidden;transition:.22s ease}
+    .prompt-box:focus-within{border-color:color-mix(in srgb,var(--accent) 48%, transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 10%, transparent)}
+    textarea{position:relative;z-index:2;width:100%;min-height:158px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:18px 18px 66px;font-size:17px;line-height:1.48;font-weight:470}
+    .ghost-suggestion{position:absolute;z-index:1;left:18px;right:18px;top:18px;color:var(--muted);opacity:.52;line-height:1.48;font-size:17px;font-weight:470;pointer-events:none;transition:opacity .24s ease,filter .24s ease,transform .24s ease}
+    .ghost-suggestion.hidden{opacity:0}
+    .ghost-suggestion.swap{opacity:.15;filter:blur(8px);transform:translateY(5px)}
+    .ghost-suggestion b{display:inline-flex;margin-top:12px;border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:11px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 8%, transparent)}
+    .send-row{position:absolute;z-index:3;left:10px;right:10px;bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .shortcut{color:var(--muted);font-size:12px;font-weight:620;padding-left:8px}
+    .primary,.secondary,.chip{position:relative;overflow:hidden;min-height:42px;border-radius:15px;font-weight:720;transition:transform .16s ease,background .16s ease,border-color .16s ease,box-shadow .16s ease}
+    .primary{padding:0 18px;color:white;background:linear-gradient(135deg,#315eea,#7c4df1);box-shadow:0 14px 32px rgba(49,94,234,.18)}
+    .primary:hover{transform:translateY(-1px);box-shadow:0 16px 36px rgba(49,94,234,.22);filter:saturate(1.03)}
+    .primary:active,.secondary:active,.chip:active{transform:translateY(1px) scale(.99)}
+    .primary:disabled{opacity:.58;cursor:not-allowed;transform:none}
+    .secondary{padding:0 14px;border:1px solid var(--line);background:var(--surface-2);color:var(--text)}
+    .secondary:hover{border-color:var(--line-2);background:color-mix(in srgb,var(--surface-2) 85%, var(--accent) 6%)}
+    .question-shell{width:min(760px,100%);margin:0 auto}
+    .question-head{text-align:center;margin:0 auto 18px;max-width:690px}
+    .question-head .intro{font-size:12px;font-weight:740;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+    .question-card{padding:24px}
+    .q-label{font-size:clamp(25px,4vw,43px);line-height:1.02;letter-spacing:-.055em;font-weight:620;margin:0;text-align:center}
+    .q-help{max-width:560px;margin:12px auto 0;color:var(--muted);line-height:1.55;text-align:center;font-size:15px}
+    .options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:22px}
+    .chip{min-height:58px;text-align:left;padding:13px 14px;border:1px solid var(--line);background:var(--field);color:var(--text);line-height:1.25}
+    .chip:hover{border-color:color-mix(in srgb,var(--accent) 34%, var(--line));background:color-mix(in srgb,var(--field) 92%, var(--accent) 8%)}
+    .chip.selected{border-color:transparent;color:white;background:linear-gradient(135deg,#315eea,#7c4df1);box-shadow:0 12px 30px rgba(49,94,234,.18)}
+    .nav-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px}
+    .dots{display:flex;justify-content:center;gap:8px;margin-top:18px}
+    .dot{height:7px;width:7px;border-radius:999px;background:color-mix(in srgb,var(--text) 18%, transparent);transition:.2s ease}
+    .dot.on{width:28px;background:var(--accent)}
+    .fade-enter{animation:fadeIn .34s ease both}
+    .fade-exit{animation:fadeOut .22s ease both}
+    @keyframes fadeIn{from{opacity:0;filter:blur(12px);transform:translateY(14px) scale(.985)}to{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}}
+    @keyframes fadeOut{to{opacity:0;filter:blur(10px);transform:translateY(-8px) scale(.99)}}
+    .loading-card{width:min(620px,100%);margin:0 auto;padding:26px;position:relative;overflow:hidden}
+    .loading-card::before{content:"";position:absolute;inset:-60% -20%;background:linear-gradient(110deg,transparent,color-mix(in srgb,var(--accent) 16%, transparent),color-mix(in srgb,var(--accent-2) 14%, transparent),transparent);animation:flow 2.4s ease-in-out infinite}
+    @keyframes flow{from{transform:translateX(-55%) rotate(8deg)}to{transform:translateX(55%) rotate(8deg)}}
+    .loading-inner{position:relative;z-index:1;text-align:center}
+    .spinner{width:54px;height:54px;border-radius:999px;margin:0 auto 18px;border:2px solid color-mix(in srgb,var(--text) 14%, transparent);border-top-color:var(--accent);border-right-color:var(--accent-2);animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-title{font-size:34px;line-height:.98;letter-spacing:-.055em;font-weight:630;margin:0}
+    .loading-text{color:var(--muted);margin:12px auto 0;line-height:1.55;max-width:500px}
+    .progress-bar{height:6px;border-radius:99px;overflow:hidden;background:color-mix(in srgb,var(--text) 10%, transparent);margin-top:22px}
+    .progress-fill{height:100%;width:40%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2),var(--accent-3));animation:slide 1.4s ease-in-out infinite}
+    @keyframes slide{from{transform:translateX(-110%)}to{transform:translateX(270%)}}
+    .stage-screen{position:fixed;inset:0;z-index:20;display:none;background:#030611;padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))}
+    .stage-screen.active{display:grid;grid-template-rows:auto 1fr;gap:12px}
+    .stagebar{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#edf3ff}
+    .stage-title{font-size:14px;font-weight:680;letter-spacing:-.02em}.stage-meta{color:#9aa7bd;font-size:12px;font-weight:620;margin-top:2px}
+    .stage-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+    .stage-actions button{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);color:#fff;border-radius:13px;min-height:38px;padding:0 12px;font-weight:680;transition:.16s ease}
+    .stage-actions button:hover{background:rgba(255,255,255,.11);border-color:rgba(255,255,255,.18)}
+    .frame-wrap{position:relative;width:100%;max-width:min(100%,calc((100dvh - 74px) * 16 / 9));aspect-ratio:16/9;margin:auto;border-radius:22px;overflow:hidden;background:#020617;border:1px solid rgba(255,255,255,.12);box-shadow:0 30px 100px rgba(0,0,0,.42)}
+    iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#020617}
+    .toast{position:fixed;z-index:40;left:50%;bottom:18px;transform:translateX(-50%) translateY(16px);width:min(680px,calc(100% - 32px));border:1px solid color-mix(in srgb,var(--warn) 28%, transparent);background:color-mix(in srgb,var(--surface) 88%, #f59e0b 10%);color:var(--text);border-radius:18px;padding:13px 14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.22s ease;font-size:13px;font-weight:620;line-height:1.45}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+    .toast b{color:var(--warn)}
+    @media(max-width:720px){
+      body{overflow:auto}.app{min-height:100dvh;padding:82px 12px 22px}.tiny-pill{display:none}.brand-title{font-size:13px}.hero{margin-bottom:18px}h1{font-size:43px}.prompt-panel,.question-card,.loading-card{border-radius:24px}.options{grid-template-columns:1fr}.nav-row{align-items:stretch}.nav-row button{flex:1}.stagebar{align-items:flex-start;flex-direction:column}.stage-actions{justify-content:flex-start}.frame-wrap{border-radius:16px}
+    }
+  </style>
 </head>
-<body class="bg-cyber-bg text-slate-100 min-h-screen font-sans relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <div id="clickPulse" class="click-pulse" aria-hidden="true"></div>
 
-    <!-- Deep Space Starfield Background Canvas -->
-    <canvas id="starfield" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
-
-    <!-- Glowing Background Atmosphere Orbs -->
-    <div class="glow-orb w-[500px] h-[500px] bg-indigo-600 top-[-100px] left-[-100px]"></div>
-    <div class="glow-orb w-[600px] h-[600px] bg-cyan-600 bottom-[-200px] right-[-100px]"></div>
-    <div class="glow-orb w-[400px] h-[400px] bg-fuchsia-600 top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2"></div>
-
-    <!-- Main Workspace Frame -->
-    <div class="relative z-10 min-h-screen flex flex-col max-w-[1700px] mx-auto px-4 py-3 md:px-6 md:py-4">
-        
-        <!-- Premium Navigation Header -->
-        <header class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 mb-4 border-b border-white/10">
-            <div class="flex items-center gap-3">
-                <!-- Cosmic Tech Logo -->
-                <div class="relative w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 shadow-neon-blue">
-                    <i class="fa-solid fa-atom text-white text-xl animate-spin" style="animation-duration: 10s;"></i>
-                    <div class="absolute inset-[-2px] rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 blur-sm opacity-50 -z-10"></div>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-black tracking-wider font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-cyan-300">
-                        AURASLIDES <span class="text-xs font-semibold tracking-widest text-cyan-400 font-sans block sm:inline sm:ml-2">POWERED BY D’AI</span>
-                    </h1>
-                    <p class="text-[10px] text-slate-400 font-rajdhani uppercase tracking-widest">Quantum Presentation Sandbox & Compiler</p>
-                </div>
-            </div>
-            
-            <div class="flex items-center gap-3">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-rajdhani tracking-wider font-bold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
-                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-                    COMPILER ACTIVE
-                </span>
-                <span class="text-xs text-slate-400 font-mono hidden md:inline">v2.6.0-prod</span>
-            </div>
-        </header>
-
-        <!-- Dynamic Compiler Grid Layout -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
-            
-            <!-- LEFT CONTROL PANEL (GLASSMORPHIC SYSTEM CONTROL) -->
-            <section class="lg:col-span-4 flex flex-col gap-4">
-                <div class="glass-panel rounded-2xl p-5 flex-grow flex flex-col justify-between shadow-2xl relative overflow-hidden border border-white/10">
-                    <!-- Tech aesthetic grid line overlay -->
-                    <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
-
-                    <div class="relative z-10 flex flex-col gap-4">
-                        <div class="flex justify-between items-center pb-2 border-b border-white/5">
-                            <span class="text-xs tracking-wider font-bold text-cyan-400 font-orbitron uppercase flex items-center gap-2">
-                                <i class="fa-solid fa-sliders-h"></i> Cognitive Controller
-                            </span>
-                            <span class="text-[10px] font-mono text-slate-500">SYSTEM: STANDBY</span>
-                        </div>
-
-                        <!-- Slide Prompt Draft Area -->
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-300 uppercase flex justify-between">
-                                <span>Presentation Topic / Prompt Directive</span>
-                                <span class="text-cyan-400 font-mono text-[10px]" id="char-counter">0 / 400</span>
-                            </label>
-                            <textarea id="prompt-input" 
-                                class="w-full h-24 px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:border-cyan-500 focus:shadow-neon-blue transition duration-300 ease-in-out glow-border-cyan resize-none"
-                                placeholder="Enter what your deck should be about... E.g., Quantum Computing architectures, Colonizing Kepler-186f, or Synthetic Biology in 2050..."
-                                maxlength="400" onkeyup="updateCharCount()"></textarea>
-                        </div>
-
-                        <!-- Presets / Idea Sparkers -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[11px] font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Preset Blueprints</span>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <button onclick="setPreset('Quantum Cryptography & Holographic Keys')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
-                                    🔑 Quantum Crypto
-                                </button>
-                                <button onclick="setPreset('Colonizing Mars: Geodesic Biospheres')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
-                                    🚀 Mars Biospheres
-                                </button>
-                                <button onclick="setPreset('Artificial Consciousness & Neural Maps')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
-                                    🧠 Synthetic Mind
-                                </button>
-                                <button onclick="setPreset('Deep-Sea Geothermal Mining Cities')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
-                                    🌋 Abyss Cities
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Generation Parameter Options -->
-                        <div class="grid grid-cols-2 gap-3">
-                            <!-- Theme Selector -->
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Aesthetic Theme</label>
-                                <select id="theme-select" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-slate-200 text-xs focus:border-cyan-500 focus:shadow-neon-blue transition duration-300">
-                                    <option value="cyber-neon">Cyber-Neon (Magenta/Cyan)</option>
-                                    <option value="deep-space" selected>Deep Space (Indigo/Violet)</option>
-                                    <option value="biosphere">Biosphere (Emerald/Lime)</option>
-                                    <option value="glass-white">Refractive Glass (Frost/Ice)</option>
-                                </select>
-                            </div>
-
-                            <!-- Slide Length Selection -->
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Slide Framework Length</label>
-                                <select id="slide-count" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-slate-200 text-xs focus:border-cyan-500 focus:shadow-neon-blue transition duration-300">
-                                    <option value="3">3 Core Panels</option>
-                                    <option value="4">4 Custom Views</option>
-                                    <option value="5" selected>5 Detailed Views</option>
-                                    <option value="6">6 Expanded Panels</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <!-- AI Cognitive Engine Select -->
-                        <div class="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-950/60 border border-white/5">
-                            <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Cognitive Pipeline</label>
-                            <div class="flex gap-2 mt-1">
-                                <button id="engine-gemini" onclick="selectEngine('gemini')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-cyan-500/40 bg-cyan-500/10 text-cyan-300">
-                                    <i class="fa-solid fa-sparkles mr-1"></i> Gemini 2.5 (No Key)
-                                </button>
-                                <button id="engine-pollinations" onclick="selectEngine('pollinations')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400">
-                                    <i class="fa-solid fa-circle-nodes mr-1"></i> Kimi K2.6
-                                </button>
-                            </div>
-
-                            <!-- Token input box - Hidden initially unless Pollinations chosen -->
-                            <div id="token-input-container" class="mt-2 hidden">
-                                <input type="password" id="pollinations-key" 
-                                    class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-xs focus:border-purple-500 transition"
-                                    placeholder="Enter Pollinations Key (Bearer Token)">
-                                <span class="text-[9px] text-slate-500 mt-1 block">Your API key is transmitted securely straight to Pollinations end.</span>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- Generate Trigger & Log Status Terminal -->
-                    <div class="relative z-10 flex flex-col gap-3 mt-6">
-                        <!-- Technical Live Log Stream -->
-                        <div class="rounded-xl bg-slate-950/90 border border-white/5 p-3 font-mono text-[10px] h-24 overflow-y-auto flex flex-col gap-1 text-slate-400" id="terminal-log">
-                            <div class="text-cyan-400 flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
-                                COMPILER INIT COMPLETED...
-                            </div>
-                            <div>[SYSTEM] Core templates compiled into memory.</div>
-                            <div>[SYSTEM] Interactive trails ready to hook.</div>
-                        </div>
-
-                        <!-- Dynamic Trigger Action Button -->
-                        <button id="generate-btn" onclick="initiateGeneration()" class="relative w-full py-4 rounded-xl font-orbitron font-black text-sm tracking-widest text-white transition duration-500 overflow-hidden shadow-neon-purple group flex items-center justify-center gap-2">
-                            <!-- Background color transitioning -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-cyan-500 group-hover:opacity-90 transition duration-300"></div>
-                            <div class="absolute inset-[1px] bg-slate-950 rounded-[11px] -z-1 group-hover:bg-slate-950/80 transition duration-300"></div>
-                            
-                            <span class="relative z-10 flex items-center gap-2">
-                                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> INITIATE COGNITIVE DRAFT
-                            </span>
-                            
-                            <!-- Internal subtle particles overlay -->
-                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_100%)] opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- RIGHT PRESENTATION STAGE -->
-            <section class="lg:col-span-8 flex flex-col gap-4">
-                <!-- Outer Glass Sandbox -->
-                <div class="glass-panel rounded-2xl p-4 flex-grow flex flex-col justify-between shadow-2xl border border-white/10 min-h-[500px] lg:min-h-0">
-                    
-                    <!-- Sandbox Interactive Control Bar -->
-                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pb-3 border-b border-white/10">
-                        <div class="flex items-center gap-2">
-                            <span class="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
-                            <span class="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
-                            <span class="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
-                            <span class="ml-2 text-xs font-orbitron tracking-wider text-slate-300 font-bold uppercase flex items-center gap-1.5">
-                                <i class="fa-solid fa-tv text-cyan-400"></i> Interactive Stage 
-                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-sans" id="active-theme-badge">DEEP SPACE THEME</span>
-                            </span>
-                        </div>
-                        
-                        <!-- Actions on active draft -->
-                        <div class="flex items-center gap-2">
-                            <button onclick="copyGeneratedCode()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Copy raw Slide Sandbox HTML">
-                                <i class="fa-regular fa-clipboard"></i> Copy Sandbox Code
-                            </button>
-                            <button onclick="downloadCode()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-indigo-600 hover:text-white text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Download standalone interactive slideshow">
-                                <i class="fa-solid fa-download"></i> Download Standalone
-                            </button>
-                            <button onclick="toggleFullscreen()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-cyan-500 hover:text-white text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Immersive presentation view">
-                                <i class="fa-solid fa-expand"></i> Go Immersive
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Sandbox Compilation Status / Progress Loading Bar -->
-                    <div id="compilation-bar-container" class="w-full h-[3px] bg-slate-950 overflow-hidden relative opacity-0 transition duration-300">
-                        <div class="h-full compile-bar w-full"></div>
-                    </div>
-
-                    <!-- Aspect-ratio locked presentation viewport wrapper (Strict 16:9 widescreen layout) -->
-                    <div class="relative w-full flex-grow flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden shadow-inner my-3 group" style="min-height: 380px;">
-                        <div class="w-full h-full max-h-full flex items-center justify-center relative p-1">
-                            <!-- Responsive 16:9 container -->
-                            <div class="w-full relative aspect-video shadow-2xl overflow-hidden rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center">
-                                <iframe id="slide-viewport" 
-                                    class="absolute inset-0 w-full h-full border-0 rounded-lg bg-slate-950 transition duration-500" 
-                                    allow-scripts allow-same-origin allow-popups>
-                                </iframe>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sandbox Status Overlay / Guide footer -->
-                    <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2 border-t border-white/5 pt-3">
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-white/10 font-bold">←</span>
-                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-white/10 font-bold">→</span>
-                            <span>Navigate with Keyboard Arrows or Tap Slide Overlay controls inside viewport</span>
-                        </div>
-                        <div class="flex items-center gap-1.5 text-cyan-400">
-                            <i class="fa-solid fa-circle-nodes text-[10px]"></i>
-                            <span>State Sandbox Sandbox compiled automatically.</span>
-                        </div>
-                    </div>
-
-                </div>
-            </section>
-
-        </div>
-
-        <!-- System Footer -->
-        <footer class="mt-6 text-center text-slate-500 text-xs flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 pt-4">
-            <p>© 2026 AuraSlides Sandbox compiled by D’Ai Architecture.</p>
-            <div class="flex gap-4">
-                <a href="#" class="hover:text-cyan-400 transition">Design Specs</a>
-                <a href="#" class="hover:text-cyan-400 transition">API Systems</a>
-                <a href="#" class="hover:text-cyan-400 transition">Terms of Protocol</a>
-            </div>
-        </footer>
-
+  <header class="topbar">
+    <button id="resetBtn" class="brand" aria-label="Reset AuraSlides">
+      <span class="logo">D</span>
+      <span><span class="brand-title">AuraSlides IGUI</span><span class="brand-sub">powered by D’Ai</span></span>
+    </button>
+    <div class="top-actions">
+      <span class="tiny-pill">Ctrl/⌘ + Enter to send</span>
+      <button id="themeBtn" class="mode-btn" aria-label="Toggle light mode">☀</button>
     </div>
+  </header>
 
-    <!-- SCRIPT INFRASTRUCTURE -->
-    <script>
-        // API Management & Engine Configuration
-        const apiKey = ""; // Keep empty string as required by runtime
-        let activeEngine = 'gemini'; // 'gemini' or 'pollinations'
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'auraslides-v2';
-
-        // Starfield Canvas Background logic
-        const canvas = document.getElementById('starfield');
-        const ctx = canvas.getContext('2d');
-        let stars = [];
-        const starCount = 120;
-
-        function initStarfield() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            stars = [];
-            for (let i = 0; i < starCount; i++) {
-                stars.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    radius: Math.random() * 1.5 + 0.5,
-                    vx: (Math.random() - 0.5) * 0.1,
-                    vy: Math.random() * 0.1 + 0.05,
-                    alpha: Math.random() * 0.7 + 0.3
-                });
-            }
-        }
-
-        function animateStarfield() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            stars.forEach(star => {
-                ctx.beginPath();
-                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(165, 180, 252, ${star.alpha})`;
-                ctx.fill();
-
-                // Slow motion
-                star.x += star.vx;
-                star.y += star.vy;
-
-                // Bounce / Re-spawn edge condition
-                if (star.y > canvas.height) {
-                    star.y = 0;
-                    star.x = Math.random() * canvas.width;
-                }
-                if (star.x < 0 || star.x > canvas.width) {
-                    star.vx = -star.vx;
-                }
-            });
-            requestAnimationFrame(animateStarfield);
-        }
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        // Setup on page load
-        window.onload = function() {
-            initStarfield();
-            animateStarfield();
-            injectDemoPresentation(); // Auto-load amazing demo deck straight out-of-the-box
-        }
-
-        function updateCharCount() {
-            const val = document.getElementById('prompt-input').value;
-            document.getElementById('char-counter').innerText = `${val.length} / 400`;
-        }
-
-        function setPreset(text) {
-            document.getElementById('prompt-input').value = text;
-            updateCharCount();
-            addLog(`[SYSTEM] Applied blueprint theme concept: "${text}"`);
-        }
-
-        function selectEngine(engine) {
-            activeEngine = engine;
-            const gemBtn = document.getElementById('engine-gemini');
-            const polBtn = document.getElementById('engine-pollinations');
-            const tokenBox = document.getElementById('token-input-container');
-
-            if (engine === 'gemini') {
-                gemBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-cyan-500/40 bg-cyan-500/10 text-cyan-300";
-                polBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400";
-                tokenBox.classList.add('hidden');
-                addLog("[SYSTEM] Switched cognitive model node pipeline to Gemini 2.5 (Built-in, keyless execution).");
-            } else {
-                polBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-purple-500/40 bg-purple-500/10 text-purple-300";
-                gemBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400";
-                tokenBox.classList.remove('hidden');
-                addLog("[SYSTEM] Switched cognitive model node pipeline to Pollinations Kimi-K2.6.");
-            }
-        }
-
-        function addLog(message, isError = false) {
-            const term = document.getElementById('terminal-log');
-            const item = document.createElement('div');
-            item.className = isError ? 'text-rose-400' : 'text-slate-300';
-            
-            const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
-            
-            item.innerHTML = `<span class="text-slate-500 font-bold font-mono">[${timeStr}]</span> ${message}`;
-            term.appendChild(item);
-            term.scrollTop = term.scrollHeight;
-        }
-
-        // Demo interactive slide presentation code inside sandbox iframe
-        let generatedSlideCode = "";
-
-        const DEMO_THEME_VARIABLES = {
-            'cyber-neon': {
-                accent: '#06B6D4',
-                accentPink: '#D946EF',
-                gradientStart: 'rgba(7, 9, 21, 0.95)',
-                glowShadow: '0 0 25px 6px #06B6D4'
-            },
-            'deep-space': {
-                accent: '#6366F1',
-                accentPink: '#8B5CF6',
-                gradientStart: 'rgba(5, 5, 15, 0.98)',
-                glowShadow: '0 0 25px 6px #6366F1'
-            },
-            'biosphere': {
-                accent: '#10B981',
-                accentPink: '#84CC16',
-                gradientStart: 'rgba(4, 10, 8, 0.95)',
-                glowShadow: '0 0 25px 6px #10B981'
-            },
-            'glass-white': {
-                accent: '#E2E8F0',
-                accentPink: '#94A3B8',
-                gradientStart: 'rgba(255, 255, 255, 0.03)',
-                glowShadow: '0 0 25px 6px rgba(255, 255, 255, 0.5)'
-            }
-        };
-
-        // Precompiled amazing slideshow to preview immediately
-        function injectDemoPresentation() {
-            addLog("[SYSTEM] Assembling baseline slide deck template into presentation frame...");
-            
-            const demoDeckCode = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuraSlides Baseline Deck</title>
-    <script src="https://cdn.tailwindcss.com"><\/script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --neon-accent: #6366F1;
-            --neon-pink: #D946EF;
-            --bg-base: #03040b;
-        }
-        body {
-            background-color: var(--bg-base);
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-            cursor: none; /* Hide default cursor */
-        }
-        
-        /* Morphing glowing vector background elements */
-        .glowing-blob {
-            position: absolute;
-            filter: blur(80px);
-            opacity: 0.18;
-            border-radius: 43% 57% 50% 50% / 40% 45% 55% 60%;
-            animation: morphBlob 16s ease-in-out infinite alternate;
-            z-index: 0;
-            pointer-events: none;
-        }
-        @keyframes morphBlob {
-            0% {
-                transform: translate(0px, 0px) scale(1) rotate(0deg);
-                border-radius: 43% 57% 50% 50% / 40% 45% 55% 60%;
-            }
-            33% {
-                transform: translate(80px, -50px) scale(1.1) rotate(60deg);
-                border-radius: 50% 40% 55% 45% / 45% 55% 40% 60%;
-            }
-            66% {
-                transform: translate(-50px, 60px) scale(0.9) rotate(120deg);
-                border-radius: 38% 62% 45% 55% / 50% 40% 60% 50%;
-            }
-            100% {
-                transform: translate(20px, -20px) scale(1.05) rotate(180deg);
-                border-radius: 47% 53% 52% 48% / 48% 52% 48% 52%;
-            }
-        }
-
-        /* Customizable Premium Cursor Trail */
-        #cursor-glow {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: var(--neon-accent);
-            position: fixed;
-            pointer-events: none;
-            z-index: 9999;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 25px 6px var(--neon-accent);
-            transition: width 0.2s, height 0.2s, background-color 0.3s;
-        }
-
-        /* Glassmorphic presentation borders */
-        .glass-frame {
-            background: rgba(10, 11, 23, 0.55);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-        }
-
-        /* Staggered entrance/exit transitions */
-        .slide {
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
-        }
-        
-        /* Staggered transition nodes animation settings */
-        .slide-element {
-            transform: translateY(25px);
-            opacity: 0;
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
-        }
-        .slide.active .slide-element {
-            transform: translateY(0);
-            opacity: 1;
-        }
-        
-        /* Dynamic delay assignments for high-end cinematic feel */
-        .delay-100 { transition-delay: 100ms; }
-        .delay-200 { transition-delay: 200ms; }
-        .delay-350 { transition-delay: 350ms; }
-        .delay-500 { transition-delay: 500ms; }
-        .delay-650 { transition-delay: 650ms; }
-
-        .slide-layout-active {
-            opacity: 1 !important;
-            transform: scale(1) translate(0px, 0px) !important;
-            pointer-events: auto !important;
-        }
-    </style>
-</head>
-<body class="w-full h-screen text-slate-100 flex items-center justify-center p-4 relative select-none">
-
-    <!-- Interactive Neon Pointer Glow -->
-    <div id="cursor-glow"></div>
-
-    <!-- Morphing glowing atmosphere context blobs -->
-    <div class="glowing-blob w-[45vw] h-[45vw] bg-indigo-600 top-[-10vw] left-[-5vw]" style="animation-duration: 25s;"></div>
-    <div class="glowing-blob w-[50vw] h-[50vw] bg-fuchsia-600 bottom-[-15vw] right-[-10vw]" style="animation-duration: 32s;"></div>
-
-    <!-- Premium 16:9 Presentation Chassis -->
-    <main class="w-full h-full max-w-[1400px] aspect-video glass-frame rounded-2xl flex flex-col justify-between p-6 md:p-10 relative overflow-hidden z-10">
-        <!-- Technical design crosshairs grid -->
-        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
-
-        <!-- Upper slide header layout info -->
-        <header class="flex justify-between items-center relative z-20">
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-orbitron tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300 font-bold uppercase">
-                    AuraSlides Baseline Sandbox
-                </span>
-                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-            </div>
-            <div class="text-[11px] font-mono text-slate-400 tracking-wider">
-                COGNITIVE DRAFT • D’AI SYSTEM
-            </div>
-        </header>
-
-        <!-- Slides Repository viewport -->
-        <div class="flex-grow flex items-center justify-center relative my-4 overflow-hidden z-20">
-
-            <!-- SLIDE 1: INTRODUCTORY cinematic POSTER -->
-            <div class="slide active absolute inset-0 flex flex-col justify-center items-center text-center opacity-100 scale-100 pointer-events-auto transition-all" id="slide-0">
-                <span class="slide-element text-xs font-orbitron text-cyan-400 tracking-[0.4em] uppercase font-bold mb-3 delay-100">
-                    AuraSlides Architectural Node
-                </span>
-                <h2 class="slide-element text-3.5xl md:text-5xl lg:text-6xl font-black font-orbitron tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 uppercase mb-4 delay-200">
-                    Quantum Space Systems
-                </h2>
-                <p class="slide-element max-w-xl text-slate-400 text-xs md:text-sm leading-relaxed delay-350">
-                    Harnessing procedural cognitive AI architectures to draft cinematic widescreen scientific layouts on-demand. Seamless animations, dynamic nodes, visual cohesion.
-                </p>
-                <div class="slide-element mt-6 flex gap-4 delay-500">
-                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-mono text-cyan-400">NODE STATUS: ACTIVE</span>
-                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-mono text-fuchsia-400">FRAME RATIO: 16:9</span>
-                </div>
-            </div>
-
-            <!-- SLIDE 2: SPLIT TEXT & STATS GRID -->
-            <div class="slide absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-6 items-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-1">
-                <!-- Text block -->
-                <div class="flex flex-col justify-center">
-                    <span class="slide-element text-[10px] font-orbitron text-indigo-400 tracking-[0.3em] uppercase font-bold mb-2 delay-100">TECHNICAL LAYOUT</span>
-                    <h3 class="slide-element text-2xl md:text-3.5xl font-bold font-orbitron text-white uppercase mb-4 delay-200">
-                        Multilayer Cognitive Mapping
-                    </h3>
-                    <p class="slide-element text-slate-400 text-xs leading-relaxed mb-4 delay-350">
-                        Traditional static slides rely on uniform grids. AuraSlides designs layouts uniquely suited to the contextual output prompt, breaking static bounds.
-                    </p>
-                    <div class="slide-element flex gap-3 delay-500">
-                        <span class="w-10 h-1 rounded-full bg-indigo-500"></span>
-                        <span class="w-3.5 h-1 rounded-full bg-cyan-400"></span>
-                        <span class="w-1.5 h-1 rounded-full bg-fuchsia-500"></span>
-                    </div>
-                </div>
-                <!-- Stats grid block -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition delay-200">
-                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">2.6M+</span>
-                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">AI Vectors Synced</h4>
-                    </div>
-                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-fuchsia-500/30 transition delay-350">
-                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-pink-500">45ms</span>
-                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Latency Compile</h4>
-                    </div>
-                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition delay-500">
-                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">100%</span>
-                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Responsive Scaling</h4>
-                    </div>
-                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition delay-650">
-                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">0.02</span>
-                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Cognitive Friction</h4>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SLIDE 3: DETAILED NEURAL DIAGRAM -->
-            <div class="slide absolute inset-0 flex flex-col justify-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-2">
-                <div class="text-center max-w-2xl mx-auto mb-6">
-                    <span class="slide-element text-[10px] font-orbitron text-fuchsia-400 tracking-[0.3em] uppercase font-bold mb-1 delay-100 block">SYSTEM FLOW</span>
-                    <h3 class="slide-element text-2xl md:text-3xl font-bold font-orbitron text-white uppercase delay-200">Neural Network Topology</h3>
-                </div>
-                
-                <!-- Mock Diagram element -->
-                <div class="slide-element grid grid-cols-3 gap-3 max-w-3xl mx-auto w-full delay-350">
-                    <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
-                        <div class="text-xs font-mono text-cyan-400 mb-1">STATION 01</div>
-                        <div class="text-lg font-bold font-orbitron text-slate-200">D'AI INGESTION</div>
-                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
-                            <div class="bg-cyan-400 h-full w-[85%] rounded-full"></div>
-                        </div>
-                    </div>
-                    <div class="p-3 bg-white/5 border border-indigo-500/20 rounded-lg text-center relative">
-                        <div class="absolute inset-x-[-15px] top-1/2 -translate-y-1/2 h-0.5 border-t border-dashed border-white/25 -z-10 hidden md:block"></div>
-                        <div class="text-xs font-mono text-indigo-400 mb-1">STATION 02</div>
-                        <div class="text-lg font-bold font-orbitron text-slate-200">SANDBOX RENDER</div>
-                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
-                            <div class="bg-indigo-500 h-full w-[95%] rounded-full"></div>
-                        </div>
-                    </div>
-                    <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
-                        <div class="text-xs font-mono text-fuchsia-400 mb-1">STATION 03</div>
-                        <div class="text-lg font-bold font-orbitron text-slate-200">INTERACTION</div>
-                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
-                            <div class="bg-fuchsia-500 h-full w-[75%] rounded-full"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SLIDE 4: HIGH-FIDELITY AI IMAGE PRESENTATION -->
-            <div class="slide absolute inset-0 grid grid-cols-1 md:grid-cols-12 gap-6 items-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-3">
-                <!-- Image viewport Column -->
-                <div class="md:col-span-7 h-full flex items-center justify-center relative">
-                    <div class="slide-element w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-slate-950 relative delay-200 shadow-2xl flex items-center justify-center">
-                        <!-- Pollinations Image loading state with custom skeletons -->
-                        <div id="loader-img" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-xs text-indigo-400 font-mono">
-                            <i class="fa-solid fa-circle-notch animate-spin text-xl mb-2"></i>
-                            ENGAGING PIXEL SYNTHESIS...
-                        </div>
-                        <img src="https://image.pollinations.ai/prompt/Stunning_ultra_realistic_sci_fi_deep_space_control_center_holographic_views_8k_aesthetic?width=800&height=450&nologo=true" 
-                             alt="AI Quantum Nebula Core"
-                             class="w-full h-full object-cover relative z-10 transition duration-500 opacity-0"
-                             onload="this.classList.remove('opacity-0'); document.getElementById('loader-img').style.display = 'none';">
-                    </div>
-                </div>
-                <!-- Content Column -->
-                <div class="md:col-span-5 flex flex-col justify-center">
-                    <span class="slide-element text-[10px] font-orbitron text-emerald-400 tracking-[0.3em] uppercase font-bold mb-2 delay-100">AI GRAPHIC AGENT</span>
-                    <h3 class="slide-element text-2xl md:text-3xl font-bold font-orbitron text-white uppercase mb-4 delay-350">Visual Synth Synthesis</h3>
-                    <p class="slide-element text-slate-400 text-xs leading-relaxed delay-500">
-                        Dynamic prompt parsing compiles context-aware imagery directly into your slide decks using robust Pollinations graphics routes.
-                    </p>
-                </div>
-            </div>
-
-            <!-- SLIDE 5: FUTURISTIC CALL TO ACTION -->
-            <div class="slide absolute inset-0 flex flex-col justify-center items-center text-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-4">
-                <span class="slide-element text-xs font-orbitron text-cyan-400 tracking-[0.4em] uppercase font-bold mb-3 delay-100">
-                    Ready to Initiate
-                </span>
-                <h2 class="slide-element text-3xl md:text-5xl font-black font-orbitron tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 uppercase mb-4 delay-200">
-                    Your Cognitive Space
-                </h2>
-                <p class="slide-element max-w-md text-slate-400 text-xs leading-relaxed delay-350 mb-6">
-                    Enter any scientific topic or prompt in the left control deck and fire the compiler. D’Ai transforms text concepts into breathtaking dynamic visual vectors.
-                </p>
-                <div class="slide-element flex gap-4 delay-500 justify-center">
-                    <button class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-500 text-xs font-bold font-orbitron uppercase rounded-lg tracking-wider hover:shadow-neon-blue transition duration-300">
-                        Begin Quantum Journey
-                    </button>
-                </div>
-            </div>
-
+  <main class="app">
+    <section id="topicScreen" class="screen active fade-enter">
+      <div class="hero">
+        <div class="eyebrow">✦ Interactive prompt builder</div>
+        <h1>What should the deck explain?</h1>
+        <p>Type one topic. The app will ask a few focused questions, then generate the full interactive slide deck.</p>
+      </div>
+      <div class="panel prompt-panel">
+        <div class="prompt-box" id="promptBox">
+          <textarea id="topicInput" autocomplete="off" spellcheck="true" aria-label="Deck topic"></textarea>
+          <div id="ghostSuggestion" class="ghost-suggestion"></div>
+          <div class="send-row">
+            <span class="shortcut">Tab applies suggestion · Ctrl/⌘ + Enter sends</span>
+            <button id="sendTopicBtn" class="primary">Send</button>
+          </div>
         </div>
+      </div>
+    </section>
 
-        <!-- Lower slide controller interface -->
-        <footer class="flex justify-between items-center relative z-20 pt-4 border-t border-white/5">
-            <!-- Navigation controls -->
-            <div class="flex items-center gap-3">
-                <button onclick="prevSlide()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 text-xs transition">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                <span id="slide-tracker" class="text-xs font-mono font-bold tracking-wider text-slate-400">1 / 5</span>
-                <button onclick="nextSlide()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 text-xs transition">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
-            </div>
+    <section id="questionScreen" class="screen">
+      <div class="question-shell">
+        <div class="question-head">
+          <div id="questionIntro" class="intro">Answer a few quick choices</div>
+        </div>
+        <div id="questionCard" class="panel question-card"></div>
+        <div id="dots" class="dots"></div>
+        <div class="nav-row">
+          <button id="backBtn" class="secondary">Back</button>
+          <button id="nextBtn" class="primary">Next</button>
+        </div>
+      </div>
+    </section>
 
-            <!-- Line progress meter -->
-            <div class="flex-grow max-w-[40%] mx-6 h-[2px] bg-slate-800 rounded-full overflow-hidden hidden md:block">
-                <div id="slide-progress" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300" style="width: 20%;"></div>
-            </div>
+    <section id="loadingScreen" class="screen">
+      <div class="panel loading-card">
+        <div class="loading-inner">
+          <div class="spinner"></div>
+          <h2 id="loadingTitle" class="loading-title">Working on it</h2>
+          <p id="loadingText" class="loading-text">Preparing the next step.</p>
+          <div class="progress-bar"><div class="progress-fill"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-            <div class="flex gap-2">
-                <span class="text-[10px] font-mono text-slate-500">PRESS LEFT / RIGHT ARROWS</span>
-            </div>
-        </footer>
+  <section id="stageScreen" class="stage-screen">
+    <div class="stagebar">
+      <div><div class="stage-title">AuraSlides Deck</div><div id="stageMeta" class="stage-meta">Preview ready</div></div>
+      <div class="stage-actions">
+        <button id="editBtn">Edit</button>
+        <button id="copyBtn">Copy HTML</button>
+        <button id="downloadBtn">Download</button>
+      </div>
+    </div>
+    <div class="frame-wrap"><iframe id="deckFrame" title="Generated AuraSlides deck" sandbox="allow-scripts allow-same-origin allow-popups" referrerpolicy="no-referrer"></iframe></div>
+  </section>
 
-    </main>
+  <div id="toast" class="toast"></div>
 
-    <!-- Interactive script runtime compilation -->
-    <script>
-        let currentSlide = 0;
-        const totalSlides = 5;
+  <script>
+  (function(){
+    'use strict';
 
-        function setSlide(index) {
-            if(index < 0 || index >= totalSlides) return;
-            
-            // Remove active tags
-            const activeSlide = document.querySelector('.slide.active');
-            if(activeSlide) {
-                activeSlide.classList.remove('active', 'slide-layout-active');
-                activeSlide.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
-            }
+    var suggestions = [
+      'Lab-scale retort sterilization for food and beverage R&D',
+      'CRISPR gene editing explained with guide RNA, Cas proteins, and repair pathways',
+      'Quantum computing through qubits, gates, superposition, and error correction',
+      'AI-powered drug discovery from molecule screening to clinical candidates',
+      'Climate-smart vertical farming using sensors, LEDs, and nutrient loops',
+      'Reusable rockets and the physics of landing guidance systems'
+    ];
 
-            // Set target active
-            const targetSlide = document.getElementById('slide-' + index);
-            if(targetSlide) {
-                targetSlide.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
-                targetSlide.classList.add('active', 'slide-layout-active');
-            }
+    var state = {
+      phase:'topic',
+      topic:'',
+      suggestionIndex:0,
+      igui:null,
+      answers:{},
+      questionIndex:0,
+      busy:false,
+      deckHtml:'',
+      imageReport:[]
+    };
 
-            // Update footer metrics
-            document.getElementById('slide-tracker').innerText = (index + 1) + ' / ' + totalSlides;
-            document.getElementById('slide-progress').style.width = ((index + 1) / totalSlides * 100) + '%';
-            currentSlide = index;
-        }
+    var el = {
+      root:document.documentElement,
+      pulse:document.getElementById('clickPulse'),
+      resetBtn:document.getElementById('resetBtn'),
+      themeBtn:document.getElementById('themeBtn'),
+      topicScreen:document.getElementById('topicScreen'),
+      questionScreen:document.getElementById('questionScreen'),
+      loadingScreen:document.getElementById('loadingScreen'),
+      stageScreen:document.getElementById('stageScreen'),
+      topicInput:document.getElementById('topicInput'),
+      ghostSuggestion:document.getElementById('ghostSuggestion'),
+      sendTopicBtn:document.getElementById('sendTopicBtn'),
+      questionIntro:document.getElementById('questionIntro'),
+      questionCard:document.getElementById('questionCard'),
+      dots:document.getElementById('dots'),
+      backBtn:document.getElementById('backBtn'),
+      nextBtn:document.getElementById('nextBtn'),
+      loadingTitle:document.getElementById('loadingTitle'),
+      loadingText:document.getElementById('loadingText'),
+      deckFrame:document.getElementById('deckFrame'),
+      stageMeta:document.getElementById('stageMeta'),
+      editBtn:document.getElementById('editBtn'),
+      copyBtn:document.getElementById('copyBtn'),
+      downloadBtn:document.getElementById('downloadBtn'),
+      toast:document.getElementById('toast')
+    };
 
-        function nextSlide() {
-            if(currentSlide < totalSlides - 1) {
-                setSlide(currentSlide + 1);
-            } else {
-                setSlide(0); // Cycle back
-            }
-        }
+    var SAMPLE_DECK = '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AuraSlides Preview</title><style>*{box-sizing:border-box}html,body{height:100%;margin:0;overflow:hidden;background:#050816;color:#f8fbff;font-family:ui-sans-serif,system-ui}.deck{position:relative;width:100vw;height:100vh;background:radial-gradient(circle at 22% 22%,rgba(99,179,255,.22),transparent 32%),radial-gradient(circle at 82% 80%,rgba(167,139,250,.18),transparent 32%),linear-gradient(135deg,#050816,#101a33)}.slide{position:absolute;inset:0;display:grid;place-items:center;padding:7vw;opacity:0;transform:scale(.985);transition:.5s ease}.slide.active{opacity:1;transform:scale(1)}.card{width:min(980px,90vw);border:1px solid rgba(255,255,255,.16);border-radius:34px;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);padding:clamp(28px,5vw,62px);box-shadow:0 30px 90px rgba(0,0,0,.35)}.k{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:#8ee7ff;font-weight:760}h1{font-size:clamp(42px,8vw,98px);line-height:.9;letter-spacing:-.075em;font-weight:650;margin:12px 0}p{font-size:clamp(16px,2.1vw,25px);line-height:1.45;color:#d7e6f5}.nav{position:absolute;left:32px;right:32px;bottom:26px;display:flex;gap:12px;align-items:center}.bar{height:4px;flex:1;border-radius:99px;background:rgba(255,255,255,.13);overflow:hidden}.fill{height:100%;width:33%;background:linear-gradient(90deg,#67e8f9,#a78bfa);transition:.25s}.btn{border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:white;border-radius:14px;padding:11px 15px;font-weight:720}</style></head><body><main class="deck"><section class="slide active"><div class="card"><div class="k">AuraSlides Preview</div><h1>Your deck will appear here.</h1><p>The final presentation opens only after the HTML and image pipeline is complete.</p></div></section><section class="slide"><div class="card"><div class="k">Ready</div><h1>Single-file parent app.</h1><p>No React, no Tailwind, no external UI libraries, and no parser issue.</p></div></section><section class="slide"><div class="card"><div class="k">Stage</div><h1>Iframe compiler.</h1><p>Generated HTML is safely injected through srcdoc.</p></div></section><div class="nav"><button id="prev" class="btn">Prev</button><div class="bar"><div id="fill" class="fill"></div></div><button id="next" class="btn">Next</button></div></main><script>var s=[].slice.call(document.querySelectorAll(".slide")),i=0,f=document.getElementById("fill");function show(n){s[i].classList.remove("active");i=(n+s.length)%s.length;s[i].classList.add("active");f.style.width=((i+1)/s.length*100)+"%"}document.getElementById("next").onclick=function(){show(i+1)};document.getElementById("prev").onclick=function(){show(i-1)};addEventListener("keydown",function(e){if(e.key==="ArrowRight")show(i+1);if(e.key==="ArrowLeft")show(i-1)})<\/script></body></html>';
 
-        function prevSlide() {
-            if(currentSlide > 0) {
-                setSlide(currentSlide - 1);
-            } else {
-                setSlide(totalSlides - 1); // Cycle to end
-            }
-        }
+    function setTheme(theme){
+      el.root.setAttribute('data-theme', theme);
+      el.themeBtn.textContent = theme === 'dark' ? '☀' : '☾';
+      el.themeBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+      try{localStorage.setItem('aura-theme', theme)}catch(e){}
+    }
 
-        // Catch navigation hotkeys inside viewport
-        document.addEventListener('keydown', function(e) {
-            if(e.key === "ArrowRight") {
-                nextSlide();
-            } else if (e.key === "ArrowLeft") {
-                prevSlide();
-            }
+    function initTheme(){
+      var saved = null;
+      try{saved = localStorage.getItem('aura-theme')}catch(e){}
+      setTheme(saved || 'dark');
+    }
+
+    function pulse(){
+      el.pulse.classList.remove('run');
+      void el.pulse.offsetWidth;
+      el.pulse.classList.add('run');
+    }
+
+    function showToast(message, kind){
+      el.toast.innerHTML = (kind ? '<b>'+escapeHTML(kind)+':</b> ' : '') + escapeHTML(message);
+      el.toast.classList.add('show');
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(function(){el.toast.classList.remove('show')}, 4200);
+    }
+
+    function escapeHTML(value){
+      return String(value == null ? '' : value).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]});
+    }
+
+    function escapeXML(value){
+      return String(value == null ? '' : value).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[m]});
+    }
+
+    function setScreen(name){
+      state.phase = name;
+      [el.topicScreen,el.questionScreen,el.loadingScreen].forEach(function(node){node.classList.remove('active','fade-enter')});
+      el.stageScreen.classList.remove('active');
+      if(name === 'topic') activate(el.topicScreen);
+      if(name === 'questions') activate(el.questionScreen);
+      if(name === 'loading') activate(el.loadingScreen);
+      if(name === 'stage') el.stageScreen.classList.add('active');
+    }
+
+    function activate(node){
+      node.classList.add('active');
+      void node.offsetWidth;
+      node.classList.add('fade-enter');
+    }
+
+    function updateGhost(){
+      var empty = el.topicInput.value.trim().length === 0;
+      el.ghostSuggestion.classList.toggle('hidden', !empty);
+      if(empty){
+        el.ghostSuggestion.innerHTML = escapeHTML(suggestions[state.suggestionIndex]) + '<br><b>Press Tab to apply</b>';
+      }
+    }
+
+    function cycleSuggestion(){
+      if(el.topicInput.value.trim()) return;
+      el.ghostSuggestion.classList.add('swap');
+      setTimeout(function(){
+        state.suggestionIndex = (state.suggestionIndex + 1) % suggestions.length;
+        updateGhost();
+        el.ghostSuggestion.classList.remove('swap');
+      }, 190);
+    }
+
+    function fallbackIGUI(topic){
+      return {
+        intro:'Personalized setup for “' + topic + '”',
+        questions:[
+          {id:'density',label:'How detailed should this deck be?',help:'Choose how deep the explanations and diagrams should go.',default:'Balanced and visual',options:['Simple overview','Balanced and visual','Technical but clear','Expert-level deep dive']},
+          {id:'audience',label:'Who is the target audience?',help:'This changes examples, vocabulary, and pacing.',default:'Curious students',options:['Curious students','General audience','Teachers','R&D team','Researchers / experts']},
+          {id:'slides',label:'How many slides should it have?',help:'Shorter decks move faster. Longer decks explain more details.',default:'8 slides',options:['5 slides','8 slides','10 slides','12 slides']},
+          {id:'design',label:'What design direction fits best?',help:'The deck generator will use this as the visual style.',default:'Dark minimal sci-fi',options:['Dark minimal sci-fi','Clean glass keynote','Cyber-neon lab','Editorial science poster','Soft educational visuals']}
+        ]
+      };
+    }
+
+    async function postJSON(url, body){
+      var response = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+      var text = await response.text();
+      if(!response.ok){throw new Error(text || ('Request failed: ' + response.status))}
+      try{return JSON.parse(text)}catch(e){throw new Error('The server returned invalid JSON.')}
+    }
+
+    function setBusy(title, text){
+      el.loadingTitle.textContent = title;
+      el.loadingText.textContent = text;
+      setScreen('loading');
+    }
+
+    async function buildIGUI(){
+      if(state.busy) return;
+      var topic = el.topicInput.value.trim();
+      if(!topic){
+        el.topicInput.focus();
+        showToast('Type a topic first, or press Tab to use the suggested topic.', 'Topic needed');
+        return;
+      }
+      pulse();
+      state.topic = topic;
+      state.busy = true;
+      setBusy('Creating your questions', 'The prompt-builder is preparing a small, topic-specific interface.');
+      try{
+        var spec = await postJSON('/api/igui',{topic:topic});
+        if(!spec || !Array.isArray(spec.questions) || !spec.questions.length){throw new Error('Question UI was empty')}
+        state.igui = normalizeIGUI(spec, topic);
+      }catch(err){
+        state.igui = fallbackIGUI(topic);
+        showToast('Using a local question flow because the AI question builder did not respond cleanly.', 'Fallback');
+      }
+      state.answers = {};
+      state.igui.questions.forEach(function(q){state.answers[q.id] = q.default || (q.options && q.options[0]) || ''});
+      state.questionIndex = 0;
+      state.busy = false;
+      renderQuestion();
+      setScreen('questions');
+    }
+
+    function normalizeIGUI(spec, topic){
+      var questions = (spec.questions || []).slice(0,7).map(function(q, i){
+        var options = Array.isArray(q.options) && q.options.length ? q.options.slice(0,8).map(String) : ['Balanced','More visual','More technical'];
+        return {
+          id:String(q.id || ('q' + i)).replace(/[^a-z0-9_\-]/gi,'_'),
+          label:String(q.label || 'Choose an option'),
+          help:String(q.help || ''),
+          default:String(q.default || options[0]),
+          options:options
+        };
+      });
+      if(!questions.length) return fallbackIGUI(topic);
+      return {intro:String(spec.intro || ('Personalized setup for “' + topic + '”')),questions:questions};
+    }
+
+    function renderQuestion(){
+      var q = state.igui.questions[state.questionIndex];
+      el.questionIntro.textContent = state.igui.intro || 'Answer a few quick choices';
+      var html = '<h2 class="q-label">' + escapeHTML(q.label) + '</h2>';
+      if(q.help){html += '<p class="q-help">' + escapeHTML(q.help) + '</p>'}
+      html += '<div class="options">';
+      q.options.forEach(function(option){
+        var selected = state.answers[q.id] === option;
+        html += '<button class="chip' + (selected ? ' selected' : '') + '" data-option="' + escapeHTML(option) + '">' + escapeHTML(option) + '</button>';
+      });
+      html += '</div>';
+      el.questionCard.classList.remove('fade-enter');
+      el.questionCard.innerHTML = html;
+      void el.questionCard.offsetWidth;
+      el.questionCard.classList.add('fade-enter');
+      Array.prototype.forEach.call(el.questionCard.querySelectorAll('.chip'),function(btn){
+        btn.addEventListener('click',function(){
+          pulse();
+          state.answers[q.id] = btn.getAttribute('data-option');
+          renderQuestion();
         });
+      });
+      renderDots();
+      el.nextBtn.textContent = state.questionIndex < state.igui.questions.length - 1 ? 'Next' : 'Generate deck';
+    }
 
-        // Touch swipe interactions for mobile
-        let touchstartX = 0;
-        let touchendX = 0;
-        
-        document.addEventListener('touchstart', e => {
-            touchstartX = e.changedTouches[0].screenX;
-        });
+    function renderDots(){
+      var total = state.igui ? state.igui.questions.length : 0;
+      var dots = '';
+      for(var i=0;i<total;i++){dots += '<span class="dot' + (i === state.questionIndex ? ' on' : '') + '"></span>'}
+      el.dots.innerHTML = dots;
+    }
 
-        document.addEventListener('touchend', e => {
-            touchendX = e.changedTouches[0].screenX;
-            handleGesture();
-        });
+    function nextQuestionOrGenerate(){
+      if(state.busy) return;
+      pulse();
+      if(state.questionIndex < state.igui.questions.length - 1){
+        state.questionIndex += 1;
+        renderQuestion();
+      }else{
+        generateDeck();
+      }
+    }
 
-        function handleGesture() {
-            if (touchendX < touchstartX - 50) nextSlide();
-            if (touchendX > touchstartX + 50) prevSlide();
+    function backQuestion(){
+      pulse();
+      if(state.questionIndex > 0){state.questionIndex -= 1;renderQuestion()} else {setScreen('topic')}
+    }
+
+    async function generateDeck(){
+      if(state.busy) return;
+      state.busy = true;
+      try{
+        setBusy('Preparing the deck brief', 'Turning your choices into the final creative instruction.');
+        var brief = await postJSON('/api/final-brief',{topic:state.topic,answers:state.answers,igui:state.igui});
+        setBusy('Writing the slide HTML', 'The deck model is coding the presentation with image placeholders.');
+        var deckPackage = await postJSON('/api/generate-deck',{topic:state.topic,answers:state.answers,brief:brief});
+        if(!deckPackage || !deckPackage.html){throw new Error('The generated deck did not include HTML.')}
+        setBusy('Generating images', 'Images are created and checked before the deck opens.');
+        var manifest = Array.isArray(deckPackage.images) ? deckPackage.images.slice(0,10).map(normalizeImage) : [];
+        var replacements = {};
+        var loaded = 0;
+        for(var i=0;i<manifest.length;i++){
+          var item = manifest[i];
+          el.loadingText.textContent = 'Image ' + (i+1) + ' of ' + manifest.length + ': ' + item.alt;
+          try{
+            var first = await postJSON('/api/generate-image',Object.assign({},item,{retry:false}));
+            await preloadImage(first.url);
+            replacements[item.id] = first.url;
+            loaded += 1;
+          }catch(firstErr){
+            try{
+              var second = await postJSON('/api/generate-image',Object.assign({},item,{retry:true}));
+              await preloadImage(second.url);
+              replacements[item.id] = second.url;
+              loaded += 1;
+            }catch(secondErr){
+              replacements[item.id] = fallbackImage(item,'Image fallback');
+            }
+          }
         }
+        state.deckHtml = replacePlaceholders(deckPackage.html,replacements);
+        el.stageMeta.textContent = loaded + '/' + manifest.length + ' images loaded';
+        el.deckFrame.srcdoc = state.deckHtml;
+        setScreen('stage');
+      }catch(err){
+        showToast(err.message || 'Something went wrong while generating the deck.', 'Generation failed');
+        setScreen('questions');
+      }finally{
+        state.busy = false;
+      }
+    }
 
-        // Cursor coordinates tracker
-        const cursorGlow = document.getElementById('cursor-glow');
-        document.addEventListener('mousemove', function(e) {
-            cursorGlow.style.left = e.clientX + 'px';
-            cursorGlow.style.top = e.clientY + 'px';
-        });
+    function normalizeImage(item, index){
+      var width = Math.max(320,Math.min(1600,Number(item && item.width) || 900));
+      var height = Math.max(240,Math.min(1200,Number(item && item.height) || 600));
+      return {
+        id:item && /^AURA_IMAGE_\d+_URL$/.test(item.id || '') ? item.id : 'AURA_IMAGE_' + (index + 1) + '_URL',
+        prompt:String((item && item.prompt) || 'premium scientific presentation visual, no text, cinematic lighting'),
+        width:width,
+        height:height,
+        alt:String((item && item.alt) || ('Deck image ' + (index + 1)))
+      };
+    }
 
-        // Small expand animation on hover elements
-        const hoverables = document.querySelectorAll('button, a, .interactive-item');
-        hoverables.forEach(item => {
-            item.addEventListener('mouseenter', () => {
-                cursorGlow.style.width = '35px';
-                cursorGlow.style.height = '35px';
-                cursorGlow.style.background = 'var(--neon-pink)';
-                cursorGlow.style.boxShadow = '0 0 25px 6px var(--neon-pink)';
-            });
-            item.addEventListener('mouseleave', () => {
-                cursorGlow.style.width = '15px';
-                cursorGlow.style.height = '15px';
-                cursorGlow.style.background = 'var(--neon-accent)';
-                cursorGlow.style.boxShadow = '0 0 25px 6px var(--neon-accent)';
-            });
-        });
-    <\/script>
-</body>
-</html>`;
+    function preloadImage(url){
+      return new Promise(function(resolve,reject){
+        if(!url){reject(new Error('Empty image URL'));return}
+        var img = new Image();
+        var timer = setTimeout(function(){reject(new Error('Image timed out'))},28000);
+        img.onload = function(){clearTimeout(timer);resolve(url)};
+        img.onerror = function(){clearTimeout(timer);reject(new Error('Image failed to load'))};
+        img.src = url;
+      });
+    }
 
-            generatedSlideCode = demoDeckCode;
-            const viewport = document.getElementById('slide-viewport');
-            viewport.srcdoc = demoDeckCode;
-            addLog("[SYSTEM] Baseline presentation compiled and active inside stage sandbox.");
+    function fallbackImage(item, reason){
+      var w = item.width || 900, h = item.height || 600;
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#07111f"/><stop offset=".55" stop-color="#1e3a8a"/><stop offset="1" stop-color="#4c1d95"/></linearGradient></defs><rect width="100%" height="100%" rx="34" fill="url(#g)"/><circle cx="'+(w*.2)+'" cy="'+(h*.22)+'" r="'+(Math.min(w,h)*.16)+'" fill="#60a5fa" opacity=".25"/><circle cx="'+(w*.82)+'" cy="'+(h*.78)+'" r="'+(Math.min(w,h)*.22)+'" fill="#c084fc" opacity=".20"/><text x="50%" y="47%" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+Math.max(22,w*.032)+'" font-weight="700" fill="#fff">'+escapeXML(item.alt || 'Image placeholder')+'</text><text x="50%" y="56%" text-anchor="middle" font-family="system-ui,sans-serif" font-size="'+Math.max(13,w*.016)+'" fill="#cbd5e1">'+escapeXML(reason)+'</text></svg>';
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    function replacePlaceholders(html,replacements){
+      var out = String(html || '');
+      Object.keys(replacements).forEach(function(id){out = out.split(id).join(replacements[id])});
+      out = out.replace(/AURA_IMAGE_\d+_URL/g,function(id){return fallbackImage({alt:id,width:900,height:600},'Missing image prompt')});
+      return out;
+    }
+
+    async function copyDeck(){
+      pulse();
+      try{
+        await navigator.clipboard.writeText(state.deckHtml || el.deckFrame.srcdoc || '');
+        el.stageMeta.textContent = 'HTML copied';
+      }catch(e){
+        el.stageMeta.textContent = 'Copy blocked by browser';
+      }
+    }
+
+    function downloadDeck(){
+      pulse();
+      var blob = new Blob([state.deckHtml || el.deckFrame.srcdoc || SAMPLE_DECK],{type:'text/html;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'auraslides-' + new Date().toISOString().slice(0,10) + '.html';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(function(){URL.revokeObjectURL(url)},800);
+      el.stageMeta.textContent = 'Downloaded';
+    }
+
+    function reset(){
+      pulse();
+      state.igui = null;
+      state.answers = {};
+      state.questionIndex = 0;
+      state.busy = false;
+      setScreen('topic');
+      setTimeout(function(){el.topicInput.focus()},100);
+    }
+
+    document.addEventListener('pointermove',function(e){
+      document.body.style.setProperty('--mx',Math.round(e.clientX / Math.max(1,innerWidth) * 100) + '%');
+      document.body.style.setProperty('--my',Math.round(e.clientY / Math.max(1,innerHeight) * 100) + '%');
+    },{passive:true});
+
+    el.themeBtn.addEventListener('click',function(){pulse();setTheme(el.root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark')});
+    el.resetBtn.addEventListener('click',reset);
+    el.sendTopicBtn.addEventListener('click',buildIGUI);
+    el.nextBtn.addEventListener('click',nextQuestionOrGenerate);
+    el.backBtn.addEventListener('click',backQuestion);
+    el.editBtn.addEventListener('click',function(){pulse();setScreen('questions')});
+    el.copyBtn.addEventListener('click',copyDeck);
+    el.downloadBtn.addEventListener('click',downloadDeck);
+
+    el.topicInput.addEventListener('input',function(){updateGhost()});
+    el.topicInput.addEventListener('keydown',function(e){
+      if(e.key === 'Tab' && !el.topicInput.value.trim()){
+        e.preventDefault();
+        el.topicInput.value = suggestions[state.suggestionIndex];
+        updateGhost();
+        pulse();
+      }
+      if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+        e.preventDefault();
+        buildIGUI();
+      }
+    });
+
+    document.addEventListener('keydown',function(e){
+      if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+        if(state.phase === 'questions'){
+          e.preventDefault();
+          nextQuestionOrGenerate();
         }
+      }
+    });
 
-        // Adjust demo slide styling matching selections inside interface controls
-        document.getElementById('theme-select').addEventListener('change', function(e) {
-            const theme = e.target.value;
-            const variables = DEMO_THEME_VARIABLES[theme];
-            if (!variables) return;
-
-            // Log update
-            addLog(`[COMPILER] Intercepting CSS modules. Adjusting theme vectors to: "${theme.toUpperCase()}"`);
-            
-            // Re-compile sandbox dynamically with customized parameters if we want, or just update style in current code
-            const badge = document.getElementById('active-theme-badge');
-            badge.innerText = theme.replace('-', ' ').toUpperCase() + ' THEME';
-            
-            if (theme === 'cyber-neon') {
-                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-sans";
-            } else if (theme === 'deep-space') {
-                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-sans";
-            } else if (theme === 'biosphere') {
-                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-sans";
-            } else {
-                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-slate-100/10 text-slate-100 border border-slate-100/20 font-sans";
-            }
-        });
-
-        // Master compilation flow launcher
-        async function initiateGeneration() {
-            const prompt = document.getElementById('prompt-input').value.trim();
-            if(!prompt) {
-                addLog("[ERROR] Generation cancelled: Prompt field cannot be empty.", true);
-                return;
-            }
-
-            const theme = document.getElementById('theme-select').value;
-            const slideCount = document.getElementById('slide-count').value;
-            
-            addLog(`[COMPILER] Initiating cognitive draft sequence...`);
-            addLog(`[PARAMETER] Topic: "${prompt}"`);
-            addLog(`[PARAMETER] Theme: ${theme.toUpperCase()} | Slides requested: ${slideCount}`);
-            
-            // Update Compilation indicator UI
-            const progressBar = document.getElementById('compilation-bar-container');
-            const genBtn = document.getElementById('generate-btn');
-            
-            progressBar.style.opacity = '1';
-            genBtn.disabled = true;
-            genBtn.classList.add('opacity-70');
-            genBtn.innerHTML = `<i class="fa-solid fa-gear animate-spin"></i> SYNTHESIZING DRAFT MODEL...`;
-
-            try {
-                // Compile customized highly structural system command mapping
-                const finalSystemInstructions = assembleSystemPrompt(theme, slideCount);
-                const userPrompt = `Generate a slide presentation on this topic: "${prompt}". Provide exactly ${slideCount} fully functional interactive slides. Ensure the theme is ${theme}.`;
-
-                let rawHTML = "";
-
-                if (activeEngine === 'gemini') {
-                    // Gemini Direct Web Ingestion
-                    rawHTML = await callGeminiAPI(finalSystemInstructions, userPrompt);
-                } else {
-                    // Pollinations Direct Integration
-                    const token = document.getElementById('pollinations-key').value.trim();
-                    if (!token) {
-                        throw new Error("Missing Pollinations API Authorization Bearer Key inside connection panel.");
-                    }
-                    rawHTML = await callPollinationsAPI(finalSystemInstructions, userPrompt, token);
-                }
-
-                // Clean and normalize LLM Output
-                const cleanedHTML = parseLLMResponse(rawHTML);
-                if (!cleanedHTML || cleanedHTML.length < 100) {
-                    throw new Error("Compiled payload outputted insufficient schema metrics or null data.");
-                }
-
-                // Inject into Viewport Frame
-                generatedSlideCode = cleanedHTML;
-                const viewport = document.getElementById('slide-viewport');
-                viewport.srcdoc = cleanedHTML;
-
-                addLog(`[RENDER] Compilation completed. Render engine dynamically updated interactive iframe!`);
-                
-            } catch (err) {
-                addLog(`[ERROR] Direct compile pipeline crashed: ${err.message}`, true);
-            } finally {
-                progressBar.style.opacity = '0';
-                genBtn.disabled = false;
-                genBtn.classList.remove('opacity-70');
-                genBtn.innerHTML = `<div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-cyan-500"></div>
-                <div class="absolute inset-[1px] bg-slate-950 rounded-[11px] -z-1"></div>
-                <span class="relative z-10 flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> INITIATE COGNITIVE DRAFT
-                </span>`;
-            }
-        }
-
-        // Compile custom Prompt parameters telling Kimi / Gemini exactly how to output slide framework
-        function assembleSystemPrompt(theme, slideCount) {
-            let colorStyles = "";
-            if (theme === 'cyber-neon') {
-                colorStyles = `
-                    --neon-accent: #06B6D4;
-                    --neon-pink: #D946EF;
-                    --bg-base: #070913;
-                    --glowShadow: 0 0 25px 6px #06B6D4;
-                `;
-            } else if (theme === 'deep-space') {
-                colorStyles = `
-                    --neon-accent: #6366F1;
-                    --neon-pink: #8B5CF6;
-                    --bg-base: #04050f;
-                    --glowShadow: 0 0 25px 6px #6366F1;
-                `;
-            } else if (theme === 'biosphere') {
-                colorStyles = `
-                    --neon-accent: #10B981;
-                    --neon-pink: #84CC16;
-                    --bg-base: #030806;
-                    --glowShadow: 0 0 25px 6px #10B981;
-                `;
-            } else if (theme === 'glass-white') {
-                colorStyles = `
-                    --neon-accent: #F1F5F9;
-                    --neon-pink: #CBD5E1;
-                    --bg-base: #1E293B;
-                    --glowShadow: 0 0 25px 6px rgba(255,255,255,0.4);
-                `;
-            }
-
-            return `You are "AuraSlides Compiler Engine", a state-of-the-art interactive slideshow builder.
-Your objective is to output ONLY a single, fully-formed, executable block of raw HTML code representing a breathtaking interactive slideshow containing exactly ${slideCount} slides based on the user's prompt.
-
-CRITICAL ARCHITECTURE DIRECTIVES:
-1. OUTPUT STRUCTURE: Do not write conversational fluff. Output ONLY the raw HTML code block. The code must be clean, syntactically correct, and run immediately inside an iframe's srcdoc.
-2. TAILWIND & FONTS: Include CDN scripts for Tailwind CSS, FontAwesome icons, and Google Fonts (specifically 'Orbitron', 'Rajdhani', 'Inter').
-3. DYNAMIC VECTOR BACKGROUNDS: Implement slow-morphing backdrop gradient blobs using custom CSS variables and infinite keyframe scaling/translating transforms (using morphing border-radius tricks).
-4. THEME INTEGRATION: Incorporate the following visual theme parameters in the global :root styling:
-   ${colorStyles}
-5. GLASSMORPHIC CHASSIS: Format the master outer layout container as a premium widescreen 16:9 ratio wrapper box ('aspect-video w-full h-full glass-frame') containing structural aesthetic lines or technical design grids.
-6. SLIDE LAYOUT FREEDOM: Do not use identical layouts! Every slide MUST be designed uniquely:
-   - Slide 1: Cinematic, bold introductory poster layout.
-   - Slide 2: High-contrast statistical or technical layout using glowing card items.
-   - Slide 3: Concept diagram / split layout displaying system architecture.
-   - Slide 4: Narrative deep dive with a central focal quote or bold typographic highlights.
-   - Slide 5: High-fidelity image layout referencing a curated AI graphic (see item 8 below).
-7. ELEMENT-LEVEL ANIMATIONS: Create entrance and exit animations for each slide element. When a slide is activated with class "slide-layout-active" (or "active"), its child tags must slide up, scale, or fade with staggered CSS transition delays (e.g. "delay-100", "delay-200", "delay-500").
-8. AI GRAPHIC INTEGRATION: At least one slide must include an image directly referencing:
-   'https://image.pollinations.ai/prompt/{highly_detailed_descriptive_prompt}?width=800&height=450&nologo=true' where {highly_detailed_descriptive_prompt} represents custom aesthetic keywords matching the presentation topic. Implement a loading skeleton overlay that hides once the image loads completely.
-9. INTERACTIVE NAVIGATORS: Embed navigation UI elements (Prev button, Next button, progress line indicator, slide metrics e.g. "1 / 5", keyboard arrow listeners for ArrowLeft/ArrowRight, and mobile swipe listeners) configured with stable inline Javascript.
-10. INTERACTIVE CURSOR GLOW: Hide the default cursor using 'cursor: none' and code a gorgeous custom circular neon glow tracking mouse coordinates. Hovering buttons or links must scale the glow and shift its glow variables.
-
-Your slide content must be highly informative, scientific, specific, and professionally written (do not use dummy text or lorem ipsum). Let's generate a masterpieces.`;
-        }
-
-        // Call Gemini 2.5 API with retry mechanics
-        async function callGeminiAPI(systemPrompt, userPrompt) {
-            addLog("[API] Dispatching payload to Gemini Cognitive Node... (Built-in Keyless Endpoint)");
-            
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: userPrompt }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] }
-            };
-
-            return await fetchWithBackoff(url, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        }
-
-        // Call Pollinations completions route Kimi-K2.6 API with retry mechanics
-        async function callPollinationsAPI(systemPrompt, userPrompt, token) {
-            addLog("[API] Dispatching payload to Pollinations Kimi-K2.6 Engine Node...");
-            
-            const url = "https://gen.pollinations.ai/v1/chat/completions";
-            const payload = {
-                model: "kimi-k2.6",
-                messages: [
-                    { role: "system", content: systemPrompt },
-                    { role: "user", content: userPrompt }
-                ]
-            };
-
-            return await fetchWithBackoff(url, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            }, true);
-        }
-
-        // Helper API Fetch wrapper with Exponential Backoff retry routine (Rule requirements)
-        async function fetchWithBackoff(url, options, isPollinations = false) {
-            let delay = 1000;
-            const maxRetries = 5;
-
-            for (let i = 0; i <= maxRetries; i++) {
-                try {
-                    const response = await fetch(url, options);
-                    
-                    if (!response.ok) {
-                        const errText = await response.text();
-                        throw new Error(`HTTP Error Status: ${response.status} - ${errText}`);
-                    }
-
-                    const json = await response.json();
-                    
-                    if (isPollinations) {
-                        return json.choices?.[0]?.message?.content || "";
-                    } else {
-                        // Extract text from Gemini structure
-                        return json.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                    }
-
-                } catch (error) {
-                    if (i === maxRetries) {
-                        throw new Error(`Connection crashed after ${maxRetries} retry attempts: ${error.message}`);
-                    }
-                    // Wait for exponential delay (1s, 2s, 4s, 8s, 16s) without console cluttering as requested
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
-                }
-            }
-        }
-
-        // Robust extractor to clean the LLM responses of any markdown code block decoration
-        function parseLLMResponse(raw) {
-            addLog("[COMPILER] Decompiling raw LLM text block...");
-            
-            // Check for ```html code wrap
-            const matchHtml = raw.match(/```html([\s\S]*?)```/);
-            if(matchHtml && matchHtml[1]) {
-                return matchHtml[1].trim();
-            }
-
-            // Check for general ``` code wrap
-            const matchCode = raw.match(/```([\s\S]*?)```/);
-            if(matchCode && matchCode[1]) {
-                return matchCode[1].trim();
-            }
-
-            // Fallback: If no codeblocks found, check for HTML tag structural match
-            if (raw.trim().startsWith("<") || raw.includes("<html") || raw.includes("<!DOCTYPE")) {
-                return raw.trim();
-            }
-
-            // Attempt basic clean if there is any leading message content before the code block
-            const startIdx = raw.indexOf("<!DOCTYPE");
-            if (startIdx !== -1) {
-                return raw.slice(startIdx).trim();
-            }
-
-            return raw.trim();
-        }
-
-        // Standardized Copy to clipboard utility (Using system instructions fallback)
-        function copyGeneratedCode() {
-            if (!generatedSlideCode) {
-                addLog("[ERROR] Copy action cancelled: Stage viewport is currently empty.", true);
-                return;
-            }
-
-            const tempTextarea = document.createElement("textarea");
-            tempTextarea.value = generatedSlideCode;
-            document.body.appendChild(tempTextarea);
-            tempTextarea.select();
-            
-            try {
-                // Clipboard copy fallback method as requested in system instructions
-                const successful = document.execCommand("copy");
-                if (successful) {
-                    addLog("[SYSTEM] Successfully copied standalone presentation code to clipboard!");
-                } else {
-                    addLog("[ERROR] Failed to execute clipboard copy routine.", true);
-                }
-            } catch (err) {
-                addLog(`[ERROR] Copy execution error: ${err.message}`, true);
-            }
-            document.body.removeChild(tempTextarea);
-        }
-
-        // Standalone Slide Document Downloader
-        function downloadCode() {
-            if (!generatedSlideCode) {
-                addLog("[ERROR] Download action cancelled: Stage viewport is currently empty.", true);
-                return;
-            }
-
-            const blob = new Blob([generatedSlideCode], { type: "text/html;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            
-            const link = document.createElement("a");
-            link.href = url;
-            link.download = "AuraSlides_Dynamic_Deck.html";
-            document.body.appendChild(link);
-            link.click();
-            
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-            addLog("[SYSTEM] Interactive presentation document downloaded successfully.");
-        }
-
-        // Toggle Stage Fullscreen
-        function toggleFullscreen() {
-            const viewport = document.getElementById('slide-viewport');
-            if (viewport.requestFullscreen) {
-                viewport.requestFullscreen();
-            } else if (viewport.webkitRequestFullscreen) { /* Safari */
-                viewport.webkitRequestFullscreen();
-            } else if (viewport.msRequestFullscreen) { /* IE11 */
-                viewport.msRequestFullscreen();
-            }
-            addLog("[SYSTEM] Sandbox presentation entered immersive fullscreen viewport.");
-        }
-    </script>
+    initTheme();
+    updateGhost();
+    el.deckFrame.srcdoc = SAMPLE_DECK;
+    setInterval(cycleSuggestion,3600);
+    setTimeout(function(){el.topicInput.focus()},250);
+  })();
+  </script>
 </body>
 </html>
