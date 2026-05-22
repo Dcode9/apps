@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraSlides powered by D’Ai — Next-Gen AI Slide Compiler</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for High-Tech Aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#070913',
+                            panel: 'rgba(13, 17, 39, 0.7)',
+                            border: 'rgba(99, 102, 241, 0.2)',
+                            accent: '#6366F1',
+                            neonPink: '#D946EF',
+                            neonCyan: '#06B6D4',
+                            neonGreen: '#10B981',
+                        }
+                    },
+                    boxShadow: {
+                        'neon-blue': '0 0 15px rgba(6, 182, 212, 0.4)',
+                        'neon-pink': '0 0 15px rgba(217, 70, 239, 0.4)',
+                        'neon-green': '0 0 15px rgba(16, 185, 129, 0.4)',
+                        'neon-purple': '0 0 15px rgba(99, 102, 241, 0.4)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for deep space layout */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 9, 19, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
+        
+        /* Backdrop glow effect */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Glassmorphism styling */
+        .glass-panel {
+            background: rgba(10, 12, 26, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .glow-border-cyan:focus {
+            outline: none;
+            border-color: rgba(6, 182, 212, 0.8);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Loading progress animation */
+        @keyframes compileGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .compile-bar {
+            background: linear-gradient(-45deg, #06B6D4, #D946EF, #6366F1, #10B981);
+            background-size: 400% 400%;
+            animation: compileGlow 4s ease infinite;
+        }
+    </style>
+</head>
+<body class="bg-cyber-bg text-slate-100 min-h-screen font-sans relative overflow-x-hidden selection:bg-indigo-500 selection:text-white">
+
+    <!-- Deep Space Starfield Background Canvas -->
+    <canvas id="starfield" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <!-- Glowing Background Atmosphere Orbs -->
+    <div class="glow-orb w-[500px] h-[500px] bg-indigo-600 top-[-100px] left-[-100px]"></div>
+    <div class="glow-orb w-[600px] h-[600px] bg-cyan-600 bottom-[-200px] right-[-100px]"></div>
+    <div class="glow-orb w-[400px] h-[400px] bg-fuchsia-600 top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2"></div>
+
+    <!-- Main Workspace Frame -->
+    <div class="relative z-10 min-h-screen flex flex-col max-w-[1700px] mx-auto px-4 py-3 md:px-6 md:py-4">
+        
+        <!-- Premium Navigation Header -->
+        <header class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4 mb-4 border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <!-- Cosmic Tech Logo -->
+                <div class="relative w-10 h-10 flex items-center justify-center rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 shadow-neon-blue">
+                    <i class="fa-solid fa-atom text-white text-xl animate-spin" style="animation-duration: 10s;"></i>
+                    <div class="absolute inset-[-2px] rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 blur-sm opacity-50 -z-10"></div>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-wider font-orbitron text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-cyan-300">
+                        AURASLIDES <span class="text-xs font-semibold tracking-widest text-cyan-400 font-sans block sm:inline sm:ml-2">POWERED BY D’AI</span>
+                    </h1>
+                    <p class="text-[10px] text-slate-400 font-rajdhani uppercase tracking-widest">Quantum Presentation Sandbox & Compiler</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-rajdhani tracking-wider font-bold bg-indigo-500/10 border border-indigo-500/30 text-indigo-300">
+                    <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                    COMPILER ACTIVE
+                </span>
+                <span class="text-xs text-slate-400 font-mono hidden md:inline">v2.6.0-prod</span>
+            </div>
+        </header>
+
+        <!-- Dynamic Compiler Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow items-stretch">
+            
+            <!-- LEFT CONTROL PANEL (GLASSMORPHIC SYSTEM CONTROL) -->
+            <section class="lg:col-span-4 flex flex-col gap-4">
+                <div class="glass-panel rounded-2xl p-5 flex-grow flex flex-col justify-between shadow-2xl relative overflow-hidden border border-white/10">
+                    <!-- Tech aesthetic grid line overlay -->
+                    <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+
+                    <div class="relative z-10 flex flex-col gap-4">
+                        <div class="flex justify-between items-center pb-2 border-b border-white/5">
+                            <span class="text-xs tracking-wider font-bold text-cyan-400 font-orbitron uppercase flex items-center gap-2">
+                                <i class="fa-solid fa-sliders-h"></i> Cognitive Controller
+                            </span>
+                            <span class="text-[10px] font-mono text-slate-500">SYSTEM: STANDBY</span>
+                        </div>
+
+                        <!-- Slide Prompt Draft Area -->
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-300 uppercase flex justify-between">
+                                <span>Presentation Topic / Prompt Directive</span>
+                                <span class="text-cyan-400 font-mono text-[10px]" id="char-counter">0 / 400</span>
+                            </label>
+                            <textarea id="prompt-input" 
+                                class="w-full h-24 px-4 py-3 rounded-xl bg-slate-950/80 border border-white/10 text-slate-200 placeholder-slate-500 text-sm focus:border-cyan-500 focus:shadow-neon-blue transition duration-300 ease-in-out glow-border-cyan resize-none"
+                                placeholder="Enter what your deck should be about... E.g., Quantum Computing architectures, Colonizing Kepler-186f, or Synthetic Biology in 2050..."
+                                maxlength="400" onkeyup="updateCharCount()"></textarea>
+                        </div>
+
+                        <!-- Presets / Idea Sparkers -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[11px] font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Preset Blueprints</span>
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <button onclick="setPreset('Quantum Cryptography & Holographic Keys')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
+                                    🔑 Quantum Crypto
+                                </button>
+                                <button onclick="setPreset('Colonizing Mars: Geodesic Biospheres')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
+                                    🚀 Mars Biospheres
+                                </button>
+                                <button onclick="setPreset('Artificial Consciousness & Neural Maps')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
+                                    🧠 Synthetic Mind
+                                </button>
+                                <button onclick="setPreset('Deep-Sea Geothermal Mining Cities')" class="px-2.5 py-1.5 rounded-lg bg-white/5 border border-white/5 text-left text-slate-300 hover:bg-indigo-500/10 hover:border-indigo-500/30 transition text-[11px] truncate">
+                                    🌋 Abyss Cities
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Generation Parameter Options -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- Theme Selector -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Aesthetic Theme</label>
+                                <select id="theme-select" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-slate-200 text-xs focus:border-cyan-500 focus:shadow-neon-blue transition duration-300">
+                                    <option value="cyber-neon">Cyber-Neon (Magenta/Cyan)</option>
+                                    <option value="deep-space" selected>Deep Space (Indigo/Violet)</option>
+                                    <option value="biosphere">Biosphere (Emerald/Lime)</option>
+                                    <option value="glass-white">Refractive Glass (Frost/Ice)</option>
+                                </select>
+                            </div>
+
+                            <!-- Slide Length Selection -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Slide Framework Length</label>
+                                <select id="slide-count" class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-white/10 text-slate-200 text-xs focus:border-cyan-500 focus:shadow-neon-blue transition duration-300">
+                                    <option value="3">3 Core Panels</option>
+                                    <option value="4">4 Custom Views</option>
+                                    <option value="5" selected>5 Detailed Views</option>
+                                    <option value="6">6 Expanded Panels</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- AI Cognitive Engine Select -->
+                        <div class="flex flex-col gap-1.5 p-3 rounded-xl bg-slate-950/60 border border-white/5">
+                            <label class="text-xs font-semibold tracking-wider font-rajdhani text-slate-400 uppercase">Cognitive Pipeline</label>
+                            <div class="flex gap-2 mt-1">
+                                <button id="engine-gemini" onclick="selectEngine('gemini')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-cyan-500/40 bg-cyan-500/10 text-cyan-300">
+                                    <i class="fa-solid fa-sparkles mr-1"></i> Gemini 2.5 (No Key)
+                                </button>
+                                <button id="engine-pollinations" onclick="selectEngine('pollinations')" class="flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400">
+                                    <i class="fa-solid fa-circle-nodes mr-1"></i> Kimi K2.6
+                                </button>
+                            </div>
+
+                            <!-- Token input box - Hidden initially unless Pollinations chosen -->
+                            <div id="token-input-container" class="mt-2 hidden">
+                                <input type="password" id="pollinations-key" 
+                                    class="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-200 placeholder-slate-500 text-xs focus:border-purple-500 transition"
+                                    placeholder="Enter Pollinations Key (Bearer Token)">
+                                <span class="text-[9px] text-slate-500 mt-1 block">Your API key is transmitted securely straight to Pollinations end.</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Generate Trigger & Log Status Terminal -->
+                    <div class="relative z-10 flex flex-col gap-3 mt-6">
+                        <!-- Technical Live Log Stream -->
+                        <div class="rounded-xl bg-slate-950/90 border border-white/5 p-3 font-mono text-[10px] h-24 overflow-y-auto flex flex-col gap-1 text-slate-400" id="terminal-log">
+                            <div class="text-cyan-400 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+                                COMPILER INIT COMPLETED...
+                            </div>
+                            <div>[SYSTEM] Core templates compiled into memory.</div>
+                            <div>[SYSTEM] Interactive trails ready to hook.</div>
+                        </div>
+
+                        <!-- Dynamic Trigger Action Button -->
+                        <button id="generate-btn" onclick="initiateGeneration()" class="relative w-full py-4 rounded-xl font-orbitron font-black text-sm tracking-widest text-white transition duration-500 overflow-hidden shadow-neon-purple group flex items-center justify-center gap-2">
+                            <!-- Background color transitioning -->
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-cyan-500 group-hover:opacity-90 transition duration-300"></div>
+                            <div class="absolute inset-[1px] bg-slate-950 rounded-[11px] -z-1 group-hover:bg-slate-950/80 transition duration-300"></div>
+                            
+                            <span class="relative z-10 flex items-center gap-2">
+                                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> INITIATE COGNITIVE DRAFT
+                            </span>
+                            
+                            <!-- Internal subtle particles overlay -->
+                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.1)_0%,transparent_100%)] opacity-0 group-hover:opacity-100 transition duration-500"></div>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RIGHT PRESENTATION STAGE -->
+            <section class="lg:col-span-8 flex flex-col gap-4">
+                <!-- Outer Glass Sandbox -->
+                <div class="glass-panel rounded-2xl p-4 flex-grow flex flex-col justify-between shadow-2xl border border-white/10 min-h-[500px] lg:min-h-0">
+                    
+                    <!-- Sandbox Interactive Control Bar -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-3 pb-3 border-b border-white/10">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-500/80 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+                            <span class="w-3 h-3 rounded-full bg-yellow-500/80 shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
+                            <span class="w-3 h-3 rounded-full bg-green-500/80 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>
+                            <span class="ml-2 text-xs font-orbitron tracking-wider text-slate-300 font-bold uppercase flex items-center gap-1.5">
+                                <i class="fa-solid fa-tv text-cyan-400"></i> Interactive Stage 
+                                <span class="px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-sans" id="active-theme-badge">DEEP SPACE THEME</span>
+                            </span>
+                        </div>
+                        
+                        <!-- Actions on active draft -->
+                        <div class="flex items-center gap-2">
+                            <button onclick="copyGeneratedCode()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Copy raw Slide Sandbox HTML">
+                                <i class="fa-regular fa-clipboard"></i> Copy Sandbox Code
+                            </button>
+                            <button onclick="downloadCode()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-indigo-600 hover:text-white text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Download standalone interactive slideshow">
+                                <i class="fa-solid fa-download"></i> Download Standalone
+                            </button>
+                            <button onclick="toggleFullscreen()" class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 hover:bg-cyan-500 hover:text-white text-slate-300 text-xs font-semibold transition flex items-center gap-1.5" title="Immersive presentation view">
+                                <i class="fa-solid fa-expand"></i> Go Immersive
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sandbox Compilation Status / Progress Loading Bar -->
+                    <div id="compilation-bar-container" class="w-full h-[3px] bg-slate-950 overflow-hidden relative opacity-0 transition duration-300">
+                        <div class="h-full compile-bar w-full"></div>
+                    </div>
+
+                    <!-- Aspect-ratio locked presentation viewport wrapper (Strict 16:9 widescreen layout) -->
+                    <div class="relative w-full flex-grow flex items-center justify-center bg-slate-950 rounded-xl overflow-hidden shadow-inner my-3 group" style="min-height: 380px;">
+                        <div class="w-full h-full max-h-full flex items-center justify-center relative p-1">
+                            <!-- Responsive 16:9 container -->
+                            <div class="w-full relative aspect-video shadow-2xl overflow-hidden rounded-lg bg-slate-900 border border-white/5 flex items-center justify-center">
+                                <iframe id="slide-viewport" 
+                                    class="absolute inset-0 w-full h-full border-0 rounded-lg bg-slate-950 transition duration-500" 
+                                    allow-scripts allow-same-origin allow-popups>
+                                </iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sandbox Status Overlay / Guide footer -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 gap-2 border-t border-white/5 pt-3">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-white/10 font-bold">←</span>
+                            <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-white/10 font-bold">→</span>
+                            <span>Navigate with Keyboard Arrows or Tap Slide Overlay controls inside viewport</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-cyan-400">
+                            <i class="fa-solid fa-circle-nodes text-[10px]"></i>
+                            <span>State Sandbox Sandbox compiled automatically.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+        <!-- System Footer -->
+        <footer class="mt-6 text-center text-slate-500 text-xs flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-white/5 pt-4">
+            <p>© 2026 AuraSlides Sandbox compiled by D’Ai Architecture.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-cyan-400 transition">Design Specs</a>
+                <a href="#" class="hover:text-cyan-400 transition">API Systems</a>
+                <a href="#" class="hover:text-cyan-400 transition">Terms of Protocol</a>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- SCRIPT INFRASTRUCTURE -->
+    <script>
+        // API Management & Engine Configuration
+        const apiKey = ""; // Keep empty string as required by runtime
+        let activeEngine = 'gemini'; // 'gemini' or 'pollinations'
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'auraslides-v2';
+
+        // Starfield Canvas Background logic
+        const canvas = document.getElementById('starfield');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+        const starCount = 120;
+
+        function initStarfield() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < starCount; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5 + 0.5,
+                    vx: (Math.random() - 0.5) * 0.1,
+                    vy: Math.random() * 0.1 + 0.05,
+                    alpha: Math.random() * 0.7 + 0.3
+                });
+            }
+        }
+
+        function animateStarfield() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(165, 180, 252, ${star.alpha})`;
+                ctx.fill();
+
+                // Slow motion
+                star.x += star.vx;
+                star.y += star.vy;
+
+                // Bounce / Re-spawn edge condition
+                if (star.y > canvas.height) {
+                    star.y = 0;
+                    star.x = Math.random() * canvas.width;
+                }
+                if (star.x < 0 || star.x > canvas.width) {
+                    star.vx = -star.vx;
+                }
+            });
+            requestAnimationFrame(animateStarfield);
+        }
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Setup on page load
+        window.onload = function() {
+            initStarfield();
+            animateStarfield();
+            injectDemoPresentation(); // Auto-load amazing demo deck straight out-of-the-box
+        }
+
+        function updateCharCount() {
+            const val = document.getElementById('prompt-input').value;
+            document.getElementById('char-counter').innerText = `${val.length} / 400`;
+        }
+
+        function setPreset(text) {
+            document.getElementById('prompt-input').value = text;
+            updateCharCount();
+            addLog(`[SYSTEM] Applied blueprint theme concept: "${text}"`);
+        }
+
+        function selectEngine(engine) {
+            activeEngine = engine;
+            const gemBtn = document.getElementById('engine-gemini');
+            const polBtn = document.getElementById('engine-pollinations');
+            const tokenBox = document.getElementById('token-input-container');
+
+            if (engine === 'gemini') {
+                gemBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-cyan-500/40 bg-cyan-500/10 text-cyan-300";
+                polBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400";
+                tokenBox.classList.add('hidden');
+                addLog("[SYSTEM] Switched cognitive model node pipeline to Gemini 2.5 (Built-in, keyless execution).");
+            } else {
+                polBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-purple-500/40 bg-purple-500/10 text-purple-300";
+                gemBtn.className = "flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition border border-white/10 bg-white/5 text-slate-400";
+                tokenBox.classList.remove('hidden');
+                addLog("[SYSTEM] Switched cognitive model node pipeline to Pollinations Kimi-K2.6.");
+            }
+        }
+
+        function addLog(message, isError = false) {
+            const term = document.getElementById('terminal-log');
+            const item = document.createElement('div');
+            item.className = isError ? 'text-rose-400' : 'text-slate-300';
+            
+            const now = new Date();
+            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            
+            item.innerHTML = `<span class="text-slate-500 font-bold font-mono">[${timeStr}]</span> ${message}`;
+            term.appendChild(item);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // Demo interactive slide presentation code inside sandbox iframe
+        let generatedSlideCode = "";
+
+        const DEMO_THEME_VARIABLES = {
+            'cyber-neon': {
+                accent: '#06B6D4',
+                accentPink: '#D946EF',
+                gradientStart: 'rgba(7, 9, 21, 0.95)',
+                glowShadow: '0 0 25px 6px #06B6D4'
+            },
+            'deep-space': {
+                accent: '#6366F1',
+                accentPink: '#8B5CF6',
+                gradientStart: 'rgba(5, 5, 15, 0.98)',
+                glowShadow: '0 0 25px 6px #6366F1'
+            },
+            'biosphere': {
+                accent: '#10B981',
+                accentPink: '#84CC16',
+                gradientStart: 'rgba(4, 10, 8, 0.95)',
+                glowShadow: '0 0 25px 6px #10B981'
+            },
+            'glass-white': {
+                accent: '#E2E8F0',
+                accentPink: '#94A3B8',
+                gradientStart: 'rgba(255, 255, 255, 0.03)',
+                glowShadow: '0 0 25px 6px rgba(255, 255, 255, 0.5)'
+            }
+        };
+
+        // Precompiled amazing slideshow to preview immediately
+        function injectDemoPresentation() {
+            addLog("[SYSTEM] Assembling baseline slide deck template into presentation frame...");
+            
+            const demoDeckCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraSlides Baseline Deck</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@600;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-accent: #6366F1;
+            --neon-pink: #D946EF;
+            --bg-base: #03040b;
+        }
+        body {
+            background-color: var(--bg-base);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            cursor: none; /* Hide default cursor */
+        }
+        
+        /* Morphing glowing vector background elements */
+        .glowing-blob {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.18;
+            border-radius: 43% 57% 50% 50% / 40% 45% 55% 60%;
+            animation: morphBlob 16s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes morphBlob {
+            0% {
+                transform: translate(0px, 0px) scale(1) rotate(0deg);
+                border-radius: 43% 57% 50% 50% / 40% 45% 55% 60%;
+            }
+            33% {
+                transform: translate(80px, -50px) scale(1.1) rotate(60deg);
+                border-radius: 50% 40% 55% 45% / 45% 55% 40% 60%;
+            }
+            66% {
+                transform: translate(-50px, 60px) scale(0.9) rotate(120deg);
+                border-radius: 38% 62% 45% 55% / 50% 40% 60% 50%;
+            }
+            100% {
+                transform: translate(20px, -20px) scale(1.05) rotate(180deg);
+                border-radius: 47% 53% 52% 48% / 48% 52% 48% 52%;
+            }
+        }
+
+        /* Customizable Premium Cursor Trail */
+        #cursor-glow {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--neon-accent);
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 25px 6px var(--neon-accent);
+            transition: width 0.2s, height 0.2s, background-color 0.3s;
+        }
+
+        /* Glassmorphic presentation borders */
+        .glass-frame {
+            background: rgba(10, 11, 23, 0.55);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        /* Staggered entrance/exit transitions */
+        .slide {
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+        }
+        
+        /* Staggered transition nodes animation settings */
+        .slide-element {
+            transform: translateY(25px);
+            opacity: 0;
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s ease;
+        }
+        .slide.active .slide-element {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Dynamic delay assignments for high-end cinematic feel */
+        .delay-100 { transition-delay: 100ms; }
+        .delay-200 { transition-delay: 200ms; }
+        .delay-350 { transition-delay: 350ms; }
+        .delay-500 { transition-delay: 500ms; }
+        .delay-650 { transition-delay: 650ms; }
+
+        .slide-layout-active {
+            opacity: 1 !important;
+            transform: scale(1) translate(0px, 0px) !important;
+            pointer-events: auto !important;
+        }
+    </style>
+</head>
+<body class="w-full h-screen text-slate-100 flex items-center justify-center p-4 relative select-none">
+
+    <!-- Interactive Neon Pointer Glow -->
+    <div id="cursor-glow"></div>
+
+    <!-- Morphing glowing atmosphere context blobs -->
+    <div class="glowing-blob w-[45vw] h-[45vw] bg-indigo-600 top-[-10vw] left-[-5vw]" style="animation-duration: 25s;"></div>
+    <div class="glowing-blob w-[50vw] h-[50vw] bg-fuchsia-600 bottom-[-15vw] right-[-10vw]" style="animation-duration: 32s;"></div>
+
+    <!-- Premium 16:9 Presentation Chassis -->
+    <main class="w-full h-full max-w-[1400px] aspect-video glass-frame rounded-2xl flex flex-col justify-between p-6 md:p-10 relative overflow-hidden z-10">
+        <!-- Technical design crosshairs grid -->
+        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:30px_30px] pointer-events-none"></div>
+
+        <!-- Upper slide header layout info -->
+        <header class="flex justify-between items-center relative z-20">
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-orbitron tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-300 font-bold uppercase">
+                    AuraSlides Baseline Sandbox
+                </span>
+                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+            </div>
+            <div class="text-[11px] font-mono text-slate-400 tracking-wider">
+                COGNITIVE DRAFT • D’AI SYSTEM
+            </div>
+        </header>
+
+        <!-- Slides Repository viewport -->
+        <div class="flex-grow flex items-center justify-center relative my-4 overflow-hidden z-20">
+
+            <!-- SLIDE 1: INTRODUCTORY cinematic POSTER -->
+            <div class="slide active absolute inset-0 flex flex-col justify-center items-center text-center opacity-100 scale-100 pointer-events-auto transition-all" id="slide-0">
+                <span class="slide-element text-xs font-orbitron text-cyan-400 tracking-[0.4em] uppercase font-bold mb-3 delay-100">
+                    AuraSlides Architectural Node
+                </span>
+                <h2 class="slide-element text-3.5xl md:text-5xl lg:text-6xl font-black font-orbitron tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-100 to-indigo-200 uppercase mb-4 delay-200">
+                    Quantum Space Systems
+                </h2>
+                <p class="slide-element max-w-xl text-slate-400 text-xs md:text-sm leading-relaxed delay-350">
+                    Harnessing procedural cognitive AI architectures to draft cinematic widescreen scientific layouts on-demand. Seamless animations, dynamic nodes, visual cohesion.
+                </p>
+                <div class="slide-element mt-6 flex gap-4 delay-500">
+                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-mono text-cyan-400">NODE STATUS: ACTIVE</span>
+                    <span class="px-3 py-1 bg-white/5 border border-white/10 rounded-full text-[10px] font-mono text-fuchsia-400">FRAME RATIO: 16:9</span>
+                </div>
+            </div>
+
+            <!-- SLIDE 2: SPLIT TEXT & STATS GRID -->
+            <div class="slide absolute inset-0 grid grid-cols-1 md:grid-cols-2 gap-6 items-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-1">
+                <!-- Text block -->
+                <div class="flex flex-col justify-center">
+                    <span class="slide-element text-[10px] font-orbitron text-indigo-400 tracking-[0.3em] uppercase font-bold mb-2 delay-100">TECHNICAL LAYOUT</span>
+                    <h3 class="slide-element text-2xl md:text-3.5xl font-bold font-orbitron text-white uppercase mb-4 delay-200">
+                        Multilayer Cognitive Mapping
+                    </h3>
+                    <p class="slide-element text-slate-400 text-xs leading-relaxed mb-4 delay-350">
+                        Traditional static slides rely on uniform grids. AuraSlides designs layouts uniquely suited to the contextual output prompt, breaking static bounds.
+                    </p>
+                    <div class="slide-element flex gap-3 delay-500">
+                        <span class="w-10 h-1 rounded-full bg-indigo-500"></span>
+                        <span class="w-3.5 h-1 rounded-full bg-cyan-400"></span>
+                        <span class="w-1.5 h-1 rounded-full bg-fuchsia-500"></span>
+                    </div>
+                </div>
+                <!-- Stats grid block -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-indigo-500/30 transition delay-200">
+                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400">2.6M+</span>
+                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">AI Vectors Synced</h4>
+                    </div>
+                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-fuchsia-500/30 transition delay-350">
+                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-400 to-pink-500">45ms</span>
+                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Latency Compile</h4>
+                    </div>
+                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-green-500/30 transition delay-500">
+                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">100%</span>
+                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Responsive Scaling</h4>
+                    </div>
+                    <div class="slide-element p-4 rounded-xl bg-white/5 border border-white/5 hover:border-yellow-500/30 transition delay-650">
+                        <span class="text-3xl font-orbitron font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-500">0.02</span>
+                        <h4 class="text-[10px] font-rajdhani text-slate-400 uppercase tracking-widest mt-1">Cognitive Friction</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 3: DETAILED NEURAL DIAGRAM -->
+            <div class="slide absolute inset-0 flex flex-col justify-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-2">
+                <div class="text-center max-w-2xl mx-auto mb-6">
+                    <span class="slide-element text-[10px] font-orbitron text-fuchsia-400 tracking-[0.3em] uppercase font-bold mb-1 delay-100 block">SYSTEM FLOW</span>
+                    <h3 class="slide-element text-2xl md:text-3xl font-bold font-orbitron text-white uppercase delay-200">Neural Network Topology</h3>
+                </div>
+                
+                <!-- Mock Diagram element -->
+                <div class="slide-element grid grid-cols-3 gap-3 max-w-3xl mx-auto w-full delay-350">
+                    <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+                        <div class="text-xs font-mono text-cyan-400 mb-1">STATION 01</div>
+                        <div class="text-lg font-bold font-orbitron text-slate-200">D'AI INGESTION</div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div class="bg-cyan-400 h-full w-[85%] rounded-full"></div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white/5 border border-indigo-500/20 rounded-lg text-center relative">
+                        <div class="absolute inset-x-[-15px] top-1/2 -translate-y-1/2 h-0.5 border-t border-dashed border-white/25 -z-10 hidden md:block"></div>
+                        <div class="text-xs font-mono text-indigo-400 mb-1">STATION 02</div>
+                        <div class="text-lg font-bold font-orbitron text-slate-200">SANDBOX RENDER</div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div class="bg-indigo-500 h-full w-[95%] rounded-full"></div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-white/5 border border-white/10 rounded-lg text-center">
+                        <div class="text-xs font-mono text-fuchsia-400 mb-1">STATION 03</div>
+                        <div class="text-lg font-bold font-orbitron text-slate-200">INTERACTION</div>
+                        <div class="w-full bg-slate-950 h-1.5 rounded-full mt-2 overflow-hidden">
+                            <div class="bg-fuchsia-500 h-full w-[75%] rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SLIDE 4: HIGH-FIDELITY AI IMAGE PRESENTATION -->
+            <div class="slide absolute inset-0 grid grid-cols-1 md:grid-cols-12 gap-6 items-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-3">
+                <!-- Image viewport Column -->
+                <div class="md:col-span-7 h-full flex items-center justify-center relative">
+                    <div class="slide-element w-full aspect-video rounded-xl overflow-hidden border border-white/10 bg-slate-950 relative delay-200 shadow-2xl flex items-center justify-center">
+                        <!-- Pollinations Image loading state with custom skeletons -->
+                        <div id="loader-img" class="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center text-xs text-indigo-400 font-mono">
+                            <i class="fa-solid fa-circle-notch animate-spin text-xl mb-2"></i>
+                            ENGAGING PIXEL SYNTHESIS...
+                        </div>
+                        <img src="https://image.pollinations.ai/prompt/Stunning_ultra_realistic_sci_fi_deep_space_control_center_holographic_views_8k_aesthetic?width=800&height=450&nologo=true" 
+                             alt="AI Quantum Nebula Core"
+                             class="w-full h-full object-cover relative z-10 transition duration-500 opacity-0"
+                             onload="this.classList.remove('opacity-0'); document.getElementById('loader-img').style.display = 'none';">
+                    </div>
+                </div>
+                <!-- Content Column -->
+                <div class="md:col-span-5 flex flex-col justify-center">
+                    <span class="slide-element text-[10px] font-orbitron text-emerald-400 tracking-[0.3em] uppercase font-bold mb-2 delay-100">AI GRAPHIC AGENT</span>
+                    <h3 class="slide-element text-2xl md:text-3xl font-bold font-orbitron text-white uppercase mb-4 delay-350">Visual Synth Synthesis</h3>
+                    <p class="slide-element text-slate-400 text-xs leading-relaxed delay-500">
+                        Dynamic prompt parsing compiles context-aware imagery directly into your slide decks using robust Pollinations graphics routes.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SLIDE 5: FUTURISTIC CALL TO ACTION -->
+            <div class="slide absolute inset-0 flex flex-col justify-center items-center text-center opacity-0 scale-95 pointer-events-none transition-all" id="slide-4">
+                <span class="slide-element text-xs font-orbitron text-cyan-400 tracking-[0.4em] uppercase font-bold mb-3 delay-100">
+                    Ready to Initiate
+                </span>
+                <h2 class="slide-element text-3xl md:text-5xl font-black font-orbitron tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400 uppercase mb-4 delay-200">
+                    Your Cognitive Space
+                </h2>
+                <p class="slide-element max-w-md text-slate-400 text-xs leading-relaxed delay-350 mb-6">
+                    Enter any scientific topic or prompt in the left control deck and fire the compiler. D’Ai transforms text concepts into breathtaking dynamic visual vectors.
+                </p>
+                <div class="slide-element flex gap-4 delay-500 justify-center">
+                    <button class="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-500 text-xs font-bold font-orbitron uppercase rounded-lg tracking-wider hover:shadow-neon-blue transition duration-300">
+                        Begin Quantum Journey
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Lower slide controller interface -->
+        <footer class="flex justify-between items-center relative z-20 pt-4 border-t border-white/5">
+            <!-- Navigation controls -->
+            <div class="flex items-center gap-3">
+                <button onclick="prevSlide()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 text-xs transition">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <span id="slide-tracker" class="text-xs font-mono font-bold tracking-wider text-slate-400">1 / 5</span>
+                <button onclick="nextSlide()" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 text-xs transition">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+
+            <!-- Line progress meter -->
+            <div class="flex-grow max-w-[40%] mx-6 h-[2px] bg-slate-800 rounded-full overflow-hidden hidden md:block">
+                <div id="slide-progress" class="h-full bg-gradient-to-r from-indigo-500 to-cyan-400 rounded-full transition-all duration-300" style="width: 20%;"></div>
+            </div>
+
+            <div class="flex gap-2">
+                <span class="text-[10px] font-mono text-slate-500">PRESS LEFT / RIGHT ARROWS</span>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Interactive script runtime compilation -->
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 5;
+
+        function setSlide(index) {
+            if(index < 0 || index >= totalSlides) return;
+            
+            // Remove active tags
+            const activeSlide = document.querySelector('.slide.active');
+            if(activeSlide) {
+                activeSlide.classList.remove('active', 'slide-layout-active');
+                activeSlide.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+            }
+
+            // Set target active
+            const targetSlide = document.getElementById('slide-' + index);
+            if(targetSlide) {
+                targetSlide.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                targetSlide.classList.add('active', 'slide-layout-active');
+            }
+
+            // Update footer metrics
+            document.getElementById('slide-tracker').innerText = (index + 1) + ' / ' + totalSlides;
+            document.getElementById('slide-progress').style.width = ((index + 1) / totalSlides * 100) + '%';
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            if(currentSlide < totalSlides - 1) {
+                setSlide(currentSlide + 1);
+            } else {
+                setSlide(0); // Cycle back
+            }
+        }
+
+        function prevSlide() {
+            if(currentSlide > 0) {
+                setSlide(currentSlide - 1);
+            } else {
+                setSlide(totalSlides - 1); // Cycle to end
+            }
+        }
+
+        // Catch navigation hotkeys inside viewport
+        document.addEventListener('keydown', function(e) {
+            if(e.key === "ArrowRight") {
+                nextSlide();
+            } else if (e.key === "ArrowLeft") {
+                prevSlide();
+            }
+        });
+
+        // Touch swipe interactions for mobile
+        let touchstartX = 0;
+        let touchendX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        });
+
+        function handleGesture() {
+            if (touchendX < touchstartX - 50) nextSlide();
+            if (touchendX > touchstartX + 50) prevSlide();
+        }
+
+        // Cursor coordinates tracker
+        const cursorGlow = document.getElementById('cursor-glow');
+        document.addEventListener('mousemove', function(e) {
+            cursorGlow.style.left = e.clientX + 'px';
+            cursorGlow.style.top = e.clientY + 'px';
+        });
+
+        // Small expand animation on hover elements
+        const hoverables = document.querySelectorAll('button, a, .interactive-item');
+        hoverables.forEach(item => {
+            item.addEventListener('mouseenter', () => {
+                cursorGlow.style.width = '35px';
+                cursorGlow.style.height = '35px';
+                cursorGlow.style.background = 'var(--neon-pink)';
+                cursorGlow.style.boxShadow = '0 0 25px 6px var(--neon-pink)';
+            });
+            item.addEventListener('mouseleave', () => {
+                cursorGlow.style.width = '15px';
+                cursorGlow.style.height = '15px';
+                cursorGlow.style.background = 'var(--neon-accent)';
+                cursorGlow.style.boxShadow = '0 0 25px 6px var(--neon-accent)';
+            });
+        });
+    <\/script>
+</body>
+</html>`;
+
+            generatedSlideCode = demoDeckCode;
+            const viewport = document.getElementById('slide-viewport');
+            viewport.srcdoc = demoDeckCode;
+            addLog("[SYSTEM] Baseline presentation compiled and active inside stage sandbox.");
+        }
+
+        // Adjust demo slide styling matching selections inside interface controls
+        document.getElementById('theme-select').addEventListener('change', function(e) {
+            const theme = e.target.value;
+            const variables = DEMO_THEME_VARIABLES[theme];
+            if (!variables) return;
+
+            // Log update
+            addLog(`[COMPILER] Intercepting CSS modules. Adjusting theme vectors to: "${theme.toUpperCase()}"`);
+            
+            // Re-compile sandbox dynamically with customized parameters if we want, or just update style in current code
+            const badge = document.getElementById('active-theme-badge');
+            badge.innerText = theme.replace('-', ' ').toUpperCase() + ' THEME';
+            
+            if (theme === 'cyber-neon') {
+                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-sans";
+            } else if (theme === 'deep-space') {
+                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-sans";
+            } else if (theme === 'biosphere') {
+                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-sans";
+            } else {
+                badge.className = "px-1.5 py-0.5 rounded text-[9px] bg-slate-100/10 text-slate-100 border border-slate-100/20 font-sans";
+            }
+        });
+
+        // Master compilation flow launcher
+        async function initiateGeneration() {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            if(!prompt) {
+                addLog("[ERROR] Generation cancelled: Prompt field cannot be empty.", true);
+                return;
+            }
+
+            const theme = document.getElementById('theme-select').value;
+            const slideCount = document.getElementById('slide-count').value;
+            
+            addLog(`[COMPILER] Initiating cognitive draft sequence...`);
+            addLog(`[PARAMETER] Topic: "${prompt}"`);
+            addLog(`[PARAMETER] Theme: ${theme.toUpperCase()} | Slides requested: ${slideCount}`);
+            
+            // Update Compilation indicator UI
+            const progressBar = document.getElementById('compilation-bar-container');
+            const genBtn = document.getElementById('generate-btn');
+            
+            progressBar.style.opacity = '1';
+            genBtn.disabled = true;
+            genBtn.classList.add('opacity-70');
+            genBtn.innerHTML = `<i class="fa-solid fa-gear animate-spin"></i> SYNTHESIZING DRAFT MODEL...`;
+
+            try {
+                // Compile customized highly structural system command mapping
+                const finalSystemInstructions = assembleSystemPrompt(theme, slideCount);
+                const userPrompt = `Generate a slide presentation on this topic: "${prompt}". Provide exactly ${slideCount} fully functional interactive slides. Ensure the theme is ${theme}.`;
+
+                let rawHTML = "";
+
+                if (activeEngine === 'gemini') {
+                    // Gemini Direct Web Ingestion
+                    rawHTML = await callGeminiAPI(finalSystemInstructions, userPrompt);
+                } else {
+                    // Pollinations Direct Integration
+                    const token = document.getElementById('pollinations-key').value.trim();
+                    if (!token) {
+                        throw new Error("Missing Pollinations API Authorization Bearer Key inside connection panel.");
+                    }
+                    rawHTML = await callPollinationsAPI(finalSystemInstructions, userPrompt, token);
+                }
+
+                // Clean and normalize LLM Output
+                const cleanedHTML = parseLLMResponse(rawHTML);
+                if (!cleanedHTML || cleanedHTML.length < 100) {
+                    throw new Error("Compiled payload outputted insufficient schema metrics or null data.");
+                }
+
+                // Inject into Viewport Frame
+                generatedSlideCode = cleanedHTML;
+                const viewport = document.getElementById('slide-viewport');
+                viewport.srcdoc = cleanedHTML;
+
+                addLog(`[RENDER] Compilation completed. Render engine dynamically updated interactive iframe!`);
+                
+            } catch (err) {
+                addLog(`[ERROR] Direct compile pipeline crashed: ${err.message}`, true);
+            } finally {
+                progressBar.style.opacity = '0';
+                genBtn.disabled = false;
+                genBtn.classList.remove('opacity-70');
+                genBtn.innerHTML = `<div class="absolute inset-0 bg-gradient-to-r from-indigo-600 via-fuchsia-600 to-cyan-500"></div>
+                <div class="absolute inset-[1px] bg-slate-950 rounded-[11px] -z-1"></div>
+                <span class="relative z-10 flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> INITIATE COGNITIVE DRAFT
+                </span>`;
+            }
+        }
+
+        // Compile custom Prompt parameters telling Kimi / Gemini exactly how to output slide framework
+        function assembleSystemPrompt(theme, slideCount) {
+            let colorStyles = "";
+            if (theme === 'cyber-neon') {
+                colorStyles = `
+                    --neon-accent: #06B6D4;
+                    --neon-pink: #D946EF;
+                    --bg-base: #070913;
+                    --glowShadow: 0 0 25px 6px #06B6D4;
+                `;
+            } else if (theme === 'deep-space') {
+                colorStyles = `
+                    --neon-accent: #6366F1;
+                    --neon-pink: #8B5CF6;
+                    --bg-base: #04050f;
+                    --glowShadow: 0 0 25px 6px #6366F1;
+                `;
+            } else if (theme === 'biosphere') {
+                colorStyles = `
+                    --neon-accent: #10B981;
+                    --neon-pink: #84CC16;
+                    --bg-base: #030806;
+                    --glowShadow: 0 0 25px 6px #10B981;
+                `;
+            } else if (theme === 'glass-white') {
+                colorStyles = `
+                    --neon-accent: #F1F5F9;
+                    --neon-pink: #CBD5E1;
+                    --bg-base: #1E293B;
+                    --glowShadow: 0 0 25px 6px rgba(255,255,255,0.4);
+                `;
+            }
+
+            return `You are "AuraSlides Compiler Engine", a state-of-the-art interactive slideshow builder.
+Your objective is to output ONLY a single, fully-formed, executable block of raw HTML code representing a breathtaking interactive slideshow containing exactly ${slideCount} slides based on the user's prompt.
+
+CRITICAL ARCHITECTURE DIRECTIVES:
+1. OUTPUT STRUCTURE: Do not write conversational fluff. Output ONLY the raw HTML code block. The code must be clean, syntactically correct, and run immediately inside an iframe's srcdoc.
+2. TAILWIND & FONTS: Include CDN scripts for Tailwind CSS, FontAwesome icons, and Google Fonts (specifically 'Orbitron', 'Rajdhani', 'Inter').
+3. DYNAMIC VECTOR BACKGROUNDS: Implement slow-morphing backdrop gradient blobs using custom CSS variables and infinite keyframe scaling/translating transforms (using morphing border-radius tricks).
+4. THEME INTEGRATION: Incorporate the following visual theme parameters in the global :root styling:
+   ${colorStyles}
+5. GLASSMORPHIC CHASSIS: Format the master outer layout container as a premium widescreen 16:9 ratio wrapper box ('aspect-video w-full h-full glass-frame') containing structural aesthetic lines or technical design grids.
+6. SLIDE LAYOUT FREEDOM: Do not use identical layouts! Every slide MUST be designed uniquely:
+   - Slide 1: Cinematic, bold introductory poster layout.
+   - Slide 2: High-contrast statistical or technical layout using glowing card items.
+   - Slide 3: Concept diagram / split layout displaying system architecture.
+   - Slide 4: Narrative deep dive with a central focal quote or bold typographic highlights.
+   - Slide 5: High-fidelity image layout referencing a curated AI graphic (see item 8 below).
+7. ELEMENT-LEVEL ANIMATIONS: Create entrance and exit animations for each slide element. When a slide is activated with class "slide-layout-active" (or "active"), its child tags must slide up, scale, or fade with staggered CSS transition delays (e.g. "delay-100", "delay-200", "delay-500").
+8. AI GRAPHIC INTEGRATION: At least one slide must include an image directly referencing:
+   'https://image.pollinations.ai/prompt/{highly_detailed_descriptive_prompt}?width=800&height=450&nologo=true' where {highly_detailed_descriptive_prompt} represents custom aesthetic keywords matching the presentation topic. Implement a loading skeleton overlay that hides once the image loads completely.
+9. INTERACTIVE NAVIGATORS: Embed navigation UI elements (Prev button, Next button, progress line indicator, slide metrics e.g. "1 / 5", keyboard arrow listeners for ArrowLeft/ArrowRight, and mobile swipe listeners) configured with stable inline Javascript.
+10. INTERACTIVE CURSOR GLOW: Hide the default cursor using 'cursor: none' and code a gorgeous custom circular neon glow tracking mouse coordinates. Hovering buttons or links must scale the glow and shift its glow variables.
+
+Your slide content must be highly informative, scientific, specific, and professionally written (do not use dummy text or lorem ipsum). Let's generate a masterpieces.`;
+        }
+
+        // Call Gemini 2.5 API with retry mechanics
+        async function callGeminiAPI(systemPrompt, userPrompt) {
+            addLog("[API] Dispatching payload to Gemini Cognitive Node... (Built-in Keyless Endpoint)");
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userPrompt }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
+            };
+
+            return await fetchWithBackoff(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        }
+
+        // Call Pollinations completions route Kimi-K2.6 API with retry mechanics
+        async function callPollinationsAPI(systemPrompt, userPrompt, token) {
+            addLog("[API] Dispatching payload to Pollinations Kimi-K2.6 Engine Node...");
+            
+            const url = "https://gen.pollinations.ai/v1/chat/completions";
+            const payload = {
+                model: "kimi-k2.6",
+                messages: [
+                    { role: "system", content: systemPrompt },
+                    { role: "user", content: userPrompt }
+                ]
+            };
+
+            return await fetchWithBackoff(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            }, true);
+        }
+
+        // Helper API Fetch wrapper with Exponential Backoff retry routine (Rule requirements)
+        async function fetchWithBackoff(url, options, isPollinations = false) {
+            let delay = 1000;
+            const maxRetries = 5;
+
+            for (let i = 0; i <= maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    
+                    if (!response.ok) {
+                        const errText = await response.text();
+                        throw new Error(`HTTP Error Status: ${response.status} - ${errText}`);
+                    }
+
+                    const json = await response.json();
+                    
+                    if (isPollinations) {
+                        return json.choices?.[0]?.message?.content || "";
+                    } else {
+                        // Extract text from Gemini structure
+                        return json.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    }
+
+                } catch (error) {
+                    if (i === maxRetries) {
+                        throw new Error(`Connection crashed after ${maxRetries} retry attempts: ${error.message}`);
+                    }
+                    // Wait for exponential delay (1s, 2s, 4s, 8s, 16s) without console cluttering as requested
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        // Robust extractor to clean the LLM responses of any markdown code block decoration
+        function parseLLMResponse(raw) {
+            addLog("[COMPILER] Decompiling raw LLM text block...");
+            
+            // Check for ```html code wrap
+            const matchHtml = raw.match(/```html([\s\S]*?)```/);
+            if(matchHtml && matchHtml[1]) {
+                return matchHtml[1].trim();
+            }
+
+            // Check for general ``` code wrap
+            const matchCode = raw.match(/```([\s\S]*?)```/);
+            if(matchCode && matchCode[1]) {
+                return matchCode[1].trim();
+            }
+
+            // Fallback: If no codeblocks found, check for HTML tag structural match
+            if (raw.trim().startsWith("<") || raw.includes("<html") || raw.includes("<!DOCTYPE")) {
+                return raw.trim();
+            }
+
+            // Attempt basic clean if there is any leading message content before the code block
+            const startIdx = raw.indexOf("<!DOCTYPE");
+            if (startIdx !== -1) {
+                return raw.slice(startIdx).trim();
+            }
+
+            return raw.trim();
+        }
+
+        // Standardized Copy to clipboard utility (Using system instructions fallback)
+        function copyGeneratedCode() {
+            if (!generatedSlideCode) {
+                addLog("[ERROR] Copy action cancelled: Stage viewport is currently empty.", true);
+                return;
+            }
+
+            const tempTextarea = document.createElement("textarea");
+            tempTextarea.value = generatedSlideCode;
+            document.body.appendChild(tempTextarea);
+            tempTextarea.select();
+            
+            try {
+                // Clipboard copy fallback method as requested in system instructions
+                const successful = document.execCommand("copy");
+                if (successful) {
+                    addLog("[SYSTEM] Successfully copied standalone presentation code to clipboard!");
+                } else {
+                    addLog("[ERROR] Failed to execute clipboard copy routine.", true);
+                }
+            } catch (err) {
+                addLog(`[ERROR] Copy execution error: ${err.message}`, true);
+            }
+            document.body.removeChild(tempTextarea);
+        }
+
+        // Standalone Slide Document Downloader
+        function downloadCode() {
+            if (!generatedSlideCode) {
+                addLog("[ERROR] Download action cancelled: Stage viewport is currently empty.", true);
+                return;
+            }
+
+            const blob = new Blob([generatedSlideCode], { type: "text/html;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = "AuraSlides_Dynamic_Deck.html";
+            document.body.appendChild(link);
+            link.click();
+            
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            addLog("[SYSTEM] Interactive presentation document downloaded successfully.");
+        }
+
+        // Toggle Stage Fullscreen
+        function toggleFullscreen() {
+            const viewport = document.getElementById('slide-viewport');
+            if (viewport.requestFullscreen) {
+                viewport.requestFullscreen();
+            } else if (viewport.webkitRequestFullscreen) { /* Safari */
+                viewport.webkitRequestFullscreen();
+            } else if (viewport.msRequestFullscreen) { /* IE11 */
+                viewport.msRequestFullscreen();
+            }
+            addLog("[SYSTEM] Sandbox presentation entered immersive fullscreen viewport.");
+        }
+    </script>
+</body>
+</html>
