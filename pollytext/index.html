@@ -637,9 +637,11 @@
             box-shadow: 0 0 8px var(--accent-rose);
         }
 
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
+        @media (prefers-reduced-motion: no-preference) {
+            @keyframes pulse-dot {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.4; }
+            }
         }
 
         .card-model-name {
@@ -899,7 +901,7 @@
     <div class="ambient-glow-1"></div>
     <div class="ambient-glow-2"></div>
 
-    <!-- Screen 2: Main Arena Screen (Direct Launch) -->
+    <!-- Main Arena Screen -->
     <div id="arena-screen">
         <!-- Header -->
         <header class="header">
@@ -917,6 +919,10 @@
                 <div id="badge-queue-mode" class="queue-badge parallel">
                     <i class="fa-solid fa-bolt"></i>
                     <span>Parallel Multithreading</span>
+                </div>
+                <div class="header-badge">
+                    <i class="fa-solid fa-key text-brand-primary"></i>
+                    <span id="badge-auth-state">Master Key Active</span>
                 </div>
             </div>
         </header>
@@ -942,7 +948,7 @@
                     </div>
                 </div>
 
-                <!-- Only Your Explicitly Selected Models Grid -->
+                <!-- Model Selector Grid -->
                 <div class="side-card">
                     <div class="side-title">
                         <span>Compare Models</span>
@@ -995,7 +1001,7 @@
                     <!-- Execute Actions Bottom Row -->
                     <div class="console-bottom-bar">
                         <div class="dashboard-info-text">
-                            <i class="fa-solid fa-info-circle"></i> Master API Key integrated. Running all selected models concurrently in Parallel mode.
+                            <i class="fa-solid fa-info-circle"></i> Master API Key integrated. Adaptive fallback handles non-streaming outputs seamlessly.
                         </div>
                         <button id="btn-trigger-benchmark" class="btn-benchmark-launcher">
                             <i class="fa-solid fa-gauge" id="trigger-btn-icon"></i>
@@ -1035,7 +1041,7 @@
 
     <!-- Benchmark Arena Client Controller -->
     <script>
-        // Official authenticated API route 
+        // Official authenticated API route
         const API_STREAM_ENDPOINT = "https://gen.pollinations.ai/v1/chat/completions";
         
         // Hardcoded Master API key
@@ -1044,6 +1050,7 @@
         // Required premium models to evaluate
         const ALLOWED_MODELS = [
             "polly", // Compulsory base
+            "openai", // Newly added model
             "perplexity-reasoning",
             "glm",
             "qwen-large",
@@ -1056,7 +1063,7 @@
             apiKey: MASTER_API_KEY,
             activeTab: 'chat',
             base64Image: null,
-            selectedModels: ["polly", "openai-large"], // default selections, polly must stay
+            selectedModels: ["polly", "openai"], // Default baseline evaluation pair
             testingRunning: false
         };
 
@@ -1172,7 +1179,7 @@
                 const card = document.createElement('div');
                 card.className = `model-option-card ${isSelected ? 'selected' : ''} ${isPolly ? 'locked' : ''}`;
                 
-                const canDoVision = ["openai-large", "perplexity-reasoning", "grok", "qwen-large"].includes(mName);
+                const canDoVision = ["openai", "openai-large", "perplexity-reasoning", "grok", "qwen-large"].includes(mName);
                 const visionBadgeHtml = canDoVision ? `<span style="font-size: 0.55rem; background-color: rgba(167, 139, 250, 0.2); color: var(--brand-hover); padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-weight: 800;">VISION</span>` : '';
                 const compulsoryBadgeHtml = isPolly ? `<span style="font-size: 0.55rem; background-color: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); padding: 0.15rem 0.35rem; border-radius: 0.25rem; font-weight: 800;">COMPULSORY</span>` : '';
 
@@ -1345,7 +1352,7 @@
         async function executeBenchmarks() {
             if (AppState.selectedModels.length === 0) return alert("Select at least one model to benchmark.");
             if (AppState.activeTab === 'vision' && !AppState.base64Image) {
-                return alert("Please upload or load an target image for vision benchmarking first.");
+                return alert("Please upload or load a target image for vision benchmarking first.");
             }
 
             setBenchmarkRunningState(true);
@@ -1404,6 +1411,9 @@
             const DOMFooter = document.getElementById(`footer-actions-${modelName}`);
             const DOMRunBtn = document.getElementById(`btn-run-${modelName}`);
 
+            // Enforce stream = false ONLY for the polly model
+            const shouldStream = modelName !== "polly";
+
             try {
                 DOMCard.className = "benchmark-box-card running";
                 DOMDot.className = "status-dot active";
@@ -1426,7 +1436,7 @@
                     body: JSON.stringify({
                         model: modelName,
                         messages,
-                        stream: true,
+                        stream: shouldStream,
                         temperature: 0.6
                     })
                 });
@@ -1436,63 +1446,77 @@
                     throw new Error(`HTTP Error ${res.status}: ${errMsg}`);
                 }
 
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let finished = false;
-                let textBuffer = "";
-
                 DOMTerminal.innerHTML = "";
 
-                while (!finished) {
-                    const { value, done } = await reader.read();
-                    if (done) {
-                        finished = true;
-                        break;
-                    }
+                if (!shouldStream) {
+                    // Non-streaming handler for Polly model
+                    const rawData = await res.json();
+                    
+                    // Mark TTFT exactly when non-streamed JSON returns
+                    tFirstToken = performance.now();
+                    const ttftVal = (tFirstToken - tStart).toFixed(0);
+                    DOMTtft.textContent = `${ttftVal}ms`;
+                    
+                    gatheredText = rawData.choices?.[0]?.message?.content || "";
+                    DOMTerminal.textContent = gatheredText;
+                } else {
+                    // Streamed reader for all other responsive models
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let finished = false;
+                    let textBuffer = "";
 
-                    if (value) {
-                        if (!tFirstToken) {
-                            tFirstToken = performance.now();
-                            const ttft = (tFirstToken - tStart).toFixed(0);
-                            DOMTtft.textContent = `${ttft}ms`;
+                    while (!finished) {
+                        const { value, done } = await reader.read();
+                        if (done) {
+                            finished = true;
+                            break;
                         }
 
-                        textBuffer += decoder.decode(value, { stream: true });
-                        const lines = textBuffer.split('\n');
-                        textBuffer = lines.pop(); // Hold onto incomplete items
+                        if (value) {
+                            if (!tFirstToken) {
+                                tFirstToken = performance.now();
+                                const ttft = (tFirstToken - tStart).toFixed(0);
+                                DOMTtft.textContent = `${ttft}ms`;
+                            }
 
-                        for (const line of lines) {
-                            const trimmed = line.trim();
-                            if (!trimmed || trimmed === 'data: [DONE]') continue;
+                            textBuffer += decoder.decode(value, { stream: true });
+                            const lines = textBuffer.split('\n');
+                            textBuffer = lines.pop(); // Hold onto incomplete items
 
-                            if (trimmed.startsWith('data: ')) {
-                                try {
-                                    const parsed = JSON.parse(trimmed.slice(6));
-                                    const nextChunk = parsed.choices?.[0]?.delta?.content || "";
-                                    if (nextChunk) {
-                                        gatheredText += nextChunk;
-                                        DOMTerminal.textContent = gatheredText;
-                                        DOMTerminal.scrollTop = DOMTerminal.scrollHeight;
-                                    }
-                                } catch(e) {}
+                            for (const line of lines) {
+                                const trimmed = line.trim();
+                                if (!trimmed || trimmed === 'data: [DONE]') continue;
+
+                                if (trimmed.startsWith('data: ')) {
+                                    try {
+                                        const parsed = JSON.parse(trimmed.slice(6));
+                                        const nextChunk = parsed.choices?.[0]?.delta?.content || "";
+                                        if (nextChunk) {
+                                            gatheredText += nextChunk;
+                                            DOMTerminal.textContent = gatheredText;
+                                            DOMTerminal.scrollTop = DOMTerminal.scrollHeight;
+                                        }
+                                    } catch(e) {}
+                                }
                             }
                         }
                     }
+
+                    // Append remaining items in buffer
+                    if (textBuffer && textBuffer.startsWith('data: ')) {
+                        try {
+                            const parsed = JSON.parse(textBuffer.trim().slice(6));
+                            const nextChunk = parsed.choices?.[0]?.delta?.content || "";
+                            if (nextChunk) {
+                                gatheredText += nextChunk;
+                                DOMTerminal.textContent = gatheredText;
+                            }
+                        } catch(e) {}
+                    }
                 }
 
-                // Append remaining items in buffer
-                if (textBuffer && textBuffer.startsWith('data: ')) {
-                    try {
-                        const parsed = JSON.parse(textBuffer.trim().slice(6));
-                        const nextChunk = parsed.choices?.[0]?.delta?.content || "";
-                        if (nextChunk) {
-                            gatheredText += nextChunk;
-                            DOMTerminal.textContent = gatheredText;
-                        }
-                    } catch(e) {}
-                }
-
-                // Evaluation Finished
+                // Evaluation Finished statistics compilation
                 const tEnd = performance.now();
                 const durationSec = ((tEnd - tStart) / 1000).toFixed(2);
                 const estimatedTokens = Math.round(gatheredText.length / 4);
@@ -1539,4 +1563,4 @@
         window.onload = initApp;
     </script>
 </body>
-</html>
+</html>p
