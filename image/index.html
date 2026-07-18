@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FLUX Minimal Studio (NVIDIA Only)</title>
+    <title>FLUX Minimal Studio</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -15,9 +15,6 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #060811; }
         .code-font { font-family: 'JetBrains Mono', monospace; }
-        /* Custom scrollbar for error box */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
@@ -31,16 +28,14 @@
                 </div>
                 <div>
                     <h1 class="text-xs font-bold tracking-tight text-slate-100">FLUX Studio</h1>
-                    <p class="text-[9px] text-slate-500">Pure HTML Direct Node</p>
+                    <p class="text-[9px] text-slate-500">Secure Vercel Engine</p>
                 </div>
             </div>
-
-            <!-- Proxy Toggle -->
-            <div class="flex items-center gap-1.5 bg-slate-950 border border-slate-900 px-2 py-1 rounded-lg" title="Bypasses browser CORS blocks">
-                <span class="text-[9px] text-slate-400 font-medium code-font">Route via Proxy</span>
-                <button id="proxy-toggle" onclick="toggleProxy()" class="relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-indigo-600" role="switch" aria-checked="true">
-                    <span id="proxy-thumb" class="pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-4"></span>
-                </button>
+            <!-- Server Status -->
+            <div class="flex items-center gap-1 bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg">
+                <span class="text-[9px] text-emerald-400 font-bold code-font tracking-wide">
+                    <i class="fa-solid fa-server mr-1"></i> ACTIVE
+                </span>
             </div>
         </div>
     </header>
@@ -80,8 +75,8 @@
             <!-- Loader Overlay -->
             <div id="loader-overlay" class="absolute inset-0 bg-slate-950/95 flex-col items-center justify-center p-6 text-center hidden z-30">
                 <div class="w-8 h-8 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin mb-3"></div>
-                <h4 id="loader-headline" class="text-xs font-semibold text-slate-200">Querying NVIDIA</h4>
-                <p id="loader-status" class="text-[9px] text-indigo-400 mt-1 code-font">Compiling tensor payload...</p>
+                <h4 id="loader-headline" class="text-xs font-semibold text-slate-200">Querying Serverless Function</h4>
+                <p id="loader-status" class="text-[9px] text-indigo-400 mt-1 code-font">Generating securely...</p>
             </div>
         </div>
 
@@ -89,7 +84,7 @@
         <div class="flex flex-col gap-3.5">
 
             <!-- Prompt Input -->
-            <textarea id="prompt-input" rows="3" class="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-inner" placeholder="Enter your prompt for the NVIDIA AI..."></textarea>
+            <textarea id="prompt-input" rows="3" class="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-inner" placeholder="Enter your prompt for the AI..."></textarea>
 
             <!-- Sample Chips -->
             <div class="flex flex-col gap-1.5">
@@ -100,67 +95,81 @@
                 </div>
             </div>
 
-            <!-- Generate Button -->
-            <button id="generate-btn" onclick="generate()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.99]">
-                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                <span>Generate with NVIDIA</span>
-            </button>
-
-            <!-- CORS Error / Troubleshooting Banner (Hidden by default) -->
-            <div id="cors-error-box" class="hidden bg-slate-900 border border-rose-500/30 rounded-xl overflow-hidden shadow-lg mt-2">
-                <div class="bg-rose-500/10 px-3 py-2 border-b border-rose-500/20 flex items-center gap-2 text-rose-400">
-                    <i class="fa-solid fa-shield-halved text-sm"></i>
-                    <span class="text-xs font-bold uppercase tracking-wide">Browser Security Blocked Request</span>
+            <!-- Upload Zone -->
+            <div class="bg-slate-950 border border-slate-900 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 relative overflow-hidden" id="upload-preview-container">
+                        <i class="fa-solid fa-image text-[10px]" id="upload-fallback-icon"></i>
+                        <img id="upload-thumbnail" class="w-full h-full object-cover hidden absolute inset-0" alt="Thumbnail">
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold block text-slate-300">Base Image Upload</span>
+                        <span id="upload-status-text" class="text-[8px] text-slate-500 block">Optional image edit layer</span>
+                    </div>
                 </div>
-                <div class="p-3 text-[10px] text-slate-300 flex flex-col gap-2">
-                    <p>Your browser blocked the connection to NVIDIA because of <strong>CORS security policies</strong>. Since you are using pure HTML without a backend server, you must bypass the browser.</p>
-                    <p class="font-bold text-slate-100">How to fix it right now:</p>
-                    <ol class="list-decimal pl-4 flex flex-col gap-1 text-slate-400">
-                        <li>Install the <strong class="text-indigo-400">"Allow CORS"</strong> extension on Chrome/Edge/Firefox.</li>
-                        <li>Click the extension icon and turn it <strong class="text-emerald-400">ON</strong>.</li>
-                        <li>Turn the "Route via Proxy" toggle <strong class="text-rose-400">OFF</strong> at the top of this app.</li>
-                        <li>Click Generate again. It will connect perfectly.</li>
-                    </ol>
+                
+                <div class="flex gap-1">
+                    <label class="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[9px] font-semibold px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border border-slate-800">
+                        Choose <input type="file" id="photo-uploader" accept="image/*" class="hidden" onchange="processPhotoUpload(this)">
+                    </label>
+                    <button id="remove-upload-btn" onclick="clearPhotoUpload()" class="bg-slate-900 hover:bg-slate-850 text-rose-500 text-[9px] font-semibold px-2 py-1.5 rounded-lg border border-slate-800 hidden"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
 
+            <!-- Generate Button -->
+            <button id="generate-btn" onclick="generate()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-[0.99]">
+                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                <span>Generate Masterpiece</span>
+            </button>
+
         </div>
-
     </main>
-
-    <!-- HARDCODED API KEY -->
-    <input type="hidden" id="api-key-input" value="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">
 
     <!-- TOAST NOTIFICATIONS -->
     <div id="toast-box" class="fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm z-50 pointer-events-none flex flex-col gap-1.5"></div>
 
     <script>
-        const NVIDIA_ENDPOINT = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b";
-        let useProxy = true;
         let timerInterval = null;
-
-        // Toggle the proxy routing
-        function toggleProxy() {
-            useProxy = !useProxy;
-            const toggle = document.getElementById('proxy-toggle');
-            const thumb = document.getElementById('proxy-thumb');
-            
-            if (useProxy) {
-                toggle.classList.add('bg-indigo-600');
-                toggle.classList.remove('bg-slate-800');
-                thumb.className = "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-4";
-                showToast("Proxy ON (Attempting to bypass CORS via web proxy)");
-            } else {
-                toggle.classList.remove('bg-indigo-600');
-                toggle.classList.add('bg-slate-800');
-                thumb.className = "pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0";
-                showToast("Proxy OFF (Direct connection. Requires Browser Extension!)");
-            }
-        }
+        let baseImageBase64 = null;
 
         function applyPreset(prompt) {
             document.getElementById('prompt-input').value = prompt;
             showToast("Prompt loaded");
+        }
+
+        function processPhotoUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    baseImageBase64 = e.target.result;
+                    document.getElementById('upload-thumbnail').src = baseImageBase64;
+                    document.getElementById('upload-thumbnail').classList.remove('hidden');
+                    document.getElementById('upload-fallback-icon').classList.add('hidden');
+                    document.getElementById('upload-status-text').innerText = "Image attached (Active)";
+                    document.getElementById('upload-status-text').classList.add('text-indigo-400');
+                    document.getElementById('remove-upload-btn').classList.remove('hidden');
+                    showToast("Photo attached");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearPhotoUpload() {
+            baseImageBase64 = null;
+            document.getElementById('photo-uploader').value = "";
+            document.getElementById('upload-thumbnail').src = "";
+            document.getElementById('upload-thumbnail').classList.add('hidden');
+            document.getElementById('upload-fallback-icon').classList.remove('hidden');
+            document.getElementById('upload-status-text').innerText = "Optional image edit layer";
+            document.getElementById('upload-status-text').classList.remove('text-indigo-400');
+            document.getElementById('remove-upload-btn').classList.add('hidden');
+        }
+
+        function cleanBase64(dataURL) {
+            if (!dataURL) return "";
+            const parts = dataURL.split(',');
+            return parts.length > 1 ? parts[1] : parts[0];
         }
 
         function downloadOutputImage() {
@@ -176,19 +185,13 @@
         }
 
         async function generate() {
-            const apiKey = document.getElementById('api-key-input').value.trim();
             const prompt = document.getElementById('prompt-input').value.trim();
-            const corsErrorBox = document.getElementById('cors-error-box');
-
-            // Hide previous errors
-            corsErrorBox.classList.add('hidden');
-
             if (!prompt) {
                 showToast("Please write a prompt first.", "error");
                 return;
             }
 
-            toggleLoader(true, "Connecting to NVIDIA NIM...");
+            toggleLoader(true, "Sending request to Vercel...");
             let startTime = performance.now();
             
             if (timerInterval) clearInterval(timerInterval);
@@ -197,57 +200,24 @@
                 document.getElementById('speed-timer').innerText = elapsed.toFixed(2) + "s";
             }, 30);
 
-            // Payload strictly for NVIDIA
-            const payload = {
-                "prompt": prompt,
-                "steps": 4,
-                "seed": Math.floor(Math.random() * 999999)
-            };
-
-            // Set up target URL based on proxy toggle
-            let targetUrl = NVIDIA_ENDPOINT;
-            if (useProxy) {
-                // Using corsproxy.io properly encoded to act as a middleman
-                targetUrl = "https://corsproxy.io/?" + encodeURIComponent(NVIDIA_ENDPOINT);
-                updateStatus("Routing through secure proxy...");
-            } else {
-                updateStatus("Direct connection initiated...");
+            // Construct local payload
+            const payload = { prompt: prompt };
+            if (baseImageBase64) {
+                payload.image = cleanBase64(baseImageBase64);
             }
 
             try {
-                const response = await fetch(targetUrl, {
+                // Call your local serverless function!
+                const response = await fetch('/api/generate', {
                     method: 'POST',
-                    headers: {
-                        'accept': 'application/json',
-                        'content-type': 'application/json',
-                        'authorization': `Bearer ${apiKey}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`API Error ${response.status}: ${errText}`);
-                }
-
                 const data = await response.json();
-                
-                // Parse NVIDIA Base64 Output
-                let base64String = "";
-                if (data.artifacts && data.artifacts[0] && data.artifacts[0].base64) {
-                    base64String = data.artifacts[0].base64;
-                } else if (data.data && data.data[0] && data.data[0].b64_json) {
-                    base64String = data.data[0].b64_json;
-                } else if (data.base64) {
-                    base64String = data.base64;
-                }
 
-                if (!base64String) {
-                    throw new Error("NVIDIA responded, but the image data was empty.");
-                }
-
-                if (!base64String.startsWith("data:image")) {
-                    base64String = "data:image/png;base64," + base64String;
+                if (!response.ok) {
+                    throw new Error(data.error || "Serverless Function Error");
                 }
 
                 // Render Image
@@ -262,21 +232,14 @@
                     document.getElementById('output-actions').classList.remove('hidden');
                     
                     toggleLoader(false);
-                    showToast("NVIDIA Generation Successful!");
+                    showToast("Generation Successful!");
                 };
-                outputImg.src = base64String;
+                outputImg.src = data.image_url;
 
             } catch (error) {
                 clearInterval(timerInterval);
                 toggleLoader(false);
-                
-                // If it's a TypeError (Network Error), it is almost guaranteed to be a CORS block
-                if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
-                    showToast("Blocked by Browser Security", "error");
-                    corsErrorBox.classList.remove('hidden'); // Show the dedicated instruction box
-                } else {
-                    showToast("Error: " + error.message, "error");
-                }
+                showToast("Error: " + error.message, "error");
             }
         }
 
@@ -285,41 +248,24 @@
             if (show) {
                 overlay.classList.remove('hidden');
                 overlay.classList.add('flex');
-                if (text) updateStatus(text);
+                if (text) document.getElementById('loader-status').innerText = text;
             } else {
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
             }
         }
 
-        function updateStatus(text) {
-            document.getElementById('loader-status').innerText = text;
-        }
-
         function showToast(message, type = "success") {
             const box = document.getElementById('toast-box');
             const toast = document.createElement('div');
             toast.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[11px] font-semibold shadow-xl bg-slate-900 border-slate-800 text-slate-100 transition-all duration-300 transform translate-y-1 opacity-0 pointer-events-auto`;
-            
-            let icon = `<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>`;
-            if (type === "error") {
-                icon = `<i class="fa-solid fa-circle-exclamation text-rose-400 text-xs"></i>`;
-            }
-
+            let icon = type === "error" ? `<i class="fa-solid fa-circle-exclamation text-rose-400 text-xs"></i>` : `<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>`;
             toast.innerHTML = `${icon} <span>${message}</span>`;
             box.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-1', 'opacity-0');
-            }, 10);
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-1', 'opacity-0');
-                setTimeout(() => toast.remove(), 4000);
-            }, 4000);
+            setTimeout(() => toast.classList.remove('translate-y-1', 'opacity-0'), 10);
+            setTimeout(() => { toast.classList.add('translate-y-1', 'opacity-0'); setTimeout(() => toast.remove(), 4000); }, 4000);
         }
     </script>
 </body>
 </html>
-
 
