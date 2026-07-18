@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FLUX Minimal Studio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #060811;
+        }
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- TOP HEADER -->
+    <header class="border-b border-slate-900 bg-slate-950/40 backdrop-blur-md px-4 py-4 sticky top-0 z-50">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-indigo-600 p-1.5 rounded-lg">
+                    <i class="fa-solid fa-bolt text-xs text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs font-bold tracking-tight text-slate-100">FLUX Studio</h1>
+                    <p class="text-[9px] text-slate-500">Auto-Routing AI Engine</p>
+                </div>
+            </div>
+
+            <!-- Active Connection Status Info Badge -->
+            <div class="flex items-center gap-1 bg-slate-900 border border-slate-850 px-2 py-1 rounded-lg shadow-inner">
+                <span id="active-engine-badge" class="text-[9px] text-emerald-400 font-bold code-font tracking-wide">
+                    <i class="fa-solid fa-circle-dot animate-pulse mr-1"></i> READY
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN MINIMAL LAYOUT -->
+    <main class="flex-1 max-w-md w-full mx-auto px-4 py-6 flex flex-col justify-center gap-5">
+
+        <!-- DISPLAY VIEWPORT -->
+        <div class="relative aspect-square w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-900 shadow-2xl flex items-center justify-center">
+            
+            <!-- Default Placeholder -->
+            <div id="output-placeholder" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 transition-all duration-300">
+                <div class="w-10 h-10 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-3 text-slate-500">
+                    <i class="fa-regular fa-image text-sm"></i>
+                </div>
+                <h3 class="text-[11px] font-semibold text-slate-300">No Image Generated Yet</h3>
+                <p class="text-[10px] text-slate-500 max-w-[240px] mt-0.5">Select a sample below or type a prompt to begin rendering.</p>
+            </div>
+
+            <!-- Generated Output image -->
+            <img id="output-image" class="absolute inset-0 w-full h-full object-cover hidden z-10" alt="Generated Output">
+
+            <!-- Generation Timer Badge -->
+            <div class="absolute bottom-3 left-3 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-lg border border-white/5 text-[10px] z-20 flex items-center gap-1.5 code-font">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-slate-400">Time:</span>
+                <span id="speed-timer" class="text-white font-bold">0.00s</span>
+            </div>
+
+            <!-- Download Button -->
+            <div id="output-actions" class="absolute bottom-3 right-3 z-20 hidden">
+                <button onclick="downloadOutputImage()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-md active:scale-95 transition-all">
+                    <i class="fa-solid fa-download"></i> Save Image
+                </button>
+            </div>
+
+            <!-- Loader Overlay -->
+            <div id="loader-overlay" class="absolute inset-0 bg-slate-950/95 flex-col items-center justify-center p-6 text-center hidden z-30">
+                <div class="w-8 h-8 rounded-full border-2 border-indigo-500/10 border-t-indigo-500 animate-spin mb-3"></div>
+                <h4 id="loader-headline" class="text-xs font-semibold text-slate-200">Generating Masterpiece</h4>
+                <p id="loader-status" class="text-[9px] text-indigo-400 mt-1 code-font">Routing to optimal AI node...</p>
+            </div>
+        </div>
+
+        <!-- CONTROL SYSTEM -->
+        <div class="flex flex-col gap-4">
+
+            <!-- Prompt Input -->
+            <textarea id="prompt-input" rows="3" class="w-full bg-slate-950 border border-slate-900 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-inner" placeholder="Enter custom prompt..."></textarea>
+
+            <!-- Sample Chips -->
+            <div class="flex flex-col gap-1.5">
+                <span class="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Tap a sample prompt</span>
+                <div class="flex flex-wrap gap-1.5">
+                    <button onclick="applyPreset('A minimalist cinematic photo of futuristic Tokyo streets, cyber atmosphere, rain, reflection, 8k')" class="text-[10px] bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-900 rounded-lg px-2.5 py-1.5 transition-all text-left">
+                        🌌 Tokyo Street
+                    </button>
+                    <button onclick="applyPreset('Beautiful oil painting on texture canvas of a sunburst over mountains, high contrast, fine art')" class="text-[10px] bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-900 rounded-lg px-2.5 py-1.5 transition-all text-left">
+                        🎨 Sunburst Canvas
+                    </button>
+                    <button onclick="applyPreset('Vibrant digital illustration of an astronaut playing electric guitar in space on neon purple nebula')" class="text-[10px] bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-900 rounded-lg px-2.5 py-1.5 transition-all text-left">
+                        🎸 Space Solo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Upload Zone -->
+            <div class="bg-slate-950 border border-slate-900 rounded-xl p-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 relative overflow-hidden" id="upload-preview-container">
+                        <i class="fa-solid fa-image text-[10px]" id="upload-fallback-icon"></i>
+                        <img id="upload-thumbnail" class="w-full h-full object-cover hidden absolute inset-0" alt="Thumbnail">
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold block text-slate-300">Base Image Upload</span>
+                        <span id="upload-status-text" class="text-[8px] text-slate-500 block">Optional image edit layer</span>
+                    </div>
+                </div>
+                
+                <div class="flex gap-1">
+                    <label class="bg-slate-900 hover:bg-slate-850 text-slate-300 text-[9px] font-semibold px-2.5 py-1.5 rounded-lg cursor-pointer transition-all border border-slate-800">
+                        Choose
+                        <input type="file" id="photo-uploader" accept="image/*" class="hidden" onchange="processPhotoUpload(this)">
+                    </label>
+                    <button id="remove-upload-btn" onclick="clearPhotoUpload()" class="bg-slate-900 hover:bg-slate-850 text-rose-500 text-[9px] font-semibold px-2 py-1.5 rounded-lg border border-slate-800 hidden" title="Remove image">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button id="generate-btn" onclick="generate()" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-xs tracking-wide transition-all flex items-center justify-center gap-2 shadow-md active:scale-[0.99]">
+                <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+                <span>Generate Masterpiece</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- HARDCODED API KEY (For NVIDIA fallback attempts) -->
+    <input type="hidden" id="api-key-input" value="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">
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-box" class="fixed bottom-4 right-4 left-4 sm:left-auto max-w-sm z-50 pointer-events-none flex flex-col gap-1.5"></div>
+
+    <script>
+        const NVIDIA_ENDPOINT = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b";
+        let timerInterval = null;
+        let baseImageBase64 = null;
+        let currentGeneratedUrl = null;
+
+        function applyPreset(prompt) {
+            document.getElementById('prompt-input').value = prompt;
+            showToast("Prompt loaded");
+        }
+
+        function processPhotoUpload(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const dataUrl = e.target.result;
+                    baseImageBase64 = dataUrl;
+
+                    const imgThumb = document.getElementById('upload-thumbnail');
+                    const fallbackIcon = document.getElementById('upload-fallback-icon');
+                    imgThumb.src = dataUrl;
+                    imgThumb.classList.remove('hidden');
+                    fallbackIcon.classList.add('hidden');
+
+                    document.getElementById('upload-status-text').innerText = "Image attached (Active)";
+                    document.getElementById('upload-status-text').classList.add('text-indigo-400');
+                    document.getElementById('remove-upload-btn').classList.remove('hidden');
+                    showToast("Photo attached successfully");
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearPhotoUpload() {
+            baseImageBase64 = null;
+            document.getElementById('photo-uploader').value = "";
+            
+            const imgThumb = document.getElementById('upload-thumbnail');
+            const fallbackIcon = document.getElementById('upload-fallback-icon');
+            imgThumb.src = "";
+            imgThumb.classList.add('hidden');
+            fallbackIcon.classList.remove('hidden');
+
+            document.getElementById('upload-status-text').innerText = "Optional image edit layer";
+            document.getElementById('upload-status-text').classList.remove('text-indigo-400');
+            document.getElementById('remove-upload-btn').classList.add('hidden');
+            showToast("Attached image cleared");
+        }
+
+        function cleanBase64(dataURL) {
+            if (!dataURL) return "";
+            const parts = dataURL.split(',');
+            return parts.length > 1 ? parts[1] : parts[0];
+        }
+
+        // Robust download that works for both Base64 and Blob URLs
+        async function downloadOutputImage() {
+            if (!currentGeneratedUrl) return;
+            
+            try {
+                // If it's a direct URL (from fallback engine), fetch it as a blob to force download
+                if (currentGeneratedUrl.startsWith('http')) {
+                    const response = await fetch(currentGeneratedUrl);
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement('a');
+                    link.download = `AI_Masterpiece_${Date.now()}.png`;
+                    link.href = blobUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(blobUrl);
+                } else {
+                    // Standard Base64 download
+                    const link = document.createElement('a');
+                    link.download = `FLUX_Klein_${Date.now()}.png`;
+                    link.href = currentGeneratedUrl;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+                showToast("Saved to downloads!");
+            } catch (err) {
+                // Fallback for extreme strict browser policies
+                window.open(currentGeneratedUrl, '_blank');
+                showToast("Opened in new tab for saving.");
+            }
+        }
+
+        async function generate() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            const prompt = document.getElementById('prompt-input').value.trim();
+
+            if (!prompt) {
+                showToast("Please write a prompt first.", "error");
+                return;
+            }
+
+            toggleLoader(true, "Authenticating Secure API...");
+            let startTime = performance.now();
+            
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const elapsed = (performance.now() - startTime) / 1000;
+                document.getElementById('speed-timer').innerText = elapsed.toFixed(2) + "s";
+            }, 30);
+
+            let renderSuccess = false;
+            let finalImageSource = "";
+            let usedFallback = false;
+
+            // ==========================================
+            // ATTEMPT 1: NVIDIA API via CORS Proxy
+            // ==========================================
+            try {
+                updateStatus("Trying NVIDIA Network...");
+                
+                const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(NVIDIA_ENDPOINT);
+                const payload = {
+                    "prompt": prompt,
+                    "steps": 4,
+                    "seed": Math.floor(Math.random() * 999999)
+                };
+
+                if (baseImageBase64) {
+                    payload["image"] = cleanBase64(baseImageBase64);
+                    payload["strength"] = 0.8;
+                    payload["mode"] = "Image Editing";
+                }
+
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'accept': 'application/json',
+                        'content-type': 'application/json',
+                        'authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.artifacts && data.artifacts[0] && data.artifacts[0].base64) {
+                        finalImageSource = "data:image/png;base64," + data.artifacts[0].base64;
+                        renderSuccess = true;
+                    } else if (data.data && data.data[0] && data.data[0].b64_json) {
+                        finalImageSource = "data:image/png;base64," + data.data[0].b64_json;
+                        renderSuccess = true;
+                    }
+                }
+            } catch (error) {
+                console.warn("NVIDIA Primary Route blocked by CORS.");
+                // Silently catch error, we will use the fallback engine below.
+            }
+
+            // ==========================================
+            // ATTEMPT 2: SEAMLESS OPEN API FALLBACK
+            // ==========================================
+            // If CORS blocks NVIDIA, we automatically route to Pollinations (An open, free, CORS-friendly generative AI network)
+            if (!renderSuccess) {
+                updateStatus("CORS Blocked. Rerouting to Open AI Fallback...");
+                usedFallback = true;
+                
+                // We add a random seed parameter to ensure fresh images on repeated prompts
+                const randomSeed = Math.floor(Math.random() * 999999);
+                // Safe URL encoding for the prompt
+                const cleanPrompt = encodeURIComponent(prompt);
+                
+                // Construct the seamless direct-image URL
+                finalImageSource = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}`;
+                
+                // Pre-load the image to ensure the timer represents actual generation speed
+                try {
+                    await new Promise((resolve, reject) => {
+                        const testImg = new Image();
+                        testImg.onload = resolve;
+                        testImg.onerror = reject;
+                        testImg.src = finalImageSource;
+                    });
+                    renderSuccess = true;
+                } catch (fallbackErr) {
+                    // Total failure case (no internet)
+                    renderSuccess = false;
+                }
+            }
+
+            // ==========================================
+            // RENDER PHASE
+            // ==========================================
+            if (!renderSuccess) {
+                clearInterval(timerInterval);
+                toggleLoader(false);
+                showToast("Network completely offline. Please check your connection.", "error");
+                return;
+            }
+
+            const outputImg = document.getElementById('output-image');
+            outputImg.onload = function() {
+                clearInterval(timerInterval);
+                const finalElapsed = (performance.now() - startTime) / 1000;
+                document.getElementById('speed-timer').innerText = finalElapsed.toFixed(2) + "s";
+                
+                currentGeneratedUrl = finalImageSource;
+
+                document.getElementById('output-placeholder').classList.add('hidden');
+                outputImg.classList.remove('hidden');
+                document.getElementById('output-actions').classList.remove('hidden');
+                
+                // Update UI badge to show which engine was used
+                const engineBadge = document.getElementById('active-engine-badge');
+                if (usedFallback) {
+                    engineBadge.innerHTML = `<i class="fa-solid fa-tower-broadcast mr-1"></i> CORS Fallback`;
+                    engineBadge.className = "text-[9px] text-amber-400 font-bold code-font tracking-wide";
+                    showToast("Rendered using Open Fallback Engine (NVIDIA CORS blocked)");
+                } else {
+                    engineBadge.innerHTML = `<i class="fa-solid fa-bolt mr-1"></i> NVIDIA NIM`;
+                    engineBadge.className = "text-[9px] text-emerald-400 font-bold code-font tracking-wide";
+                    showToast("Render complete!");
+                }
+
+                toggleLoader(false);
+            };
+
+            // Trigger the render
+            outputImg.src = finalImageSource;
+        }
+
+        function toggleLoader(show, text = "") {
+            const overlay = document.getElementById('loader-overlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                if (text) updateStatus(text);
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
+
+        function updateStatus(text) {
+            document.getElementById('loader-status').innerText = text;
+        }
+
+        function showToast(message, type = "success") {
+            const box = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl border text-[11px] font-semibold shadow-xl bg-slate-900 border-slate-800 text-slate-100 transition-all duration-300 transform translate-y-1 opacity-0 pointer-events-auto`;
+            
+            let icon = `<i class="fa-solid fa-circle-check text-emerald-400 text-xs"></i>`;
+            if (type === "error") {
+                icon = `<i class="fa-solid fa-circle-exclamation text-rose-400 text-xs"></i>`;
+            }
+
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            box.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-1', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-1', 'opacity-0');
+                setTimeout(() => toast.remove(), 4000);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>
+
+
