@@ -3,104 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Multimodal Chatbot</title>
+    <title>Nexus Vercel Bot</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+    
     <script>
         tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        neutral: { 950: '#0a0a0a', 900: '#171717', 800: '#262626' }
-                    }
-                }
-            }
+            theme: { extend: { colors: { neutral: { 950: '#0a0a0a', 900: '#171717', 800: '#262626' } } } }
         }
     </script>
     <style>
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #404040; }
-        
-        /* Audio player styling */
-        audio {
-            height: 36px;
-            border-radius: 8px;
-            outline: none;
-        }
     </style>
 </head>
-<body class="bg-neutral-950 text-neutral-50 font-sans min-h-screen flex flex-col h-screen overflow-hidden">
+<body class="bg-neutral-950 text-neutral-50 font-sans h-screen flex flex-col overflow-hidden">
 
     <!-- Header -->
-    <header class="bg-neutral-900 border-b border-neutral-800 p-4 shrink-0 flex items-center justify-between z-10 shadow-md">
-        <div class="flex items-center gap-3">
-            <div class="p-2 bg-indigo-500/10 rounded-xl">
-                <i class="ph ph-robot text-2xl text-indigo-500"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-bold tracking-tight">Nexus Multimodal Bot</h1>
-                <p id="envStatus" class="text-xs text-neutral-400">Checking environment...</p>
-            </div>
+    <header class="bg-neutral-900 border-b border-neutral-800 p-4 shrink-0 flex items-center gap-3 z-10 shadow-md">
+        <div class="p-2 bg-indigo-500/10 rounded-xl">
+            <i class="ph ph-robot text-2xl text-indigo-500"></i>
         </div>
-        <button onclick="console.clear(); console.log('Console Cleared.');" class="text-xs flex items-center gap-1 text-neutral-400 hover:text-white transition-colors bg-neutral-800 px-3 py-1.5 rounded-lg">
-            <i class="ph ph-terminal-window"></i> Clear F12 Logs
-        </button>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight">Nexus Vercel Bot</h1>
+            <p class="text-xs text-neutral-400">Secure Serverless Backend</p>
+        </div>
     </header>
 
-    <!-- Chat History Area -->
-    <main id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-neutral-900/50 to-neutral-950">
-        
-        <!-- Welcome Message -->
+    <!-- Chat Box -->
+    <main id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
         <div class="flex gap-4 max-w-3xl">
-            <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20">
-                <i class="ph ph-robot text-xl text-white"></i>
-            </div>
-            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 text-neutral-200 shadow-sm max-w-[85%]">
-                <p>Hello! I am a fully multimodal assistant. Select a mode below to start chatting, generating images, or creating audio!</p>
+            <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg"><i class="ph ph-robot text-xl text-white"></i></div>
+            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 text-neutral-200">
+                <p>Hello! I am connected to your Vercel Serverless API. What would you like to create?</p>
             </div>
         </div>
-        
     </main>
 
-    <!-- Input Area -->
-    <footer class="bg-neutral-900 border-t border-neutral-800 p-4 shrink-0 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+    <!-- Input Footer -->
+    <footer class="bg-neutral-900 border-t border-neutral-800 p-4 shrink-0">
         <div class="max-w-4xl mx-auto flex flex-col gap-3">
-            
             <form id="chatForm" class="flex items-end gap-3">
-                <!-- Mode Selector -->
                 <div class="relative shrink-0">
-                    <select id="modeSelect" class="appearance-none bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm rounded-xl pl-4 pr-10 py-4 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer h-full">
-                        <option value="text">💬 Text Chat</option>
-                        <option value="image">🎨 Image Gen</option>
-                        <option value="audio">🔊 Text to Speech</option>
+                    <select id="modeSelect" class="appearance-none bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm rounded-xl pl-4 pr-10 py-4 focus:outline-none focus:border-indigo-500 h-full">
+                        <option value="text">💬 Text</option>
+                        <option value="image">🎨 Image</option>
+                        <option value="audio">🔊 Audio</option>
                     </select>
                     <i class="ph ph-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"></i>
                 </div>
 
-                <!-- Input Textarea -->
-                <div class="relative flex-1">
-                    <textarea
-                        id="promptInput"
-                        rows="1"
-                        class="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-4 pr-12 py-4 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500 transition-colors resize-none block"
-                        placeholder="Type your prompt here..."
-                        style="min-height: 54px; max-height: 150px;"
-                    ></textarea>
-                </div>
+                <textarea id="promptInput" rows="1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-4 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500 resize-none min-h-[54px] max-h-[150px]" placeholder="Type your prompt..."></textarea>
                 
-                <!-- Send Button -->
-                <button
-                    type="submit"
-                    id="sendBtn"
-                    class="bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shrink-0 shadow-lg shadow-indigo-600/20"
-                >
+                <button type="submit" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl transition-all disabled:opacity-50 shrink-0">
                     <i id="sendIcon" class="ph-fill ph-paper-plane-tilt text-xl"></i>
                     <i id="sendSpinner" class="ph ph-spinner-gap text-xl animate-spin hidden"></i>
                 </button>
@@ -109,270 +67,80 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const chatBox = document.getElementById('chatBox');
-            const chatForm = document.getElementById('chatForm');
-            const promptInput = document.getElementById('promptInput');
-            const modeSelect = document.getElementById('modeSelect');
-            const sendBtn = document.getElementById('sendBtn');
-            const sendIcon = document.getElementById('sendIcon');
-            const sendSpinner = document.getElementById('sendSpinner');
-            const envStatus = document.getElementById('envStatus');
+        const chatBox = document.getElementById('chatBox');
+        const chatForm = document.getElementById('chatForm');
+        const promptInput = document.getElementById('promptInput');
+        const modeSelect = document.getElementById('modeSelect');
+        const sendBtn = document.getElementById('sendBtn');
+        const sendIcon = document.getElementById('sendIcon');
+        const sendSpinner = document.getElementById('sendSpinner');
 
-            // --- API Setup & Environment Detection ---
-            const canvasKey = ""; // Injected by Canvas
-            const userKey = "AIzaSyAxA7hUR1pyO8vPLk5dbnsvHnTQp7WC2N8";
-            const apiKey = canvasKey || userKey;
-            const isCanvas = canvasKey !== "" && canvasKey !== undefined;
+        promptInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+            sendBtn.disabled = this.value.trim() === '';
+        });
 
-            // --- Model Configurations ---
-            // Local runs use the models you specifically requested.
-            // Canvas uses the verified compatible preview models for this environment.
-            const models = {
-                text: isCanvas ? 'gemini-2.5-flash-preview-09-2025' : 'gemini-3.5-flash-lite',
-                audio: isCanvas ? 'gemini-2.5-flash-preview-tts' : 'gemini-2.5-flash-native-audio-dialog',
-                imageChain: isCanvas 
-                    ? ['imagen-4.0-generate-001'] 
-                    : [
-                        'imagen-4.0-ultra-generate-001', 
-                        'imagen-4.0-generate-001', 
-                        'imagen-4.0-fast-generate-001'
-                      ]
-            };
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatForm.dispatchEvent(new Event('submit')); }
+        });
 
-            // Update UI status
-            envStatus.innerHTML = isCanvas 
-                ? `<span class="text-yellow-500">● Canvas Mode</span> (Using Preview Models)` 
-                : `<span class="text-green-500">● Local Mode</span> (Using Requested Models)`;
+        const setLoading = (loading) => {
+            promptInput.disabled = modeSelect.disabled = loading;
+            sendBtn.disabled = loading || promptInput.value.trim() === '';
+            sendIcon.classList.toggle('hidden', loading);
+            sendSpinner.classList.toggle('hidden', !loading);
+        };
 
-            // Auto-resize textarea
-            promptInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-                sendBtn.disabled = this.value.trim() === '';
-            });
+        const addMessage = (role, content, type) => {
+            const isUser = role === 'user';
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex gap-4 w-full ${isUser ? 'justify-end' : 'justify-start'}`;
 
-            // Prevent enter key from creating new line, instead submit
-            promptInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    if (promptInput.value.trim() !== '') chatForm.dispatchEvent(new Event('submit'));
-                }
-            });
-
-            // Set UI Loading State
-            const setLoading = (loading) => {
-                promptInput.disabled = loading;
-                modeSelect.disabled = loading;
-                sendBtn.disabled = loading || promptInput.value.trim() === '';
-                if (loading) {
-                    sendIcon.classList.add('hidden');
-                    sendSpinner.classList.remove('hidden');
-                } else {
-                    sendIcon.classList.remove('hidden');
-                    sendSpinner.classList.add('hidden');
-                }
-            };
-
-            // Add Message to Chat UI
-            const addMessage = (role, content, type = 'text') => {
-                const isUser = role === 'user';
-                const wrapper = document.createElement('div');
-                wrapper.className = `flex gap-4 w-full ${isUser ? 'justify-end' : 'justify-start'}`;
-
-                let avatar = isUser 
-                    ? `<div class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center shrink-0 border border-neutral-700"><i class="ph ph-user text-xl text-neutral-400"></i></div>`
-                    : `<div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/20"><i class="ph ph-robot text-xl text-white"></i></div>`;
-
-                let innerContent = '';
-                if (type === 'text') {
-                    innerContent = `<p class="whitespace-pre-wrap">${content}</p>`;
-                } else if (type === 'image') {
-                    innerContent = `<img src="${content}" class="rounded-xl max-w-full h-auto max-h-[400px] object-contain bg-black/50" alt="Generated Image" />`;
-                } else if (type === 'audio') {
-                    innerContent = `
-                        <div class="flex items-center gap-3">
-                            <i class="ph ph-waveform text-2xl text-indigo-400"></i>
-                            <audio controls src="${content}" autoplay></audio>
-                        </div>`;
-                } else if (type === 'error') {
-                    innerContent = `<p class="text-red-400 text-sm font-mono whitespace-pre-wrap">${content}</p>`;
-                }
-
-                const bubbleClass = isUser 
-                    ? `bg-neutral-800 border border-neutral-700 rounded-2xl rounded-tr-none px-5 py-4 text-neutral-100 shadow-sm max-w-[85%]`
-                    : `bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 text-neutral-200 shadow-sm max-w-[85%] ${type==='error' ? 'border-red-900/50 bg-red-950/20' : ''}`;
-
-                wrapper.innerHTML = `
-                    ${!isUser ? avatar : ''}
-                    <div class="${bubbleClass}">
-                        ${innerContent}
-                    </div>
-                    ${isUser ? avatar : ''}
-                `;
-
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-            };
-
-            // --- 1. Text Generation ---
-            const generateText = async (prompt) => {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${models.text}:generateContent?key=${apiKey}`;
-                const payload = { contents: [{ parts: [{ text: prompt }] }] };
-                
-                console.log(`[TEXT] Model: ${models.text}`);
-                const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-                const data = await res.json();
-                
-                if (!res.ok) throw new Error(data.error?.message || `Text API Error ${res.status}`);
-                return data.candidates[0].content.parts[0].text;
-            };
-
-            // --- 2. Image Generation (With Requested Fallback Chain) ---
-            const generateImageFallback = async (prompt) => {
-                const chain = models.imageChain;
-                let lastError = null;
-
-                for (let i = 0; i < chain.length; i++) {
-                    const currentModel = chain[i];
-                    console.log(`[IMAGE] Attempt ${i + 1}: Trying model ${currentModel}...`);
-                    
-                    try {
-                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:predict?key=${apiKey}`;
-                        const payload = { instances: [{ prompt: prompt }], parameters: { sampleCount: 1 } };
-                        
-                        const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-                        const data = await res.json();
-                        
-                        if (!res.ok) {
-                            throw new Error(`Model ${currentModel} returned ${res.status}: ${data.error?.message}`);
-                        }
-                        
-                        const b64 = data.predictions?.[0]?.bytesBase64Encoded;
-                        if (!b64) throw new Error(`Success response, but no image data from ${currentModel}`);
-                        
-                        console.log(`[IMAGE] Success! Generated using ${currentModel}`);
-                        return `data:image/png;base64,${b64}`;
-                        
-                    } catch (err) {
-                        console.warn(`[IMAGE] Failed on ${currentModel}:`, err.message);
-                        lastError = err.message;
-                        // If it's the last model in the chain, we throw the error to UI
-                        if (i === chain.length - 1) {
-                            throw new Error(`All image models in fallback chain failed.\nLast Error: ${lastError}`);
-                        }
-                    }
-                }
-            };
-
-            // --- 3. Text to Speech Generation ---
-            // Helper function to convert raw PCM16 to a playable WAV file inside the browser
-            const pcmToWav = (base64Pcm, sampleRate = 24000) => {
-                const binaryString = atob(base64Pcm);
-                const pcmLength = binaryString.length;
-                const wavBuffer = new ArrayBuffer(44 + pcmLength);
-                const view = new DataView(wavBuffer);
-                
-                const writeString = (offset, string) => {
-                    for (let i = 0; i < string.length; i++) {
-                        view.setUint8(offset + i, string.charCodeAt(i));
-                    }
-                };
-
-                writeString(0, 'RIFF');
-                view.setUint32(4, 36 + pcmLength, true);
-                writeString(8, 'WAVE');
-                writeString(12, 'fmt ');
-                view.setUint32(16, 16, true); 
-                view.setUint16(20, 1, true); 
-                view.setUint16(22, 1, true); 
-                view.setUint32(24, sampleRate, true); 
-                view.setUint32(28, sampleRate * 2, true); 
-                view.setUint16(32, 2, true); 
-                view.setUint16(34, 16, true); 
-                writeString(36, 'data');
-                view.setUint32(40, pcmLength, true);
-
-                const pcmData = new Uint8Array(wavBuffer, 44);
-                for (let i = 0; i < pcmLength; i++) {
-                    pcmData[i] = binaryString.charCodeAt(i);
-                }
-
-                const blob = new Blob([wavBuffer], { type: 'audio/wav' });
-                return URL.createObjectURL(blob);
-            };
-
-            const generateSpeech = async (prompt) => {
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${models.audio}:generateContent?key=${apiKey}`;
-                
-                // Instructions parameter tells the model to vocalize it
-                const payload = {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseModalities: ["AUDIO"],
-                        speechConfig: {
-                            voiceConfig: {
-                                prebuiltVoiceConfig: { voiceName: "Aoede" } // Using standard voice config
-                            }
-                        }
-                    }
-                };
-                
-                console.log(`[AUDIO] Model: ${models.audio}`);
-                const res = await fetch(url, { method: 'POST', body: JSON.stringify(payload) });
-                const data = await res.json();
-                
-                if (!res.ok) throw new Error(data.error?.message || `Audio API Error ${res.status}`);
-                
-                const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
-                if (!inlineData || !inlineData.data) throw new Error("API succeeded but no audio data was returned.");
-                
-                console.log(`[AUDIO] Success! Converting PCM to WAV...`);
-                return pcmToWav(inlineData.data);
-            };
-
-            // --- Form Submission Handler ---
-            chatForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const prompt = promptInput.value.trim();
-                const mode = modeSelect.value;
-                if (!prompt) return;
-
-                // 1. Add User Message
-                addMessage('user', prompt, 'text');
-                
-                // 2. Clear input and set loading state
-                promptInput.value = '';
-                promptInput.style.height = 'auto'; // reset height
-                setLoading(true);
-
-                // 3. Process Request based on mode
-                try {
-                    let result;
-                    if (mode === 'text') {
-                        result = await generateText(prompt);
-                        addMessage('bot', result, 'text');
-                    } 
-                    else if (mode === 'image') {
-                        result = await generateImageFallback(prompt);
-                        addMessage('bot', result, 'image');
-                    } 
-                    else if (mode === 'audio') {
-                        result = await generateSpeech(prompt);
-                        addMessage('bot', result, 'audio');
-                    }
-                } catch (error) {
-                    console.error("Chatbot Error:", error);
-                    addMessage('bot', error.message, 'error');
-                } finally {
-                    setLoading(false);
-                    promptInput.focus();
-                }
-            });
+            let avatar = isUser ? `<div class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center shrink-0 border border-neutral-700"><i class="ph ph-user text-xl text-neutral-400"></i></div>` : `<div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-xl text-white"></i></div>`;
             
-            // Initial button state setup
-            sendBtn.disabled = true;
+            let innerContent = type === 'text' ? `<p class="whitespace-pre-wrap">${content}</p>` 
+                : type === 'image' ? `<img src="${content}" class="rounded-xl max-w-full h-auto max-h-[400px] object-contain" />` 
+                : type === 'audio' ? `<audio controls src="${content}" autoplay class="h-10"></audio>` 
+                : `<p class="text-red-400 text-sm font-mono whitespace-pre-wrap">${content}</p>`;
+
+            let bubbleClass = isUser ? `bg-neutral-800 border border-neutral-700 rounded-2xl rounded-tr-none px-5 py-4` : `bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 ${type === 'error' ? 'bg-red-950/20 border-red-900/50' : ''}`;
+
+            wrapper.innerHTML = `${!isUser ? avatar : ''}<div class="${bubbleClass}">${innerContent}</div>${isUser ? avatar : ''}`;
+            chatBox.appendChild(wrapper);
+            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
+        };
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = promptInput.value.trim();
+            const mode = modeSelect.value;
+            if (!prompt) return;
+
+            addMessage('user', prompt, 'text');
+            promptInput.value = ''; promptInput.style.height = 'auto';
+            setLoading(true);
+
+            try {
+                // We call the secure Vercel Serverless Function instead of Google!
+                const res = await fetch('/api/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, mode })
+                });
+
+                const data = await res.json();
+                
+                if (!res.ok) throw new Error(data.error || 'Server error');
+                
+                addMessage('bot', data.result, mode);
+
+            } catch (err) {
+                addMessage('bot', err.message, 'error');
+            } finally {
+                setLoading(false);
+                promptInput.focus();
+            }
         });
     </script>
 </body>
