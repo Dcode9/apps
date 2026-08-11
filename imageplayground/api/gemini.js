@@ -4,7 +4,8 @@ export default async function handler(req, res) {
     }
 
     // STRICT ENVIRONMENT VARIABLE ENFORCEMENT
-    const apiKey = process.env.GEMINI_API;
+    // Added .trim() in case a hidden space was copied into the Vercel dashboard
+    const apiKey = process.env.GEMINI_API?.trim();
     if (!apiKey) {
         return res.status(500).json({ error: 'CRITICAL: GEMINI_API is missing from Vercel Environment Variables.' });
     }
@@ -53,7 +54,7 @@ export default async function handler(req, res) {
                     
                     finalResult = `data:image/png;base64,${base64}`;
                     success = true;
-                    break; // Stop falling back if successful!
+                    break; 
                 } catch (e) {
                     lastError = e.message;
                 }
@@ -79,15 +80,37 @@ export default async function handler(req, res) {
             const b64pcm = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             if (!b64pcm) throw new Error("No audio data returned");
 
-            // Encode to a format HTML Audio can play directly
-            finalResult = `data:audio/L16;rate=24000;base64,${b64pcm}`;
+            // --- THE FIX: Convert raw PCM to a standard WAV file in Node.js ---
+            const pcmBuffer = Buffer.from(b64pcm, 'base64');
+            const sampleRate = 24000;
+            const wavBuffer = Buffer.alloc(44 + pcmBuffer.length);
+            
+            wavBuffer.write('RIFF', 0);
+            wavBuffer.writeUInt32LE(36 + pcmBuffer.length, 4);
+            wavBuffer.write('WAVE', 8);
+            wavBuffer.write('fmt ', 12);
+            wavBuffer.writeUInt32LE(16, 16); // Subchunk1Size
+            wavBuffer.writeUInt16LE(1, 20);  // AudioFormat (PCM)
+            wavBuffer.writeUInt16LE(1, 22);  // NumChannels
+            wavBuffer.writeUInt32LE(sampleRate, 24); 
+            wavBuffer.writeUInt32LE(sampleRate * 2, 28); // ByteRate
+            wavBuffer.writeUInt16LE(2, 32);  // BlockAlign
+            wavBuffer.writeUInt16LE(16, 34); // BitsPerSample
+            wavBuffer.write('data', 36);
+            wavBuffer.writeUInt32LE(pcmBuffer.length, 40);
+            pcmBuffer.copy(wavBuffer, 44);
+
+            const wavBase64 = wavBuffer.toString('base64');
+            
+            // Now we send a highly-compatible standard WAV string!
+            finalResult = `data:audio/wav;base64,${wavBase64}`;
         }
 
-        // Send successful response back to HTML
         return res.status(200).json({ result: finalResult });
 
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
 }
+
 
