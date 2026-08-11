@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const apiKey = (process.env.GEMINI_API || '').trim();
@@ -7,7 +7,6 @@ export default async function handler(req, res) {
     const { prompt, mode } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Prompt is required' });
 
-    // Helper to safely fetch and extract Google's exact error message
     const makeGoogleRequest = async (url, payload) => {
         const apiRes = await fetch(url, {
             method: 'POST',
@@ -100,9 +99,9 @@ export default async function handler(req, res) {
         return res.status(200).json({ result: finalResult });
 
     } catch (error) {
-        console.error(error); // Visible in Vercel logs
+        console.error(error); 
         return res.status(500).json({ error: error.message });
     }
-}
+};
 
 
