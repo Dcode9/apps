@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Image Generator</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Phosphor Icons for UI elements -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        neutral: {
+                            950: '#0a0a0a',
+                            900: '#171717',
+                            800: '#262626',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #404040; }
+        
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 3s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-neutral-950 text-neutral-50 font-sans min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-8">
+        
+        <!-- Header -->
+        <header class="text-center space-y-3 pt-8 pb-4">
+            <div class="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-2xl mb-2">
+                <i class="ph ph-sparkle text-3xl text-blue-500"></i>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight bg-gradient-to-br from-neutral-100 to-neutral-500 bg-clip-text text-transparent">
+                Gemini Flash Lite Image
+            </h1>
+            <p class="text-neutral-400 max-w-2xl mx-auto text-lg flex items-center justify-center gap-2">
+                <i class="ph ph-terminal-window"></i> Open F12 Console for detailed API logs
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Controls / Left Column -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl">
+                    <label for="promptInput" class="block text-sm font-medium text-neutral-300 mb-2">
+                        Your Prompt
+                    </label>
+                    <textarea
+                        id="promptInput"
+                        rows="5"
+                        class="w-full bg-neutral-950 border border-neutral-800 rounded-2xl p-4 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all resize-none"
+                        placeholder="A futuristic city with flying cars at sunset, high detail..."
+                    ></textarea>
+                    
+                    <button
+                        id="generateBtn"
+                        class="w-full mt-6 bg-blue-600 hover:bg-blue-500 text-white font-semibold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <i id="btnIcon" class="ph ph-sparkle text-xl"></i>
+                        <i id="btnSpinner" class="ph ph-spinner-gap text-xl animate-spin hidden"></i>
+                        <span id="btnText">Generate Image</span>
+                    </button>
+                </div>
+
+                <!-- Error Message Box -->
+                <div id="errorBox" class="hidden bg-red-900/30 border border-red-500/50 text-red-300 rounded-2xl p-4 flex flex-col sm:flex-row items-start gap-3">
+                    <i class="ph ph-warning-circle text-xl shrink-0 mt-0.5"></i>
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-sm mb-1">API Error Encountered</span>
+                        <p id="errorText" class="text-xs break-words w-full"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview / Right Column -->
+            <div class="lg:col-span-7">
+                <div class="bg-neutral-900 border border-neutral-800 rounded-3xl p-4 md:p-6 shadow-2xl min-h-[400px] lg:min-h-[600px] flex flex-col">
+                    
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <h2 class="text-lg font-medium text-neutral-300">Canvas</h2>
+                        <button
+                            id="downloadBtn"
+                            class="hidden flex items-center gap-2 text-sm text-neutral-400 hover:text-blue-500 transition-colors bg-neutral-950 px-4 py-2 rounded-xl border border-neutral-800"
+                        >
+                            <i class="ph ph-download-simple text-base"></i>
+                            Download
+                        </button>
+                    </div>
+
+                    <div class="flex-1 bg-neutral-950 rounded-2xl border border-neutral-800 overflow-hidden relative group flex items-center justify-center">
+                        
+                        <!-- Empty State -->
+                        <div id="emptyState" class="text-neutral-600 flex flex-col items-center gap-4">
+                            <i class="ph ph-image text-6xl opacity-20"></i>
+                            <p class="text-sm">Your creation will appear here</p>
+                        </div>
+
+                        <!-- Loading State -->
+                        <div id="loadingState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-neutral-500 space-y-4 bg-neutral-950/90 z-10">
+                            <i class="ph ph-aperture text-5xl animate-spin-slow text-blue-500"></i>
+                            <p class="animate-pulse">Check F12 Console for progress...</p>
+                        </div>
+
+                        <!-- Image Result -->
+                        <img
+                            id="resultImage"
+                            src=""
+                            alt="Generated Output"
+                            class="hidden w-full h-full object-contain transition-transform duration-700 hover:scale-[1.02]"
+                        />
+                        
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const promptInput = document.getElementById('promptInput');
+            const generateBtn = document.getElementById('generateBtn');
+            const btnIcon = document.getElementById('btnIcon');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const btnText = document.getElementById('btnText');
+            
+            const errorBox = document.getElementById('errorBox');
+            const errorText = document.getElementById('errorText');
+            
+            const emptyState = document.getElementById('emptyState');
+            const loadingState = document.getElementById('loadingState');
+            const resultImage = document.getElementById('resultImage');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            let currentImageUrl = null;
+
+            // --- API Configuration ---
+            
+            // 1. The execution environment provides a key at runtime to the empty string variable.
+            const canvasKey = ""; 
+            
+            // 2. Your hardcoded key for local usage. 
+            // NOTE: Raw HTML cannot read Vercel's `process.env`. If deploying as static HTML, put your key here.
+            // If using Next.js/Vite, you would replace this with `process.env.NEXT_PUBLIC_GEMINI_API`
+            const userKey = "AIzaSyAxA7hUR1pyO8vPLk5dbnsvHnTQp7WC2N8";
+            
+            const activeKey = canvasKey || userKey;
+
+            // 3. Dynamic Model Selection
+            // Uses gemini-3.1-flash-lite-image locally, but falls back to the preview model in this restricted Canvas UI.
+            const isCanvasPreview = canvasKey !== "" && canvasKey !== undefined;
+            const MODEL_NAME = isCanvasPreview ? 'gemini-2.5-flash-image-preview' : 'gemini-3.1-flash-lite-image';
+
+            // Enable/Disable button based on input
+            promptInput.addEventListener('input', () => {
+                generateBtn.disabled = promptInput.value.trim() === '';
+            });
+
+            const setUIState = (state) => {
+                if (state === 'loading') {
+                    generateBtn.disabled = true;
+                    btnIcon.classList.add('hidden');
+                    btnSpinner.classList.remove('hidden');
+                    btnText.textContent = 'Checking Logs...';
+                    
+                    errorBox.classList.add('hidden');
+                    emptyState.classList.add('hidden');
+                    loadingState.classList.remove('hidden');
+                } else if (state === 'idle') {
+                    generateBtn.disabled = promptInput.value.trim() === '';
+                    btnIcon.classList.remove('hidden');
+                    btnSpinner.classList.add('hidden');
+                    btnText.textContent = 'Generate Image';
+                    
+                    loadingState.classList.add('hidden');
+                }
+            };
+
+            const showError = (msg) => {
+                errorText.textContent = msg;
+                errorBox.classList.remove('hidden');
+                
+                if (!currentImageUrl) {
+                    emptyState.classList.remove('hidden');
+                    resultImage.classList.add('hidden');
+                }
+            };
+
+            const generateImage = async (userPrompt) => {
+                // Correct Endpoint: Gemini models use :generateContent
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${activeKey}`;
+                
+                // Correct Payload: Requires responseModalities to output an image
+                const payload = {
+                    contents: [{ parts: [{ text: userPrompt }] }],
+                    generationConfig: { 
+                        responseModalities: ['IMAGE'] 
+                    }
+                };
+
+                console.clear();
+                console.log("=== 🚀 STARTING API REQUEST ===");
+                console.log(`📡 Target Model: ${MODEL_NAME}`);
+                console.log(`🔑 API Key Configured: ${activeKey ? 'Yes (Hidden for security)' : 'No API Key found!'}`);
+                console.log(`🔗 Endpoint URL: https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent`);
+                console.log("📦 Payload being sent:", JSON.stringify(payload, null, 2));
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    console.log(`🌐 Response Status: ${response.status} ${response.statusText}`);
+
+                    const data = await response.json();
+                    console.log("📥 Raw API Response JSON:", data);
+
+                    if (!response.ok) {
+                        throw new Error(`API Error ${response.status}: ${data.error?.message || 'Unknown error'}`);
+                    }
+
+                    // Extract inlineData from the generateContent structure
+                    const parts = data.candidates?.[0]?.content?.parts || [];
+                    const inlineData = parts.find(p => p.inlineData)?.inlineData;
+
+                    if (inlineData && inlineData.data) {
+                        console.log("✅ Image data successfully extracted!");
+                        return `data:${inlineData.mimeType || 'image/jpeg'};base64,${inlineData.data}`;
+                    } else {
+                        console.error("❌ Valid API response, but no inlineData found.", parts);
+                        throw new Error("API succeeded, but no image data was found in the response object.");
+                    }
+                } catch (err) {
+                    console.error("❌ Caught Error during generation:", err);
+                    throw err;
+                }
+            };
+
+            generateBtn.addEventListener('click', async () => {
+                const prompt = promptInput.value.trim();
+                if (!prompt) return;
+
+                setUIState('loading');
+
+                try {
+                    const generatedUrl = await generateImage(prompt);
+                    
+                    currentImageUrl = generatedUrl;
+                    resultImage.src = currentImageUrl;
+                    
+                    // Show image, hide placeholders
+                    resultImage.classList.remove('hidden');
+                    emptyState.classList.add('hidden');
+                    downloadBtn.classList.remove('hidden');
+                    downloadBtn.classList.add('flex');
+
+                } catch (err) {
+                    showError(err.message);
+                } finally {
+                    setUIState('idle');
+                    console.log("=== 🏁 GENERATION PROCESS FINISHED ===");
+                }
+            });
+
+            downloadBtn.addEventListener('click', () => {
+                if (!currentImageUrl) return;
+                const a = document.createElement('a');
+                a.href = currentImageUrl;
+                a.download = `gemini-image-${Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+            
+            // Initialize button state
+            generateBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>
