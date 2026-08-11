@@ -1,4 +1,16 @@
-module.exports = async function (req, res) {
+export default async function handler(req, res) {
+    // 1. Set CORS headers to prevent strict browser blocking on Vercel
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+    // 2. Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
+    }
+
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const apiKey = (process.env.GEMINI_API || '').trim();
@@ -48,7 +60,7 @@ module.exports = async function (req, res) {
                     const data = await makeGoogleRequest(url, { instances: [{ prompt }], parameters: { sampleCount: 1 } });
                     
                     const base64 = data.predictions?.[0]?.bytesBase64Encoded;
-                    if (!base64) throw new Error(`Success response, but no image data from ${model}`);
+                    if (!base64) throw new Error(`No image data from ${model}`);
                     
                     finalResult = `data:image/png;base64,${base64}`;
                     success = true;
@@ -57,9 +69,7 @@ module.exports = async function (req, res) {
                     errors.push(`[${model}] failed: ${e.message}`);
                 }
             }
-            if (!success) {
-                throw new Error(`All fallback models failed.\n\nDetails:\n${errors.join('\n')}`);
-            }
+            if (!success) throw new Error(`All fallback models failed.\n\nDetails:\n${errors.join('\n')}`);
 
         } else if (mode === 'audio') {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-native-audio-dialog:generateContent?key=${apiKey}`;
@@ -102,6 +112,6 @@ module.exports = async function (req, res) {
         console.error(error); 
         return res.status(500).json({ error: error.message });
     }
-};
+}
 
 
