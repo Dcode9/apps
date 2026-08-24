@@ -3,130 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Multimodal Bot</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script>tailwind.config = { theme: { extend: { colors: { neutral: { 950: '#0a0a0a', 900: '#171717', 800: '#262626' } } } } }</script>
-</head>
-<body class="bg-neutral-950 text-neutral-50 font-sans h-screen flex flex-col overflow-hidden">
+    <title>Coming Soon - Optical Physics</title>
+    <style>
+        :root {
+            --bg-color: #030303; /* Deepest almost-black to allow volumetric light to show */
+        }
 
-    <header class="bg-neutral-900 border-b border-neutral-800 p-4 shrink-0 flex items-center gap-3 shadow-md">
-        <div class="p-2 bg-indigo-500/10 rounded-xl"><i class="ph ph-robot text-2xl text-indigo-500"></i></div>
-        <div>
-            <h1 class="text-xl font-bold">Nexus Vercel Bot</h1>
-            <p class="text-xs text-green-400">Connected to /api/gemini</p>
-        </div>
-    </header>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            /* Apple typography */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+            overflow: hidden;
+            user-select: none;
+            -webkit-font-smoothing: antialiased;
+        }
 
-    <main id="chatBox" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scroll-smooth">
-        <div class="flex gap-4 w-full">
-            <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-xl text-white"></i></div>
-            <div class="bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 text-neutral-200">
-                <p>Hello! I am ready. Select a mode below and send a prompt!</p>
-            </div>
-        </div>
-    </main>
+        /* Container holds everything in perfect alignment */
+        .wwdc-scene {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Scaled down slightly from the original to fit "Coming Soon!" on one line */
+            font-size: clamp(3rem, 11vw, 14rem);
+            font-weight: 200; /* Ultra-thin Apple aesthetic */
+            letter-spacing: -0.05em;
+            line-height: 1;
+            animation: reveal 2.5s cubic-bezier(0.1, 0, 0.1, 1) forwards;
+        }
 
-    <footer class="bg-neutral-900 border-t border-neutral-800 p-4 shrink-0">
-        <div class="max-w-4xl mx-auto flex flex-col gap-3">
-            <form id="chatForm" class="flex items-end gap-3">
-                <div class="relative shrink-0">
-                    <select id="modeSelect" class="appearance-none bg-neutral-950 border border-neutral-800 text-neutral-200 text-sm rounded-xl pl-4 pr-10 py-4 focus:outline-none focus:border-indigo-500 h-full">
-                        <option value="text">💬 Text</option>
-                        <option value="image">🎨 Image</option>
-                        <option value="audio">🔊 Audio</option>
-                    </select>
-                    <i class="ph ph-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none"></i>
-                </div>
-                <textarea id="promptInput" rows="1" class="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-4 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-indigo-500 resize-none min-h-[54px] max-h-[150px]" placeholder="Type your prompt..."></textarea>
-                <button type="submit" id="sendBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white p-4 rounded-xl transition-all disabled:opacity-50 shrink-0">
-                    <i id="sendIcon" class="ph-fill ph-paper-plane-tilt text-xl"></i>
-                    <i id="sendSpinner" class="ph ph-spinner-gap text-xl animate-spin hidden"></i>
-                </button>
-            </form>
-        </div>
-    </footer>
+        @keyframes reveal {
+            0% { opacity: 0; transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
 
-    <script>
-        const chatBox = document.getElementById('chatBox');
-        const chatForm = document.getElementById('chatForm');
-        const promptInput = document.getElementById('promptInput');
-        const modeSelect = document.getElementById('modeSelect');
-        const sendBtn = document.getElementById('sendBtn');
-        const sendIcon = document.getElementById('sendIcon');
-        const sendSpinner = document.getElementById('sendSpinner');
+        /* 1. VOLUMETRIC ATMOSPHERE
+         * The massive, soft ambient glow bleeding from the right side into the background room.
+         */
+        .ambient-scatter {
+            position: absolute;
+            right: -15%;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 70%;
+            height: 200%;
+            background: radial-gradient(circle at center, 
+                rgba(255, 255, 255, 0.12) 0%, 
+                rgba(255, 200, 100, 0.06) 20%, 
+                rgba(200, 50, 0, 0.02) 45%, 
+                transparent 70%);
+            filter: blur(40px);
+            z-index: 0;
+            pointer-events: none;
+        }
 
-        promptInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-            sendBtn.disabled = this.value.trim() === '';
-        });
+        /* 2. MATERIAL BASE LAYER
+         * A single seamless gradient mapping the exact grey values of the metallic letters.
+         * Adjusted to match the length of "Coming Soon!"
+         */
+        .base-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1;
+            background: linear-gradient(90deg,
+                #242426 0%,   /* C, o: Dark grey metal */
+                #323235 20%,  /* m, i: Slightly brighter */
+                #4b4b50 40%,  /* n, g: Mid-grey transitioning */
+                #98989e 55%,  /* S: Light grey reflecting the blast */
+                #ffffff 68%,  /* o, o: Pure white blowout */
+                #ffffff 100%  /* n, !: Pure white blowout */
+            );
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+            white-space: nowrap;
+        }
 
-        const setLoading = (loading) => {
-            promptInput.disabled = modeSelect.disabled = loading;
-            sendBtn.disabled = loading || promptInput.value.trim() === '';
-            sendIcon.classList.toggle('hidden', loading);
-            sendSpinner.classList.toggle('hidden', !loading);
-        };
+        /* 3. PHYSICS & EMISSION LAYER
+         * Overlays perfectly. Holds the 3D bevels, core brightness, and chromatic dispersion.
+         */
+        .effects-layer {
+            position: relative;
+            z-index: 2;
+            color: transparent; /* Dark letters stay transparent to show base gradient */
+            white-space: nowrap;
+        }
 
-        const addMessage = (role, content, type) => {
-            const isUser = role === 'user';
-            const wrapper = document.createElement('div');
-            wrapper.className = `flex gap-4 w-full ${isUser ? 'justify-end' : 'justify-start'}`;
+        .effects-layer span {
+            display: inline-block;
+        }
 
-            let avatar = isUser ? `<div class="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center shrink-0 border border-neutral-700"><i class="ph ph-user text-xl text-neutral-400"></i></div>` : `<div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center shrink-0"><i class="ph ph-robot text-xl text-white"></i></div>`;
-            
-            let innerContent = type === 'text' ? `<p class="whitespace-pre-wrap">${content}</p>` 
-                : type === 'image' ? `<img src="${content}" class="rounded-xl max-w-full h-auto max-h-[400px] object-contain" />` 
-                : type === 'audio' ? `<audio controls src="${content}" autoplay class="h-10 outline-none rounded-lg"></audio>` 
-                : `<div class="flex flex-col gap-1"><span class="font-bold text-red-500">Error:</span><p class="text-red-400 text-sm font-mono whitespace-pre-wrap">${content}</p></div>`;
+        /* SPECULAR HIGHLIGHTS
+         * -1px dark shadow + 1px light shadow creates a 3D extruded metallic bevel.
+         */
+        .metal-1 { text-shadow: -1px -1px 1px rgba(0,0,0,0.9), 1px 1px 1px rgba(255,255,255,0.20); }
+        .metal-2 { text-shadow: -1px -1px 1px rgba(0,0,0,0.9), 1px 1px 1.5px rgba(255,255,255,0.25); }
+        .metal-3 { text-shadow: -1px -1px 1px rgba(0,0,0,0.9), 1px 1px 2px rgba(255,255,255,0.40); }
+        
+        /* The letters closest to the light source get blasted by ambient bounce reflection */
+        .metal-bounce { text-shadow: -1px -1px 1px rgba(0,0,0,0.5), 2px 0 8px rgba(255,255,255,0.5); }
 
-            let bubbleClass = isUser ? `bg-neutral-800 border border-neutral-700 rounded-2xl rounded-tr-none px-5 py-4` : `bg-neutral-900 border border-neutral-800 rounded-2xl rounded-tl-none px-5 py-4 ${type === 'error' ? 'bg-red-950/20 border-red-900/50' : ''}`;
-
-            wrapper.innerHTML = `${!isUser ? avatar : ''}<div class="${bubbleClass}">${innerContent}</div>${isUser ? avatar : ''}`;
-            chatBox.appendChild(wrapper);
-            chatBox.scrollTo({ top: chatBox.scrollHeight, behavior: 'smooth' });
-        };
-
-        const submitPrompt = async () => {
-            const prompt = promptInput.value.trim();
-            const mode = modeSelect.value;
-            if (!prompt) return;
-
-            addMessage('user', prompt, 'text');
-            promptInput.value = ''; promptInput.style.height = 'auto';
-            setLoading(true);
-
-            try {
-                // Ensure it targets the absolute root API path
-                const res = await fetch('/api/gemini', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, mode })
-                });
-
-                const rawText = await res.text();
-                let data;
-                try { data = JSON.parse(rawText); } catch (e) { throw new Error(`Vercel Server Error:\n${rawText}`); }
-
-                if (!res.ok) throw new Error(data.error || 'Unknown Server Error');
+        /* BLINDING CORE & CHROMATIC DIFFUSION
+         * Color is forced to pure white to ensure it acts as the blinding light source.
+         */
+        .glow-left {
+            color: #ffffff;
+            text-shadow:
+                /* Razor-sharp Cyan lens cut */
+                -2px 0 0px rgba(0, 200, 255, 0.9),  
+                /* Diffused Blue scatter */
+                -6px 0 12px rgba(0, 100, 255, 0.5), 
                 
-                addMessage('bot', data.result, mode);
+                /* Blinding White Core */
+                0 0 15px rgba(255,255,255,1),       
+                0 0 35px rgba(255,255,255,0.8);     
+        }
 
-            } catch (err) {
-                addMessage('bot', err.message, 'error');
-            } finally {
-                setLoading(false);
-                promptInput.focus();
-            }
-        };
+        .glow-right {
+            color: #ffffff;
+            text-shadow:
+                /* Razor-sharp Cyan lens cut (Left edge of the letter) */
+                -2px 0 0px rgba(0, 200, 255, 0.9),  
+                -6px 0 10px rgba(0, 100, 255, 0.4), 
+                
+                /* Sharp Yellow inner rim (Right edge of the letter) */
+                2px 0 0px rgba(255, 230, 0, 1),   
+                /* Hot Orange transition */
+                6px 0 10px rgba(255, 120, 0, 0.9),  
+                /* Red/Orange wide diffusion */
+                15px 0 25px rgba(255, 50, 0, 0.7),  
+                /* Deep atmospheric red bleed */
+                35px 0 60px rgba(200, 0, 0, 0.4),   
+                
+                /* Blinding White Core */
+                0 0 20px rgba(255,255,255,1),       
+                0 0 45px rgba(255,255,255,0.8);     
+        }
+    </style>
+</head>
+<body>
 
-        chatForm.addEventListener('submit', (e) => { e.preventDefault(); submitPrompt(); });
-        promptInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitPrompt(); }
-        });
-    </script>
+    <div class="wwdc-scene">
+        <!-- 1. Volumetric background glow -->
+        <div class="ambient-scatter"></div>
+        
+        <!-- 2. Seamless metallic gradient base -->
+        <div class="base-layer" aria-hidden="true">Coming Soon!</div>
+        
+        <!-- 3. 3D Bevels, White Core, and Chromatic Dispersion -->
+        <!-- Mapped to transition perfectly from dark metal to blinding light -->
+        <div class="effects-layer">
+            <span class="metal-1">C</span><span class="metal-1">o</span><span class="metal-2">m</span><span class="metal-2">i</span><span class="metal-3">n</span><span class="metal-bounce">g</span><span>&nbsp;</span><span class="metal-bounce">S</span><span class="glow-left">o</span><span class="glow-left">o</span><span class="glow-right">n</span><span class="glow-right">!</span>
+        </div>
+    </div>
+
 </body>
 </html>
-
-
