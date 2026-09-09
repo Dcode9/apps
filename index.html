@@ -201,6 +201,34 @@
             'https://quest.d-verse.in'
         ]);
 
+        function getCookie(name) {
+            const prefix = name + '=';
+            const parts = document.cookie.split('; ');
+            for (let i = 0; i < parts.length; i++) {
+                if (parts[i].indexOf(prefix) === 0) {
+                    return decodeURIComponent(parts[i].substring(prefix.length));
+                }
+            }
+            return null;
+        }
+
+        function setCookie(name, val, maxAge = 600) {
+            document.cookie = name + '=' + encodeURIComponent(val) + '; domain=.d-verse.in; path=/; max-age=' + maxAge + '; SameSite=Lax; Secure';
+        }
+
+        function clearCookie(name) {
+            document.cookie = name + '=; domain=.d-verse.in; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
+        }
+
+        function getAppName(url) {
+            if (!url) return "D'Verse";
+            if (url.includes('ai.d-verse.in')) return "D'Ai";
+            if (url.includes('tunes.d-verse.in')) return "D'Tunes";
+            if (url.includes('quest.d-verse.in')) return "D'Quest";
+            if (url.includes('webboard.d-verse.in')) return "WebBoard";
+            return "D'Verse";
+        }
+
         function showAuthLoading(title, sub) {
             document.getElementById('coming-soon-view').style.display = 'none';
             const authView = document.getElementById('auth-loading-view');
@@ -238,16 +266,20 @@
             const hasAuthHash = window.location.hash && (window.location.hash.includes('access_token=') || window.location.hash.includes('dverse_session='));
             const hasAuthCode = params.has('code');
 
-            // 1. Initial Request from D'Tunes or other app
+            // 1. Initial Request from D'Ai, D'Tunes, or other app
             if (returnToParam) {
                 const validReturn = safeReturnUrl(returnToParam);
                 if (validReturn) {
                     sessionStorage.setItem(RETURN_TO_KEY, validReturn);
+                    try { localStorage.setItem(RETURN_TO_KEY, validReturn); } catch (_) {}
+                    setCookie(RETURN_TO_KEY, validReturn);
+                    setCookie('dverse_auth_return_to', validReturn);
                 }
-                showAuthLoading('Redirecting to Google Sign-In...', 'Please wait a moment');
+                const appName = getAppName(validReturn);
+                showAuthLoading('Redirecting to Google Sign-In...', 'Connecting securely with ' + appName);
                 
                 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                const redirectUri = `${window.location.origin}${window.location.pathname}`;
+                const redirectUri = window.location.origin + window.location.pathname;
                 
                 const { data, error } = await sb.auth.signInWithOAuth({
                     provider: 'google',
@@ -266,7 +298,19 @@
 
             // 2. Returning from Google / Supabase callback with tokens
             if (hasAuthHash || hasAuthCode) {
-                showAuthLoading('Authenticating...', 'Passing credentials back to D\'Tunes');
+                const savedReturnTo = safeReturnUrl(sessionStorage.getItem(RETURN_TO_KEY)) ||
+                                      safeReturnUrl(getCookie(RETURN_TO_KEY)) ||
+                                      safeReturnUrl(getCookie('dverse_auth_return_to')) ||
+                                      safeReturnUrl(localStorage.getItem(RETURN_TO_KEY)) ||
+                                      'https://d-verse.in/';
+
+                sessionStorage.removeItem(RETURN_TO_KEY);
+                try { localStorage.removeItem(RETURN_TO_KEY); } catch (_) {}
+                clearCookie(RETURN_TO_KEY);
+                clearCookie('dverse_auth_return_to');
+
+                const appName = getAppName(savedReturnTo);
+                showAuthLoading('Authenticating...', 'Passing credentials back to ' + appName);
                 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
                 let session = null;
@@ -279,8 +323,21 @@
                     session = data?.session;
                 }
 
-                const savedReturnTo = safeReturnUrl(sessionStorage.getItem(RETURN_TO_KEY)) || 'https://tunes.d-verse.in/';
-                sessionStorage.removeItem(RETURN_TO_KEY);
+                // If return target is the portal itself, keep user on portal
+                const isPortalRoot = savedReturnTo === 'https://d-verse.in/' || 
+                                     savedReturnTo === (window.location.origin + window.location.pathname);
+                if (isPortalRoot) {
+                    if (session) {
+                        showAuthLoading("Signed in to D'Verse", session.user?.email || 'Welcome');
+                        setTimeout(() => {
+                            const authView = document.getElementById('auth-loading-view');
+                            const comingView = document.getElementById('coming-soon-view');
+                            if (authView) authView.style.display = 'none';
+                            if (comingView) comingView.style.display = 'flex';
+                        }, 1200);
+                    }
+                    return;
+                }
 
                 if (session) {
                     const target = new URL(savedReturnTo);
@@ -293,10 +350,9 @@
                         user: session.user
                     };
                     const encoded = base64UrlEncode(handoff);
-                    target.hash = `dverse_session=${encoded}`;
+                    target.hash = 'dverse_session=' + encoded;
                     window.location.href = target.href;
                 } else {
-                    // Forward hash directly to D-Tunes
                     const target = new URL(savedReturnTo);
                     target.hash = window.location.hash;
                     window.location.href = target.href;
