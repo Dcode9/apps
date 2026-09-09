@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>D'Verse Auth Bridge</title>
+</head>
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    (() => {
+      const DVERSE_SUPABASE_URL = window.DVERSE_SUPABASE_URL || 'https://gmwieijbrrztukqpfwkg.supabase.co';
+      const DVERSE_SUPABASE_KEY = window.DVERSE_SUPABASE_KEY || 'sb_publishable_KX3MYtV84QJJdy9bPDuMEA_V99sLKSE';
+      const allowedOrigins = new Set([
+        'https://ai.d-verse.in',
+        'https://tunes.d-verse.in',
+        'https://webboard.d-verse.in',
+        'https://quest.d-verse.in',
+        'https://films.d-verse.in',
+        'https://games.d-verse.in',
+        'https://maths.d-verse.in',
+        'https://science.d-verse.in',
+        'https://d-verse.in',
+        'https://www.d-verse.in',
+        // Transition legacy origins
+        'https://ai.dverse.fun',
+        'https://tunes.dverse.fun',
+        'https://webboard.dverse.fun',
+        'https://quest.dverse.fun',
+        'https://films.dverse.fun',
+        'https://games.dverse.fun',
+        'https://maths.dverse.fun',
+        'https://science.dverse.fun',
+        'https://dverse.fun',
+        'https://www.dverse.fun'
+      ]);
+
+      if (!window.supabase) return;
+      const client = window.supabase.createClient(DVERSE_SUPABASE_URL, DVERSE_SUPABASE_KEY);
+
+      const publicSession = (session) => session ? {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        expires_in: session.expires_in,
+        token_type: session.token_type,
+        user: session.user
+      } : null;
+
+      function reply(targetWindow, targetOrigin, requestId, payload) {
+        targetWindow.postMessage({
+          source: 'dverse-auth-bridge',
+          requestId,
+          ...payload
+        }, targetOrigin);
+      }
+
+      window.addEventListener('message', async (event) => {
+        if (!allowedOrigins.has(event.origin)) return;
+        const message = event.data || {};
+        if (message.source !== 'dverse-app') return;
+
+        try {
+          if (message.type === 'dverse-auth:get-session') {
+            const { data, error } = await client.auth.getSession();
+            if (error) throw error;
+            reply(event.source, event.origin, message.requestId, {
+              type: 'dverse-auth:session',
+              session: publicSession(data.session)
+            });
+            return;
+          }
+
+          if (message.type === 'dverse-auth:set-session') {
+            const session = message.session || {};
+            if (session.access_token && session.refresh_token) {
+              const { error } = await client.auth.setSession({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token
+              });
+              if (error) throw error;
+            }
+            const { data, error } = await client.auth.getSession();
+            if (error) throw error;
+            reply(event.source, event.origin, message.requestId, {
+              type: 'dverse-auth:saved',
+              session: publicSession(data.session)
+            });
+            return;
+          }
+
+          if (message.type === 'dverse-auth:sign-out') {
+            const { error } = await client.auth.signOut();
+            if (error) throw error;
+            reply(event.source, event.origin, message.requestId, {
+              type: 'dverse-auth:signed-out'
+            });
+          }
+        } catch (error) {
+          reply(event.source, event.origin, message.requestId, {
+            type: 'dverse-auth:error',
+            error: error?.message || 'DVerse auth bridge failed.'
+          });
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
