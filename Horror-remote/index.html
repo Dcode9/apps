@@ -2,160 +2,268 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#0a0000" />
   <title>Horror Remote • D'Verse</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;500;600;700;800&display=swap');
+    :root { color-scheme: dark; }
+    html, body { height: 100%; }
     body {
       font-family: 'Inter', sans-serif;
       background: radial-gradient(ellipse at center, #1a0505 0%, #050000 70%);
       color: #e8e0d0;
       min-height: 100dvh;
       overflow-x: hidden;
+      overscroll-behavior: none;
       -webkit-tap-highlight-color: transparent;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
     }
-    .font-horror { font-family: 'Creepster', cursive; }
+    .font-horror { font-family: 'Creepster', cursive; letter-spacing: 0.03em; }
     .glass {
       background: rgba(20, 5, 5, 0.65);
       backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(180, 40, 40, 0.25);
     }
     .pad {
-      width: 110px; height: 110px;
+      width: 104px; height: 104px;
       border-radius: 18px;
       background: rgba(40, 8, 8, 0.7);
       border: 1px solid rgba(200, 50, 50, 0.35);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       text-align: center; cursor: pointer;
-      transition: all 0.12s ease;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
       user-select: none;
       position: relative;
       overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
     .pad:active, .pad.playing {
       transform: scale(0.94);
       box-shadow: 0 0 28px rgba(220, 30, 30, 0.55);
       border-color: #ef4444;
     }
-    .pad .icon { font-size: 28px; margin-bottom: 4px; }
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .pad .icon { font-size: 26px; margin-bottom: 4px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
     .status-dot.connected { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
     .status-dot.waiting { background: #eab308; animation: pulse 1.4s infinite; }
     .status-dot.offline { background: #ef4444; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .status-dot.connecting { background: #38bdf8; animation: pulse 0.9s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
     .btn-horror {
       background: linear-gradient(135deg, #7f1d1d, #450a0a);
       border: 1px solid #b91c1c;
+      transition: transform 0.1s ease, opacity 0.15s ease;
     }
-    .btn-horror:active { transform: scale(0.97); }
+    .btn-horror:active:not(:disabled) { transform: scale(0.97); }
+    .btn-horror:disabled { opacity: 0.4; }
     input, button { outline: none; }
     .hide { display: none !important; }
     #player-screen, #controller-screen { min-height: 100dvh; }
+    .pin-btn { opacity: 0.45; transition: opacity 0.15s ease, transform 0.15s ease; }
+    .pin-btn.pinned { opacity: 1; color: #fbbf24; }
+    .pin-btn:active { transform: scale(0.85); }
+
+    .screen-enter { animation: screenIn 0.32s cubic-bezier(.2,.9,.3,1) both; }
+    @keyframes screenIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .spin {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.25); border-top-color: #ef4444;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 999px;
+      background: rgba(255,255,255,0.14);
+      touch-action: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.75);
+      cursor: pointer; margin-top: -6px;
+      border: 2px solid #1a0505;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #ef4444; border: 2px solid #1a0505;
+      box-shadow: 0 0 8px rgba(239,68,68,0.75); cursor: pointer;
+    }
+    input[type=range]::-moz-range-track { height: 4px; border-radius: 999px; background: rgba(255,255,255,0.14); }
+    input[type=range]:disabled::-webkit-slider-thumb { background: #6b7280; box-shadow: none; }
+    input[type=range]:disabled::-moz-range-thumb { background: #6b7280; box-shadow: none; }
+
+    #toast {
+      position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); z-index: 60;
+      transform: translate(-50%, 12px); opacity: 0; pointer-events: none;
+      background: #f5f0ea; color: #1a0505; font-weight: 700; font-size: 12.5px;
+      padding: 11px 18px; border-radius: 999px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: opacity 0.2s ease, transform 0.2s ease; max-width: 88vw; text-align: center;
+    }
+    #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .btn-inline-spin { display:inline-flex; align-items:center; gap:6px; }
   </style>
 </head>
 <body class="flex flex-col">
 
   <!-- MODE SELECT -->
-  <div id="mode-select" class="flex-1 flex flex-col items-center justify-center p-6 gap-8">
+  <div id="mode-select" class="flex-1 flex flex-col items-center justify-center p-6 gap-8 screen-enter">
     <div class="text-center">
-      <h1 class="font-horror text-5xl text-red-500 tracking-wider mb-2">HORROR REMOTE</h1>
+      <h1 class="font-horror text-5xl text-red-500 tracking-wider mb-2 drop-shadow-[0_0_18px_rgba(239,68,68,0.35)]">HORROR REMOTE</h1>
       <p class="text-neutral-400 text-sm tracking-widest uppercase">D'Verse • Two-phone soundboard</p>
     </div>
-
     <div class="flex flex-col gap-4 w-full max-w-xs">
-      <button onclick="startAs('player')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40">
+      <button onclick="startAs('player')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40 active:scale-[0.97]">
         🎧 PLAYER<br><span class="text-xs font-normal opacity-70">This phone plays the sounds</span>
       </button>
-      <button onclick="startAs('controller')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40">
+      <button onclick="startAs('controller')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40 active:scale-[0.97]">
         🕹️ CONTROLLER<br><span class="text-xs font-normal opacity-70">This phone controls the other</span>
       </button>
     </div>
-
     <p class="text-neutral-600 text-xs text-center max-w-xs">
       Works on iOS & Android browsers. Add to Home Screen for best experience.
     </p>
   </div>
 
   <!-- PLAYER SCREEN -->
-  <div id="player-screen" class="hide flex flex-col p-5 gap-5">
+  <div id="player-screen" class="hide flex-col p-5 gap-4">
     <header class="glass rounded-2xl p-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 min-w-0">
         <div id="p-status-dot" class="status-dot waiting"></div>
-        <div>
+        <div class="min-w-0">
           <div class="text-xs text-neutral-400 uppercase tracking-widest">Player Mode</div>
-          <div id="p-status-text" class="text-sm font-semibold">Waiting for controller…</div>
+          <div id="p-status-text" class="text-sm font-semibold truncate">Waiting for controller…</div>
         </div>
       </div>
-      <button onclick="location.reload()" class="text-neutral-500 text-xs">Exit</button>
+      <button onclick="exitApp()" class="text-neutral-500 text-xs shrink-0 px-2 py-1">Exit</button>
     </header>
 
-    <div class="glass rounded-2xl p-8 flex flex-col items-center gap-4 flex-1 justify-center">
-      <div class="font-horror text-6xl text-red-600/80">🎧</div>
+    <div class="glass rounded-2xl p-6 flex flex-col items-center gap-3">
+      <div class="font-horror text-5xl text-red-600/80">🎧</div>
       <div class="text-center">
-        <div class="text-neutral-400 text-sm mb-1">Share this room code</div>
-        <div id="room-code" class="font-horror text-5xl tracking-[0.3em] text-red-400 select-all">······</div>
+        <div class="text-neutral-400 text-xs mb-1">Share this room code</div>
+        <div id="room-code" class="font-horror text-4xl tracking-[0.3em] text-red-400 select-all">······</div>
       </div>
-      <p class="text-neutral-500 text-xs text-center max-w-xs mt-4">
-        Keep this screen open. The controller will connect and play sounds here.
+      <p class="text-neutral-500 text-xs text-center max-w-xs">
+        Keep this screen open. Sounds play only here.
       </p>
+      <div id="sfx-flash" class="text-xs text-red-300/80 font-medium h-4 transition-opacity duration-300 opacity-0">—</div>
     </div>
 
-    <div class="glass rounded-2xl p-4 text-center">
-      <div class="text-xs text-neutral-500 uppercase tracking-widest mb-1">Now Playing</div>
-      <div id="now-playing" class="text-sm font-medium text-red-300">— silent —</div>
+    <!-- Now Playing / local song controls -->
+    <div class="glass rounded-2xl p-4 flex flex-col gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-black/40 border border-red-900/40 flex items-center justify-center text-xl shrink-0">🎵</div>
+        <div class="min-w-0 flex-1">
+          <div id="song-title" class="text-sm font-semibold truncate">No song loaded</div>
+          <div id="song-artist" class="text-xs text-neutral-500 truncate">Songs sent from the controller appear here</div>
+        </div>
+        <div id="song-spinner" class="spin hide shrink-0"></div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span id="time-current" class="text-[10px] text-neutral-500 w-9 text-right tabular-nums">0:00</span>
+        <input id="seekbar" type="range" min="0" max="100" value="0" step="1"
+          class="flex-1" oninput="onSeekInput(this.value)" onchange="onSeekCommit(this.value)" disabled />
+        <span id="time-total" class="text-[10px] text-neutral-500 w-9 tabular-nums">0:00</span>
+      </div>
+
+      <div class="flex items-center justify-center">
+        <button id="song-playpause" onclick="toggleLocalPlayPause()" disabled
+          class="btn-horror rounded-full w-14 h-14 flex items-center justify-center text-2xl">
+          <span id="song-playpause-icon">▶️</span>
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2 pt-2 border-t border-red-950/50">
+        <span class="text-sm">🔊</span>
+        <input id="volume-slider" type="range" min="0" max="100" value="90" step="1"
+          class="flex-1" oninput="onVolumeInput(this.value)" />
+        <span id="volume-val" class="text-[10px] text-neutral-500 w-9 text-right tabular-nums">90%</span>
+      </div>
+      <div class="text-[10px] text-neutral-600 text-center leading-tight">
+        This controls the song volume on this phone — the hardware volume buttons work too.
+      </div>
     </div>
+
+    <div id="preload-card" class="glass rounded-2xl p-3 text-center">
+      <div id="preload-status" class="text-xs text-neutral-500">&nbsp;</div>
+    </div>
+
+    <audio id="song-audio" class="hide" playsinline></audio>
   </div>
 
   <!-- CONTROLLER SCREEN -->
-  <div id="controller-screen" class="hide flex flex-col p-4 gap-4">
+  <div id="controller-screen" class="hide flex-col p-4 gap-4">
     <header class="glass rounded-2xl p-3 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 min-w-0">
         <div id="c-status-dot" class="status-dot offline"></div>
-        <div id="c-status-text" class="text-xs font-semibold">Not connected</div>
+        <div id="c-status-text" class="text-xs font-semibold truncate">Not connected</div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 shrink-0">
         <input id="join-code" type="text" maxlength="6" placeholder="Room code"
           class="bg-black/40 border border-red-900/50 rounded-lg px-3 py-1.5 text-sm w-24 tracking-widest text-center uppercase"
-          oninput="this.value=this.value.toUpperCase()" />
-        <button onclick="connectToRoom()" class="btn-horror rounded-lg px-3 py-1.5 text-xs font-bold">JOIN</button>
+          oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter') connectToRoom()" />
+        <button id="join-btn" onclick="connectToRoom()" class="btn-horror rounded-lg px-3 py-1.5 text-xs font-bold min-w-[64px] flex items-center justify-center gap-1.5">
+          <span id="join-btn-label">JOIN</span>
+        </button>
       </div>
     </header>
 
-    <!-- Pads -->
-    <div class="glass rounded-2xl p-4 flex-1">
+    <div id="controller-now-playing" class="hide text-xs text-center text-red-300/90 -mb-1"></div>
+
+    <div class="glass rounded-2xl p-4">
       <div class="text-xs text-neutral-500 uppercase tracking-widest mb-3">Horror Pads</div>
       <div id="pad-grid" class="flex flex-wrap justify-center gap-3"></div>
     </div>
 
-    <!-- Saavn Search -->
     <div class="glass rounded-2xl p-4">
-      <div class="text-xs text-neutral-500 uppercase tracking-widest mb-2">JioSaavn Search</div>
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-xs text-neutral-500 uppercase tracking-widest">D'Tunes</div>
+        <button onclick="preloadPinnedOnPlayer()" id="preload-btn"
+          class="btn-horror rounded-lg px-3 py-1 text-xs font-bold disabled:opacity-40" disabled>
+          Preload Pinned → Player
+        </button>
+      </div>
       <div class="flex gap-2 mb-3">
         <input id="saavn-query" type="search" placeholder="Search song / artist…"
           class="flex-1 bg-black/40 border border-red-900/40 rounded-lg px-3 py-2 text-sm"
           onkeydown="if(event.key==='Enter') searchSaavn()" />
-        <button onclick="searchSaavn()" class="btn-horror rounded-lg px-4 py-2 text-sm font-bold">Go</button>
+        <button id="search-btn" onclick="searchSaavn()" class="btn-horror rounded-lg px-4 py-2 text-sm font-bold min-w-[56px] flex items-center justify-center">Go</button>
       </div>
-      <div id="saavn-results" class="max-h-40 overflow-y-auto space-y-1 text-sm"></div>
+      <div id="saavn-results" class="max-h-48 overflow-y-auto space-y-1 text-sm"></div>
+      <div id="pinned-section" class="mt-3 pt-3 border-t border-red-950/60 hide">
+        <div class="text-xs text-neutral-500 uppercase tracking-widest mb-2">Pinned</div>
+        <div id="pinned-list" class="space-y-1 text-sm"></div>
+      </div>
     </div>
 
     <div class="flex gap-2">
-      <button onclick="sendCmd({type:'stop'})" class="flex-1 bg-red-950/80 border border-red-700 rounded-xl py-3 text-sm font-bold text-red-300">
+      <button onclick="sendCmd({type:'stop'})" class="flex-1 bg-red-950/80 border border-red-700 rounded-xl py-3 text-sm font-bold text-red-300 active:scale-[0.98] transition-transform">
         🛑 STOP ALL
       </button>
-      <button onclick="location.reload()" class="px-4 text-neutral-500 text-xs">Exit</button>
+      <button onclick="exitApp()" class="px-4 text-neutral-500 text-xs">Exit</button>
     </div>
   </div>
+
+  <div id="toast"></div>
 
 <script>
 /* ============================================================
    HORROR REMOTE – D'Verse
+   Controller sends commands. Player plays audio locally.
    ============================================================ */
 
 const SOUNDS = [
@@ -173,32 +281,55 @@ const SOUNDS = [
   { id: 'bell',       name: 'Death Bell',  emoji: '🔔', color: '#fbbf24' },
 ];
 
+// STUN alone frequently fails to punch through carrier-grade NAT / cross-network
+// pairing (e.g. Android on cellular data connecting to iOS on WiFi), which is the
+// most common reason two-phone pairing silently fails. Public TURN relays are
+// added as a fallback so the connection still works when a direct P2P path can't
+// be found.
+const ICE_CONFIG = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
+  ]
+};
+
 let peer = null;
 let conn = null;
-let mode = null; // 'player' | 'controller'
+let mode = null;
+
+/* ---------------- Toast ---------------- */
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+/* ---------------- Web Audio SFX engine (procedural, Player only) ---------------- */
 let audioCtx = null;
 let masterGain = null;
 let buffers = {};
-let activeSources = [];
-let roomCode = '';
+let activeSFXSources = [];
 
-/* ---------- Audio Engine (synthetic horror sounds) ---------- */
-function ensureAudio() {
+function ensureSFXAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.85;
+  masterGain.gain.value = 0.9;
   masterGain.connect(audioCtx.destination);
 }
 
-function resumeAudio() {
+function resumeSFXAudio() {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// Procedural horror sound generators (no external files needed → works offline + instant)
 function createWhisper() {
-  const len = 1.8;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 1.8, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -207,8 +338,7 @@ function createWhisper() {
   return buf;
 }
 function createJumpscare() {
-  const len = 0.9;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 0.9, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -218,8 +348,7 @@ function createJumpscare() {
   return buf;
 }
 function createDoorCreak() {
-  const len = 2.2;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 2.2, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -229,8 +358,7 @@ function createDoorCreak() {
   return buf;
 }
 function createHeartbeat() {
-  const len = 2.5;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 2.5, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -240,8 +368,7 @@ function createHeartbeat() {
   return buf;
 }
 function createScream() {
-  const len = 1.4;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 1.4, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -251,8 +378,7 @@ function createScream() {
   return buf;
 }
 function createFootsteps() {
-  const len = 2.0;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 2.0, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -262,8 +388,7 @@ function createFootsteps() {
   return buf;
 }
 function createThunder() {
-  const len = 2.8;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 2.8, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -272,8 +397,7 @@ function createThunder() {
   return buf;
 }
 function createLaugh() {
-  const len = 1.6;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 1.6, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -283,8 +407,7 @@ function createLaugh() {
   return buf;
 }
 function createChains() {
-  const len = 1.8;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 1.8, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -293,8 +416,7 @@ function createChains() {
   return buf;
 }
 function createWind() {
-  const len = 3.0;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 3.0, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -303,8 +425,7 @@ function createWind() {
   return buf;
 }
 function createGrowl() {
-  const len = 1.5;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 1.5, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -314,8 +435,7 @@ function createGrowl() {
   return buf;
 }
 function createBell() {
-  const len = 2.5;
-  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const len = 2.5, buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
   const d = buf.getChannelData(0);
   for (let i = 0; i < d.length; i++) {
     const t = i / audioCtx.sampleRate;
@@ -332,81 +452,290 @@ const GENERATORS = {
   wind: createWind, growl: createGrowl, bell: createBell
 };
 
-function preloadAll() {
-  ensureAudio();
-  SOUNDS.forEach(s => {
-    buffers[s.id] = GENERATORS[s.id]();
-  });
+function preloadSFX() {
+  ensureSFXAudio();
+  SOUNDS.forEach(s => { buffers[s.id] = GENERATORS[s.id](); });
 }
 
-function playLocal(id) {
-  ensureAudio(); resumeAudio();
+function playSFX(id) {
+  ensureSFXAudio(); resumeSFXAudio();
   if (!buffers[id]) return;
   const src = audioCtx.createBufferSource();
   src.buffer = buffers[id];
   src.connect(masterGain);
   src.start(0);
-  activeSources.push(src);
-  src.onended = () => { activeSources = activeSources.filter(x => x !== src); };
+  activeSFXSources.push(src);
+  src.onended = () => { activeSFXSources = activeSFXSources.filter(x => x !== src); };
+  const s = SOUNDS.find(x => x.id === id);
+  flashSFX(s ? s.name : id);
 }
 
-function stopAllLocal() {
-  activeSources.forEach(s => { try { s.stop(); } catch(e){} });
-  activeSources = [];
-  document.getElementById('now-playing') && (document.getElementById('now-playing').textContent = '— silent —');
+function stopSFX() {
+  activeSFXSources.forEach(s => { try { s.stop(); } catch(e){} });
+  activeSFXSources = [];
 }
 
-/* ---------- PeerJS ---------- */
+let sfxFlashTimer = null;
+function flashSFX(text) {
+  const el = document.getElementById('sfx-flash');
+  if (!el) return;
+  el.textContent = '▶ ' + text;
+  el.style.opacity = '1';
+  clearTimeout(sfxFlashTimer);
+  sfxFlashTimer = setTimeout(() => { el.style.opacity = '0'; }, 1600);
+}
+
+/* ---------------- Song playback (single persistent element, Player only) ----------------
+   A single, reused <audio> element is used for every song instead of creating a new
+   Audio() object per play. Creating multiple concurrent HTMLMediaElements / re-triggering
+   playback while a previous play() promise hadn't settled is what caused songs to play for
+   a split second and then stop — the browser's audio focus / the unresolved play() promise
+   would get interrupted by the next action. A single element with a safe swap sequence
+   avoids that entirely. */
+let songAudio = null;
+let currentSongId = null;
+let seeking = false;
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+
+function ensureSongAudio() {
+  if (songAudio) return songAudio;
+  songAudio = document.getElementById('song-audio');
+
+  songAudio.addEventListener('loadedmetadata', () => {
+    if (!currentSongId) return; // ignore the silent unlock clip used to satisfy iOS autoplay rules
+    const bar = document.getElementById('seekbar');
+    const dur = Math.floor(songAudio.duration) || 0;
+    bar.max = dur || 100;
+    bar.disabled = false;
+    document.getElementById('time-total').textContent = formatTime(dur);
+  });
+  songAudio.addEventListener('timeupdate', () => {
+    if (!currentSongId || seeking) return;
+    const bar = document.getElementById('seekbar');
+    bar.value = Math.floor(songAudio.currentTime) || 0;
+    document.getElementById('time-current').textContent = formatTime(songAudio.currentTime);
+  });
+  songAudio.addEventListener('play', () => setPlayPauseIcon(true));
+  songAudio.addEventListener('playing', () => { hideSongSpinner(); setPlayPauseIcon(true); });
+  songAudio.addEventListener('pause', () => setPlayPauseIcon(false));
+  songAudio.addEventListener('waiting', () => showSongSpinner());
+  songAudio.addEventListener('ended', () => setPlayPauseIcon(false));
+  songAudio.addEventListener('error', () => {
+    hideSongSpinner();
+    if (currentSongId) toast('Song failed to load — try another track');
+  });
+  return songAudio;
+}
+
+// Unlocks the <audio> element for later *programmatic* play() calls triggered by
+// remote (WebRTC) commands rather than a direct tap — required by iOS Safari's
+// autoplay policy. Must run inside the real user gesture of tapping "PLAYER".
+function unlockSongAudio() {
+  const a = ensureSongAudio();
+  a.muted = true;
+  a.src = SILENT_WAV;
+  const p = a.play();
+  const cleanup = () => { a.pause(); a.removeAttribute('src'); a.load(); a.muted = false; };
+  if (p && p.then) { p.then(cleanup).catch(cleanup); } else { cleanup(); }
+}
+
+function formatTime(s) {
+  s = Math.max(0, Math.floor(Number(s) || 0));
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m + ':' + String(sec).padStart(2, '0');
+}
+function setPlayPauseIcon(playing) {
+  const icon = document.getElementById('song-playpause-icon');
+  if (icon) icon.textContent = playing ? '⏸️' : '▶️';
+}
+function showSongSpinner() { document.getElementById('song-spinner')?.classList.remove('hide'); }
+function hideSongSpinner() { document.getElementById('song-spinner')?.classList.add('hide'); }
+function setSongMeta(title, artist) {
+  document.getElementById('song-title').textContent = title || 'No song loaded';
+  document.getElementById('song-artist').textContent = artist || '—';
+}
+function updateMediaSession(title, artist) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: title || 'Horror Remote',
+    artist: artist || "D'Verse",
+    album: 'Horror Remote'
+  });
+  try {
+    navigator.mediaSession.setActionHandler('play', () => songAudio && songAudio.play().catch(()=>{}));
+    navigator.mediaSession.setActionHandler('pause', () => songAudio && songAudio.pause());
+    navigator.mediaSession.setActionHandler('stop', () => stopSong());
+    navigator.mediaSession.setActionHandler('seekto', (d) => {
+      if (songAudio && d && d.seekTime != null) songAudio.currentTime = d.seekTime;
+    });
+  } catch (e) { /* not all handlers are supported on every browser */ }
+}
+
+async function playSong(id, url, title, artist) {
+  const a = ensureSongAudio();
+  stopSFX();
+  showSongSpinner();
+  document.getElementById('song-playpause').disabled = false;
+
+  try {
+    if (currentSongId !== id || a.src !== url) {
+      if (!a.paused) a.pause();
+      document.getElementById('seekbar').disabled = true;
+      document.getElementById('seekbar').value = 0;
+      document.getElementById('time-current').textContent = '0:00';
+      document.getElementById('time-total').textContent = '0:00';
+      a.src = url;
+      currentSongId = id;
+      a.load();
+    } else {
+      a.currentTime = 0;
+    }
+    setSongMeta(title, artist);
+    updateMediaSession(title, artist);
+    await a.play();
+    if (conn && conn.open) conn.send({ type: 'ack', id, title: title || 'Song' });
+  } catch (err) {
+    console.warn('playSong failed', err);
+    hideSongSpinner();
+    toast('Tap the Player screen once, then try again');
+  }
+}
+
+function toggleLocalPlayPause() {
+  const a = songAudio;
+  if (!a || !a.src) return;
+  if (a.paused) a.play().catch(() => toast('Playback blocked — tap the screen first'));
+  else a.pause();
+}
+
+function onSeekInput(val) {
+  seeking = true;
+  document.getElementById('time-current').textContent = formatTime(val);
+}
+function onSeekCommit(val) {
+  seeking = false;
+  if (songAudio) songAudio.currentTime = Number(val);
+}
+function onVolumeInput(val) {
+  const v = Number(val) / 100;
+  if (songAudio) songAudio.volume = v;
+  document.getElementById('volume-val').textContent = val + '%';
+  try { localStorage.setItem('horror_volume', val); } catch(e){}
+}
+
+function stopSong() {
+  if (songAudio) songAudio.pause();
+  currentSongId = null;
+  setSongMeta(null, 'Songs sent from the controller appear here');
+  const bar = document.getElementById('seekbar');
+  bar.value = 0;
+  document.getElementById('time-current').textContent = '0:00';
+}
+
+function stopAll() {
+  stopSFX();
+  stopSong();
+}
+
+const preloadedIds = new Set();
+async function preloadSong(url, id) {
+  if (preloadedIds.has(id)) return true;
+  try {
+    await new Promise((resolve) => {
+      const tmp = new Audio();
+      tmp.preload = 'auto';
+      let settled = false;
+      const done = () => { if (settled) return; settled = true; tmp.src = ''; resolve(); };
+      tmp.addEventListener('canplaythrough', done, { once: true });
+      tmp.addEventListener('error', done, { once: true });
+      tmp.src = url;
+      tmp.load();
+      setTimeout(done, 10000);
+    });
+    preloadedIds.add(id);
+    return true;
+  } catch (e) {
+    console.warn('preload failed', id, e);
+    return false;
+  }
+}
+
+/* ---------------- Pairing / connection ---------------- */
+
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let c = '';
-  for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random()*chars.length)];
+  for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random() * chars.length)];
   return c;
+}
+
+function revealScreen(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('hide');
+  el.classList.add('flex', 'screen-enter');
 }
 
 function startAs(m) {
   mode = m;
   document.getElementById('mode-select').classList.add('hide');
-  preloadAll();
 
   if (m === 'player') {
-    document.getElementById('player-screen').classList.remove('hide');
-    roomCode = generateCode();
+    revealScreen('player-screen');
+    ensureSFXAudio();
+    resumeSFXAudio();
+    preloadSFX();
+    unlockSongAudio();
+
+    const savedVol = (() => { try { return localStorage.getItem('horror_volume'); } catch(e){ return null; } })();
+    if (savedVol != null) {
+      document.getElementById('volume-slider').value = savedVol;
+      document.getElementById('volume-val').textContent = savedVol + '%';
+    }
+    ensureSongAudio().volume = Number(document.getElementById('volume-slider').value) / 100;
+
+    const roomCode = generateCode();
     document.getElementById('room-code').textContent = roomCode;
+    setPlayerStatus('connecting', 'Starting up…');
 
-    peer = new Peer(roomCode, {
-      debug: 1,
-      config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-    });
+    peer = new Peer(roomCode, { debug: 1, config: ICE_CONFIG });
 
-    peer.on('open', id => {
-      console.log('Player peer open', id);
-    });
-
+    peer.on('open', () => setPlayerStatus('waiting', 'Waiting for controller…'));
     peer.on('connection', c => {
       conn = c;
       setupConnection(c);
-      setPlayerStatus('connected', 'Controller connected!');
     });
-
+    peer.on('disconnected', () => setPlayerStatus('waiting', 'Reconnecting…'));
     peer.on('error', err => {
       console.error(err);
-      setPlayerStatus('offline', 'Error – try refresh');
+      setPlayerStatus('offline', 'Connection error — pull to refresh');
+      toast('Signaling error — try reloading the page');
     });
   } else {
-    document.getElementById('controller-screen').classList.remove('hide');
+    revealScreen('controller-screen');
     renderPads();
+    loadPinnedFromStorage();
   }
+}
+
+function setJoinLoading(loading) {
+  // Guarded: setupConnection() is shared by both Player and Controller, but
+  // #join-btn only exists on the Controller screen.
+  const btn = document.getElementById('join-btn');
+  const label = document.getElementById('join-btn-label');
+  if (!btn || !label) return;
+  btn.disabled = loading;
+  label.innerHTML = loading ? '<span class="spin" style="width:12px;height:12px;border-width:2px;"></span>' : 'JOIN';
 }
 
 function connectToRoom() {
   const code = document.getElementById('join-code').value.trim().toUpperCase();
-  if (code.length < 4) return alert('Enter the 6-digit room code');
+  if (code.length < 4) return toast('Enter the room code from the Player');
+  if (peer) { try { peer.destroy(); } catch(e){} }
 
-  peer = new Peer({
-    debug: 1,
-    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
-  });
+  setJoinLoading(true);
+  setControllerStatus('connecting', 'Connecting…');
+
+  peer = new Peer({ debug: 1, config: ICE_CONFIG });
 
   peer.on('open', () => {
     conn = peer.connect(code, { reliable: true });
@@ -415,149 +744,268 @@ function connectToRoom() {
 
   peer.on('error', err => {
     console.error(err);
+    setJoinLoading(false);
     setControllerStatus('offline', 'Connection failed');
-    alert('Could not connect. Check the code and that the Player is open.');
+    const reason = err && err.type === 'peer-unavailable'
+      ? 'No Player found with that code — check it and make sure the Player screen is open'
+      : 'Could not connect — check your connection and try again';
+    toast(reason);
   });
+
+  // Safety net in case neither 'open' nor 'error' fires on a dead network.
+  setTimeout(() => {
+    if (!conn || !conn.open) {
+      setJoinLoading(false);
+      if (!conn || !conn.open) setControllerStatus('offline', 'Not connected');
+    }
+  }, 15000);
 }
 
 function setupConnection(c) {
   c.on('open', () => {
-    if (mode === 'controller') setControllerStatus('connected', 'Connected!');
+    setJoinLoading(false);
+    if (mode === 'controller') {
+      setControllerStatus('connected', 'Connected!');
+      document.getElementById('preload-btn').disabled = false;
+    }
     if (mode === 'player') setPlayerStatus('connected', 'Controller connected!');
   });
 
   c.on('data', data => {
-    if (mode !== 'player') return;
-    handleCommand(data);
+    if (mode === 'player') { handleCommand(data); return; }
+    if (mode === 'controller' && data && data.type === 'ack') {
+      const el = document.getElementById('controller-now-playing');
+      el.textContent = '▶ Now playing on Player: ' + (data.title || 'Song');
+      el.classList.remove('hide');
+      clearRowLoading(data.id);
+    }
   });
 
   c.on('close', () => {
     if (mode === 'player') setPlayerStatus('waiting', 'Controller disconnected');
-    if (mode === 'controller') setControllerStatus('offline', 'Disconnected');
+    if (mode === 'controller') {
+      setControllerStatus('offline', 'Disconnected');
+      document.getElementById('preload-btn').disabled = true;
+      setJoinLoading(false);
+    }
+  });
+
+  c.on('error', err => {
+    console.error(err);
+    setJoinLoading(false);
   });
 }
 
 function setPlayerStatus(state, text) {
-  const dot = document.getElementById('p-status-dot');
-  const txt = document.getElementById('p-status-text');
-  dot.className = 'status-dot ' + state;
-  txt.textContent = text;
+  document.getElementById('p-status-dot').className = 'status-dot ' + state;
+  document.getElementById('p-status-text').textContent = text;
 }
 function setControllerStatus(state, text) {
-  const dot = document.getElementById('c-status-dot');
-  const txt = document.getElementById('c-status-text');
-  dot.className = 'status-dot ' + state;
-  txt.textContent = text;
+  document.getElementById('c-status-dot').className = 'status-dot ' + state;
+  document.getElementById('c-status-text').textContent = text;
 }
 
 function sendCmd(cmd) {
   if (conn && conn.open) {
     conn.send(cmd);
   } else {
-    // local fallback for testing
-    if (cmd.type === 'play') playLocal(cmd.id);
-    if (cmd.type === 'stop') stopAllLocal();
+    toast('Connect to a Player first');
+    if (cmd.type === 'play') {
+      const btn = document.querySelector(`[data-id="${cmd.id}"]`);
+      if (btn) {
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 350);
+      }
+    }
   }
 }
 
-function handleCommand(cmd) {
-  resumeAudio();
+async function handleCommand(cmd) {
+  resumeSFXAudio();
   if (cmd.type === 'play') {
-    playLocal(cmd.id);
-    const s = SOUNDS.find(x => x.id === cmd.id);
-    document.getElementById('now-playing').textContent = s ? s.name : cmd.id;
+    playSFX(cmd.id);
   } else if (cmd.type === 'stop') {
-    stopAllLocal();
+    stopAll();
   } else if (cmd.type === 'song') {
-    playSongUrl(cmd.url, cmd.title);
+    playSong(cmd.id || cmd.url, cmd.url, cmd.title, cmd.artist);
+  } else if (cmd.type === 'preload') {
+    const list = cmd.songs || [];
+    const status = document.getElementById('preload-status');
+    let done = 0;
+    status.textContent = `Preloading 0/${list.length}…`;
+    for (const s of list) {
+      await preloadSong(s.url, s.id);
+      done++;
+      status.textContent = `Preloaded ${done}/${list.length}`;
+    }
+    status.textContent = `Ready • ${list.length} song${list.length === 1 ? '' : 's'} cached`;
   }
 }
 
-/* ---------- Pads UI ---------- */
+/* ---------------- Controller: SFX pads ---------------- */
+
 function renderPads() {
   const grid = document.getElementById('pad-grid');
   grid.innerHTML = '';
   SOUNDS.forEach(s => {
     const div = document.createElement('div');
     div.className = 'pad';
+    div.dataset.id = s.id;
     div.innerHTML = `<div class="icon">${s.emoji}</div><div class="text-xs font-semibold leading-tight">${s.name}</div>`;
     div.style.borderColor = s.color + '55';
     div.onpointerdown = (e) => {
       e.preventDefault();
       div.classList.add('playing');
       sendCmd({ type: 'play', id: s.id });
-      // also play locally so controller hears it too
-      playLocal(s.id);
-      setTimeout(() => div.classList.remove('playing'), 400);
+      setTimeout(() => div.classList.remove('playing'), 350);
     };
     grid.appendChild(div);
   });
 }
 
-/* ---------- JioSaavn ---------- */
+/* ---------------- Controller: D'Tunes (search / pin / preload) ---------------- */
+
+let pinnedSongs = [];
+
+function loadPinnedFromStorage() {
+  try { pinnedSongs = JSON.parse(localStorage.getItem('horror_pinned') || '[]'); }
+  catch { pinnedSongs = []; }
+  renderPinned();
+}
+function savePinned() {
+  localStorage.setItem('horror_pinned', JSON.stringify(pinnedSongs));
+  renderPinned();
+}
+function togglePin(song) {
+  const idx = pinnedSongs.findIndex(p => p.id === song.id);
+  if (idx >= 0) pinnedSongs.splice(idx, 1);
+  else pinnedSongs.push(song);
+  savePinned();
+}
+function renderPinned() {
+  const section = document.getElementById('pinned-section');
+  const list = document.getElementById('pinned-list');
+  if (!pinnedSongs.length) { section.classList.add('hide'); return; }
+  section.classList.remove('hide');
+  list.innerHTML = pinnedSongs.map(s => `
+    <div class="flex items-center justify-between gap-2 py-1.5 border-b border-red-950/40">
+      <div class="min-w-0 flex-1">
+        <div class="truncate font-medium text-sm">${s.title}</div>
+        <div class="truncate text-xs text-neutral-500">${s.artist || ''}</div>
+      </div>
+      <div class="flex gap-1 shrink-0">
+        <button onclick="playPinned('${s.id}', this)" data-row="${s.id}" class="btn-horror rounded-lg px-2.5 py-1 text-xs font-bold min-w-[52px]">Play</button>
+        <button onclick="togglePin({id:'${s.id}'})" class="text-yellow-400 text-sm px-1">★</button>
+      </div>
+    </div>
+  `).join('');
+}
+function playPinned(id, btnEl) {
+  const s = pinnedSongs.find(p => p.id === id);
+  if (!s) return;
+  setRowLoading(btnEl, s.id);
+  sendCmd({ type: 'song', id: s.id, url: s.url, title: s.title, artist: s.artist });
+}
+function preloadPinnedOnPlayer() {
+  if (!conn || !conn.open) return toast('Connect to a Player first');
+  if (!pinnedSongs.length) return toast('Pin some songs first');
+  sendCmd({ type: 'preload', songs: pinnedSongs });
+  const btn = document.getElementById('preload-btn');
+  const original = btn.textContent;
+  btn.textContent = 'Sent ✓';
+  setTimeout(() => { btn.textContent = original; }, 2000);
+}
+
+function setRowLoading(btnEl, id) {
+  if (!btnEl) return;
+  btnEl.dataset.loading = '1';
+  btnEl.innerHTML = '<span class="btn-inline-spin"><span class="spin" style="width:11px;height:11px;border-width:2px;"></span></span>';
+  clearTimeout(btnEl._rowTimer);
+  btnEl._rowTimer = setTimeout(() => clearRowLoading(id), 6000);
+}
+function clearRowLoading(id) {
+  document.querySelectorAll(`[data-row="${CSS.escape(String(id))}"]`).forEach(btn => {
+    if (btn.dataset.loading) { btn.textContent = 'Play'; delete btn.dataset.loading; }
+  });
+}
+
 async function searchSaavn() {
   const q = document.getElementById('saavn-query').value.trim();
   if (!q) return;
   const box = document.getElementById('saavn-results');
-  box.innerHTML = '<div class="text-neutral-500 text-xs">Searching…</div>';
+  const btn = document.getElementById('search-btn');
+  const originalBtn = btn.innerHTML;
+  btn.innerHTML = '<span class="spin" style="width:12px;height:12px;border-width:2px;"></span>';
+  btn.disabled = true;
+  box.innerHTML = '<div class="text-neutral-500 text-xs flex items-center gap-2 py-2"><span class="spin" style="width:12px;height:12px;border-width:2px;"></span> Searching…</div>';
 
   try {
-    const res = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(q)}&limit=8`);
+    const res = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(q)}&limit=10`);
     const json = await res.json();
     const results = json?.data?.results || [];
     if (!results.length) {
-      box.innerHTML = '<div class="text-neutral-500 text-xs">No results</div>';
+      box.innerHTML = '<div class="text-neutral-500 text-xs py-2">No results</div>';
       return;
     }
+
     box.innerHTML = results.map(r => {
-      const title = r.name || 'Unknown';
-      const artists = (r.artists?.primary || []).map(a => a.name).join(', ') || r.primaryArtists || '';
-      // find best download url
-      let url = null;
+      const title = (r.name || 'Unknown').replace(/'/g, "\\'");
+      const artists = ((r.artists?.primary || []).map(a => a.name).join(', ') || r.primaryArtists || '').replace(/'/g, "\\'");
+      let url = '';
       if (r.downloadUrl && r.downloadUrl.length) {
-        url = r.downloadUrl[r.downloadUrl.length-1]?.url || r.downloadUrl[0]?.url;
+        url = r.downloadUrl[r.downloadUrl.length - 1]?.url || r.downloadUrl[0]?.url || '';
       }
-      if (!url && r.url) url = r.url; // fallback
-      return `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-red-950/50">
-        <div class="min-w-0 flex-1">
-          <div class="truncate font-medium text-sm">${title}</div>
-          <div class="truncate text-xs text-neutral-500">${artists}</div>
-        </div>
-        <button onclick="playSaavnSong('${url || ''}', '${title.replace(/'/g,"\\'")}')"
-          class="btn-horror rounded-lg px-3 py-1 text-xs font-bold shrink-0 ${url?'':'opacity-40'}" ${url?'':'disabled'}>
-          Play
-        </button>
-      </div>`;
+      const id = r.id || url;
+      const isPinned = pinnedSongs.some(p => p.id === id);
+      return `
+        <div class="flex items-center justify-between gap-2 py-1.5 border-b border-red-950/50">
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-medium text-sm">${r.name || 'Unknown'}</div>
+            <div class="truncate text-xs text-neutral-500">${(r.artists?.primary || []).map(a => a.name).join(', ') || r.primaryArtists || ''}</div>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="playFromSearch('${id}','${url}','${title}','${artists}', this)" data-row="${id}"
+              class="btn-horror rounded-lg px-2.5 py-1 text-xs font-bold min-w-[52px] ${url ? '' : 'opacity-40'}" ${url ? '' : 'disabled'}>
+              Play
+            </button>
+            <button onclick="togglePinFromSearch('${id}','${url}','${title}','${artists}')"
+              class="pin-btn text-lg leading-none px-1 ${isPinned ? 'pinned' : ''}" title="Pin">
+              ★
+            </button>
+          </div>
+        </div>`;
     }).join('');
   } catch (e) {
     console.error(e);
-    box.innerHTML = '<div class="text-red-400 text-xs">Search failed – try again</div>';
+    box.innerHTML = '<div class="text-red-400 text-xs py-2">Search failed – try again</div>';
+  } finally {
+    btn.innerHTML = originalBtn;
+    btn.disabled = false;
   }
 }
 
-function playSaavnSong(url, title) {
-  if (!url) return alert('No stream URL available for this track');
-  sendCmd({ type: 'song', url, title });
-  // also try local play
-  playSongUrl(url, title);
+function playFromSearch(id, url, title, artist, btnEl) {
+  if (!url) return;
+  setRowLoading(btnEl, id);
+  sendCmd({ type: 'song', id, url, title, artist });
+}
+function togglePinFromSearch(id, url, title, artists) {
+  if (!url) return;
+  togglePin({ id, url, title, artist: artists });
+  searchSaavn();
 }
 
-function playSongUrl(url, title) {
-  stopAllLocal();
-  const audio = new Audio(url);
-  audio.crossOrigin = 'anonymous';
-  audio.volume = 0.9;
-  audio.play().catch(e => console.warn('Song play error', e));
-  activeSources.push({ stop: () => audio.pause() });
-  if (document.getElementById('now-playing')) {
-    document.getElementById('now-playing').textContent = title || 'Song';
-  }
+/* ---------------- Misc ---------------- */
+
+function exitApp() {
+  try { if (peer) peer.destroy(); } catch (e) {}
+  location.reload();
 }
 
-/* ---------- Init ---------- */
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') resumeAudio();
+  if (document.visibilityState === 'visible') resumeSFXAudio();
 });
+window.addEventListener('pagehide', () => { try { if (peer) peer.destroy(); } catch (e) {} });
 </script>
 </body>
 </html>
