@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0a0000" />
+  <title>Horror Remote • D'Verse</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@400;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(ellipse at center, #1a0505 0%, #050000 70%);
+      color: #e8e0d0;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .font-horror { font-family: 'Creepster', cursive; }
+    .glass {
+      background: rgba(20, 5, 5, 0.65);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(180, 40, 40, 0.25);
+    }
+    .pad {
+      width: 110px; height: 110px;
+      border-radius: 18px;
+      background: rgba(40, 8, 8, 0.7);
+      border: 1px solid rgba(200, 50, 50, 0.35);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; cursor: pointer;
+      transition: all 0.12s ease;
+      user-select: none;
+      position: relative;
+      overflow: hidden;
+    }
+    .pad:active, .pad.playing {
+      transform: scale(0.94);
+      box-shadow: 0 0 28px rgba(220, 30, 30, 0.55);
+      border-color: #ef4444;
+    }
+    .pad .icon { font-size: 28px; margin-bottom: 4px; }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .status-dot.connected { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+    .status-dot.waiting { background: #eab308; animation: pulse 1.4s infinite; }
+    .status-dot.offline { background: #ef4444; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .btn-horror {
+      background: linear-gradient(135deg, #7f1d1d, #450a0a);
+      border: 1px solid #b91c1c;
+    }
+    .btn-horror:active { transform: scale(0.97); }
+    input, button { outline: none; }
+    .hide { display: none !important; }
+    #player-screen, #controller-screen { min-height: 100dvh; }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <!-- MODE SELECT -->
+  <div id="mode-select" class="flex-1 flex flex-col items-center justify-center p-6 gap-8">
+    <div class="text-center">
+      <h1 class="font-horror text-5xl text-red-500 tracking-wider mb-2">HORROR REMOTE</h1>
+      <p class="text-neutral-400 text-sm tracking-widest uppercase">D'Verse • Two-phone soundboard</p>
+    </div>
+
+    <div class="flex flex-col gap-4 w-full max-w-xs">
+      <button onclick="startAs('player')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40">
+        🎧 PLAYER<br><span class="text-xs font-normal opacity-70">This phone plays the sounds</span>
+      </button>
+      <button onclick="startAs('controller')" class="btn-horror rounded-2xl py-5 px-6 text-lg font-bold tracking-wide shadow-lg shadow-red-900/40">
+        🕹️ CONTROLLER<br><span class="text-xs font-normal opacity-70">This phone controls the other</span>
+      </button>
+    </div>
+
+    <p class="text-neutral-600 text-xs text-center max-w-xs">
+      Works on iOS & Android browsers. Add to Home Screen for best experience.
+    </p>
+  </div>
+
+  <!-- PLAYER SCREEN -->
+  <div id="player-screen" class="hide flex flex-col p-5 gap-5">
+    <header class="glass rounded-2xl p-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div id="p-status-dot" class="status-dot waiting"></div>
+        <div>
+          <div class="text-xs text-neutral-400 uppercase tracking-widest">Player Mode</div>
+          <div id="p-status-text" class="text-sm font-semibold">Waiting for controller…</div>
+        </div>
+      </div>
+      <button onclick="location.reload()" class="text-neutral-500 text-xs">Exit</button>
+    </header>
+
+    <div class="glass rounded-2xl p-8 flex flex-col items-center gap-4 flex-1 justify-center">
+      <div class="font-horror text-6xl text-red-600/80">🎧</div>
+      <div class="text-center">
+        <div class="text-neutral-400 text-sm mb-1">Share this room code</div>
+        <div id="room-code" class="font-horror text-5xl tracking-[0.3em] text-red-400 select-all">······</div>
+      </div>
+      <p class="text-neutral-500 text-xs text-center max-w-xs mt-4">
+        Keep this screen open. The controller will connect and play sounds here.
+      </p>
+    </div>
+
+    <div class="glass rounded-2xl p-4 text-center">
+      <div class="text-xs text-neutral-500 uppercase tracking-widest mb-1">Now Playing</div>
+      <div id="now-playing" class="text-sm font-medium text-red-300">— silent —</div>
+    </div>
+  </div>
+
+  <!-- CONTROLLER SCREEN -->
+  <div id="controller-screen" class="hide flex flex-col p-4 gap-4">
+    <header class="glass rounded-2xl p-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <div id="c-status-dot" class="status-dot offline"></div>
+        <div id="c-status-text" class="text-xs font-semibold">Not connected</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <input id="join-code" type="text" maxlength="6" placeholder="Room code"
+          class="bg-black/40 border border-red-900/50 rounded-lg px-3 py-1.5 text-sm w-24 tracking-widest text-center uppercase"
+          oninput="this.value=this.value.toUpperCase()" />
+        <button onclick="connectToRoom()" class="btn-horror rounded-lg px-3 py-1.5 text-xs font-bold">JOIN</button>
+      </div>
+    </header>
+
+    <!-- Pads -->
+    <div class="glass rounded-2xl p-4 flex-1">
+      <div class="text-xs text-neutral-500 uppercase tracking-widest mb-3">Horror Pads</div>
+      <div id="pad-grid" class="flex flex-wrap justify-center gap-3"></div>
+    </div>
+
+    <!-- Saavn Search -->
+    <div class="glass rounded-2xl p-4">
+      <div class="text-xs text-neutral-500 uppercase tracking-widest mb-2">JioSaavn Search</div>
+      <div class="flex gap-2 mb-3">
+        <input id="saavn-query" type="search" placeholder="Search song / artist…"
+          class="flex-1 bg-black/40 border border-red-900/40 rounded-lg px-3 py-2 text-sm"
+          onkeydown="if(event.key==='Enter') searchSaavn()" />
+        <button onclick="searchSaavn()" class="btn-horror rounded-lg px-4 py-2 text-sm font-bold">Go</button>
+      </div>
+      <div id="saavn-results" class="max-h-40 overflow-y-auto space-y-1 text-sm"></div>
+    </div>
+
+    <div class="flex gap-2">
+      <button onclick="sendCmd({type:'stop'})" class="flex-1 bg-red-950/80 border border-red-700 rounded-xl py-3 text-sm font-bold text-red-300">
+        🛑 STOP ALL
+      </button>
+      <button onclick="location.reload()" class="px-4 text-neutral-500 text-xs">Exit</button>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   HORROR REMOTE – D'Verse
+   ============================================================ */
+
+const SOUNDS = [
+  { id: 'whisper',    name: 'Whisper',     emoji: '🗣️', color: '#a855f7' },
+  { id: 'jumpscare',  name: 'Jumpscare',   emoji: '😱', color: '#ef4444' },
+  { id: 'doorcreak',  name: 'Door Creak',  emoji: '🚪', color: '#f97316' },
+  { id: 'heartbeat',  name: 'Heartbeat',   emoji: '❤️', color: '#e11d48' },
+  { id: 'scream',     name: 'Scream',      emoji: '👻', color: '#f43f5e' },
+  { id: 'footsteps',  name: 'Footsteps',   emoji: '👣', color: '#78716c' },
+  { id: 'thunder',    name: 'Thunder',     emoji: '⚡', color: '#3b82f6' },
+  { id: 'laugh',      name: 'Evil Laugh',  emoji: '😈', color: '#84cc16' },
+  { id: 'chains',     name: 'Chains',      emoji: '⛓️', color: '#a1a1aa' },
+  { id: 'wind',       name: 'Ghost Wind',  emoji: '💨', color: '#67e8f9' },
+  { id: 'growl',      name: 'Growl',       emoji: '🐺', color: '#b45309' },
+  { id: 'bell',       name: 'Death Bell',  emoji: '🔔', color: '#fbbf24' },
+];
+
+let peer = null;
+let conn = null;
+let mode = null; // 'player' | 'controller'
+let audioCtx = null;
+let masterGain = null;
+let buffers = {};
+let activeSources = [];
+let roomCode = '';
+
+/* ---------- Audio Engine (synthetic horror sounds) ---------- */
+function ensureAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.85;
+  masterGain.connect(audioCtx.destination);
+}
+
+function resumeAudio() {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Procedural horror sound generators (no external files needed → works offline + instant)
+function createWhisper() {
+  const len = 1.8;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    d[i] = (Math.random()*2-1) * 0.15 * Math.exp(-t*1.2) * (0.5 + 0.5*Math.sin(t*40));
+  }
+  return buf;
+}
+function createJumpscare() {
+  const len = 0.9;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const env = t < 0.05 ? t/0.05 : Math.exp(-(t-0.05)*8);
+    d[i] = (Math.random()*2-1) * env * 0.9 + Math.sin(t*800)*0.3*env;
+  }
+  return buf;
+}
+function createDoorCreak() {
+  const len = 2.2;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const f = 180 + 80*Math.sin(t*3) + 40*Math.sin(t*7);
+    d[i] = Math.sin(2*Math.PI*f*t) * 0.25 * Math.exp(-t*0.6) * (0.6+0.4*Math.random());
+  }
+  return buf;
+}
+function createHeartbeat() {
+  const len = 2.5;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const beat = (t % 0.85 < 0.08) ? Math.sin(t*40)*Math.exp(-((t%0.85)/0.08)*6) : 0;
+    d[i] = beat * 0.7;
+  }
+  return buf;
+}
+function createScream() {
+  const len = 1.4;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const env = Math.exp(-t*1.8);
+    d[i] = (Math.sin(2*Math.PI*(600+200*Math.sin(t*12))*t) + (Math.random()*2-1)*0.4) * env * 0.5;
+  }
+  return buf;
+}
+function createFootsteps() {
+  const len = 2.0;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const step = (t % 0.55 < 0.06) ? (Math.random()*2-1)*Math.exp(-((t%0.55)/0.06)*8) : 0;
+    d[i] = step * 0.55;
+  }
+  return buf;
+}
+function createThunder() {
+  const len = 2.8;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    d[i] = (Math.random()*2-1) * 0.6 * Math.exp(-t*1.1) * (t<0.15?1:0.4+0.6*Math.random());
+  }
+  return buf;
+}
+function createLaugh() {
+  const len = 1.6;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const env = Math.exp(-t*1.3);
+    d[i] = Math.sin(2*Math.PI*(220+40*Math.sin(t*18))*t) * env * 0.4 * (0.7+0.3*Math.random());
+  }
+  return buf;
+}
+function createChains() {
+  const len = 1.8;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    d[i] = (Math.random()*2-1) * 0.3 * Math.exp(-t*1.5) * Math.abs(Math.sin(t*25));
+  }
+  return buf;
+}
+function createWind() {
+  const len = 3.0;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    d[i] = (Math.random()*2-1) * 0.2 * (0.5+0.5*Math.sin(t*0.8));
+  }
+  return buf;
+}
+function createGrowl() {
+  const len = 1.5;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const env = Math.exp(-t*1.4);
+    d[i] = Math.sin(2*Math.PI*(90+30*Math.sin(t*6))*t) * env * 0.55;
+  }
+  return buf;
+}
+function createBell() {
+  const len = 2.5;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * len, audioCtx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) {
+    const t = i / audioCtx.sampleRate;
+    const env = Math.exp(-t*1.8);
+    d[i] = (Math.sin(2*Math.PI*440*t) + 0.5*Math.sin(2*Math.PI*880*t)) * env * 0.35;
+  }
+  return buf;
+}
+
+const GENERATORS = {
+  whisper: createWhisper, jumpscare: createJumpscare, doorcreak: createDoorCreak,
+  heartbeat: createHeartbeat, scream: createScream, footsteps: createFootsteps,
+  thunder: createThunder, laugh: createLaugh, chains: createChains,
+  wind: createWind, growl: createGrowl, bell: createBell
+};
+
+function preloadAll() {
+  ensureAudio();
+  SOUNDS.forEach(s => {
+    buffers[s.id] = GENERATORS[s.id]();
+  });
+}
+
+function playLocal(id) {
+  ensureAudio(); resumeAudio();
+  if (!buffers[id]) return;
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffers[id];
+  src.connect(masterGain);
+  src.start(0);
+  activeSources.push(src);
+  src.onended = () => { activeSources = activeSources.filter(x => x !== src); };
+}
+
+function stopAllLocal() {
+  activeSources.forEach(s => { try { s.stop(); } catch(e){} });
+  activeSources = [];
+  document.getElementById('now-playing') && (document.getElementById('now-playing').textContent = '— silent —');
+}
+
+/* ---------- PeerJS ---------- */
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c = '';
+  for (let i = 0; i < 6; i++) c += chars[Math.floor(Math.random()*chars.length)];
+  return c;
+}
+
+function startAs(m) {
+  mode = m;
+  document.getElementById('mode-select').classList.add('hide');
+  preloadAll();
+
+  if (m === 'player') {
+    document.getElementById('player-screen').classList.remove('hide');
+    roomCode = generateCode();
+    document.getElementById('room-code').textContent = roomCode;
+
+    peer = new Peer(roomCode, {
+      debug: 1,
+      config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+    });
+
+    peer.on('open', id => {
+      console.log('Player peer open', id);
+    });
+
+    peer.on('connection', c => {
+      conn = c;
+      setupConnection(c);
+      setPlayerStatus('connected', 'Controller connected!');
+    });
+
+    peer.on('error', err => {
+      console.error(err);
+      setPlayerStatus('offline', 'Error – try refresh');
+    });
+  } else {
+    document.getElementById('controller-screen').classList.remove('hide');
+    renderPads();
+  }
+}
+
+function connectToRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 4) return alert('Enter the 6-digit room code');
+
+  peer = new Peer({
+    debug: 1,
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+  });
+
+  peer.on('open', () => {
+    conn = peer.connect(code, { reliable: true });
+    setupConnection(conn);
+  });
+
+  peer.on('error', err => {
+    console.error(err);
+    setControllerStatus('offline', 'Connection failed');
+    alert('Could not connect. Check the code and that the Player is open.');
+  });
+}
+
+function setupConnection(c) {
+  c.on('open', () => {
+    if (mode === 'controller') setControllerStatus('connected', 'Connected!');
+    if (mode === 'player') setPlayerStatus('connected', 'Controller connected!');
+  });
+
+  c.on('data', data => {
+    if (mode !== 'player') return;
+    handleCommand(data);
+  });
+
+  c.on('close', () => {
+    if (mode === 'player') setPlayerStatus('waiting', 'Controller disconnected');
+    if (mode === 'controller') setControllerStatus('offline', 'Disconnected');
+  });
+}
+
+function setPlayerStatus(state, text) {
+  const dot = document.getElementById('p-status-dot');
+  const txt = document.getElementById('p-status-text');
+  dot.className = 'status-dot ' + state;
+  txt.textContent = text;
+}
+function setControllerStatus(state, text) {
+  const dot = document.getElementById('c-status-dot');
+  const txt = document.getElementById('c-status-text');
+  dot.className = 'status-dot ' + state;
+  txt.textContent = text;
+}
+
+function sendCmd(cmd) {
+  if (conn && conn.open) {
+    conn.send(cmd);
+  } else {
+    // local fallback for testing
+    if (cmd.type === 'play') playLocal(cmd.id);
+    if (cmd.type === 'stop') stopAllLocal();
+  }
+}
+
+function handleCommand(cmd) {
+  resumeAudio();
+  if (cmd.type === 'play') {
+    playLocal(cmd.id);
+    const s = SOUNDS.find(x => x.id === cmd.id);
+    document.getElementById('now-playing').textContent = s ? s.name : cmd.id;
+  } else if (cmd.type === 'stop') {
+    stopAllLocal();
+  } else if (cmd.type === 'song') {
+    playSongUrl(cmd.url, cmd.title);
+  }
+}
+
+/* ---------- Pads UI ---------- */
+function renderPads() {
+  const grid = document.getElementById('pad-grid');
+  grid.innerHTML = '';
+  SOUNDS.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'pad';
+    div.innerHTML = `<div class="icon">${s.emoji}</div><div class="text-xs font-semibold leading-tight">${s.name}</div>`;
+    div.style.borderColor = s.color + '55';
+    div.onpointerdown = (e) => {
+      e.preventDefault();
+      div.classList.add('playing');
+      sendCmd({ type: 'play', id: s.id });
+      // also play locally so controller hears it too
+      playLocal(s.id);
+      setTimeout(() => div.classList.remove('playing'), 400);
+    };
+    grid.appendChild(div);
+  });
+}
+
+/* ---------- JioSaavn ---------- */
+async function searchSaavn() {
+  const q = document.getElementById('saavn-query').value.trim();
+  if (!q) return;
+  const box = document.getElementById('saavn-results');
+  box.innerHTML = '<div class="text-neutral-500 text-xs">Searching…</div>';
+
+  try {
+    const res = await fetch(`https://saavn.sumit.co/api/search/songs?query=${encodeURIComponent(q)}&limit=8`);
+    const json = await res.json();
+    const results = json?.data?.results || [];
+    if (!results.length) {
+      box.innerHTML = '<div class="text-neutral-500 text-xs">No results</div>';
+      return;
+    }
+    box.innerHTML = results.map(r => {
+      const title = r.name || 'Unknown';
+      const artists = (r.artists?.primary || []).map(a => a.name).join(', ') || r.primaryArtists || '';
+      // find best download url
+      let url = null;
+      if (r.downloadUrl && r.downloadUrl.length) {
+        url = r.downloadUrl[r.downloadUrl.length-1]?.url || r.downloadUrl[0]?.url;
+      }
+      if (!url && r.url) url = r.url; // fallback
+      return `<div class="flex items-center justify-between gap-2 py-1.5 border-b border-red-950/50">
+        <div class="min-w-0 flex-1">
+          <div class="truncate font-medium text-sm">${title}</div>
+          <div class="truncate text-xs text-neutral-500">${artists}</div>
+        </div>
+        <button onclick="playSaavnSong('${url || ''}', '${title.replace(/'/g,"\\'")}')"
+          class="btn-horror rounded-lg px-3 py-1 text-xs font-bold shrink-0 ${url?'':'opacity-40'}" ${url?'':'disabled'}>
+          Play
+        </button>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error(e);
+    box.innerHTML = '<div class="text-red-400 text-xs">Search failed – try again</div>';
+  }
+}
+
+function playSaavnSong(url, title) {
+  if (!url) return alert('No stream URL available for this track');
+  sendCmd({ type: 'song', url, title });
+  // also try local play
+  playSongUrl(url, title);
+}
+
+function playSongUrl(url, title) {
+  stopAllLocal();
+  const audio = new Audio(url);
+  audio.crossOrigin = 'anonymous';
+  audio.volume = 0.9;
+  audio.play().catch(e => console.warn('Song play error', e));
+  activeSources.push({ stop: () => audio.pause() });
+  if (document.getElementById('now-playing')) {
+    document.getElementById('now-playing').textContent = title || 'Song';
+  }
+}
+
+/* ---------- Init ---------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') resumeAudio();
+});
+</script>
+</body>
+</html>
