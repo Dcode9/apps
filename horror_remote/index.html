@@ -13,50 +13,49 @@
 body{font-family:system-ui,-apple-system,sans-serif;background:#0a0000;color:#e8e0d0;min-height:100dvh;padding:12px;-webkit-tap-highlight-color:transparent}
 h1{font-size:1.8rem;color:#ef4444;text-align:center;margin-bottom:4px}
 .sub{text-align:center;color:#888;font-size:0.75rem;margin-bottom:16px}
-.btn{display:block;width:100%;max-width:340px;margin:8px auto;padding:14px;border:1px solid #b91c1c;border-radius:12px;background:linear-gradient(135deg,#7f1d1d,#450a0a);color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
-.btn:active{transform:scale(0.97)}
+.btn{display:block;width:100%;max-width:320px;margin:8px auto;padding:14px;border:1px solid #b91c1c;border-radius:12px;background:linear-gradient(135deg,#7f1d1d,#450a0a);color:#fff;font-size:1rem;font-weight:700;cursor:pointer}
+.btn:active{transform:scale(0.97)}.btn:disabled{opacity:0.4}
 .btn.small{padding:8px 12px;font-size:0.8rem;display:inline-block;width:auto;margin:3px}
 .glass{background:rgba(30,8,8,0.8);border:1px solid rgba(180,40,40,0.35);border-radius:12px;padding:12px;margin:8px 0}
 .hide{display:none!important}
 .pads{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.pad{width:96px;height:96px;border-radius:12px;background:rgba(40,10,10,0.85);border:1px solid rgba(200,50,50,0.45);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.7rem;cursor:pointer;user-select:none}
-.pad:active{transform:scale(0.93);box-shadow:0 0 18px rgba(220,30,30,0.55)}
+.pad{width:96px;height:96px;border-radius:12px;background:rgba(50,12,12,0.9);border:1px solid rgba(200,50,50,0.45);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.7rem;cursor:pointer;user-select:none}
+.pad:active{transform:scale(0.92);box-shadow:0 0 18px rgba(220,30,30,0.55)}
 .pad .icon{font-size:1.5rem;margin-bottom:2px}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.dot.ok{background:#22c55e}.dot.wait{background:#eab308}.dot.err{background:#ef4444}
-input{font:inherit;background:#111;border:1px solid #555;color:#eee;padding:9px;border-radius:8px}
-#log,#clog,#boot-log{font-size:0.68rem;color:#999;max-height:90px;overflow-y:auto;white-space:pre-wrap}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot.ok{background:#22c55e;box-shadow:0 0 6px #22c55e}.dot.wait{background:#eab308}.dot.err{background:#ef4444}
+input[type=text],input[type=search]{background:#111;border:1px solid #555;color:#eee;padding:10px;border-radius:8px;width:100%;font-size:1rem}
+#log,#clog,#boot-log{font-size:0.68rem;color:#999;max-height:90px;overflow-y:auto;white-space:pre-wrap;line-height:1.35}
 </style>
 </head>
 <body>
 <div id="mode-select">
   <h1>HORROR REMOTE</h1>
   <div class="sub">D'Verse • Two-phone soundboard</div>
-  <button class="btn" onclick="startAs('player')">🎧 PLAYER<br><small style="opacity:.7;font-weight:400">Plays the sounds</small></button>
-  <button class="btn" onclick="startAs('controller')">🕹️ CONTROLLER<br><small style="opacity:.7;font-weight:400">Controls the other phone</small></button>
-  <div id="boot-log" class="glass" style="max-width:340px;margin:16px auto"></div>
+  <button class="btn" onclick="startAs('player')">🎧 PLAYER<br><small style="opacity:.7;font-weight:400">This phone plays the sounds</small></button>
+  <button class="btn" onclick="startAs('controller')">🕹️ CONTROLLER<br><small style="opacity:.7;font-weight:400">This phone controls the other</small></button>
+  <div id="boot-log" class="glass" style="max-width:320px;margin:16px auto"></div>
 </div>
 
 <div id="player-screen" class="hide">
   <div class="glass" style="display:flex;justify-content:space-between;align-items:center">
-    <div><span id="p-dot" class="dot wait"></span><span id="p-status">Waiting…</span></div>
+    <div><span id="p-dot" class="dot wait"></span><span id="p-status">Starting…</span></div>
     <button class="btn small" onclick="location.reload()">Exit</button>
   </div>
   <div id="unlock-gate" class="glass" style="text-align:center;padding:24px">
     <div style="font-size:2.2rem;margin-bottom:10px">🔓</div>
     <button class="btn" onclick="unlockAudio()">TAP TO ENABLE AUDIO</button>
-    <p style="font-size:0.72rem;color:#888;margin-top:10px">Must do this first. Keep page open.</p>
+    <p style="font-size:0.72rem;color:#888;margin-top:10px">Must do this first on Player (especially iPhone)</p>
   </div>
   <div id="player-main" class="hide">
     <div class="glass" style="text-align:center">
-      <div style="color:#888;font-size:0.72rem">Room code — share with Controller</div>
-      <div id="room-code" style="font-size:2rem;letter-spacing:0.2em;color:#f87171;margin:6px 0;user-select:all">······</div>
+      <div style="color:#888;font-size:0.72rem">Share this code with Controller</div>
+      <div id="room-code" style="font-size:2.4rem;letter-spacing:0.28em;color:#f87171;margin:10px 0;user-select:all;font-weight:700">······</div>
       <button class="btn small" onclick="testLocalSFX()">Test SFX</button>
     </div>
     <div class="glass" style="text-align:center">
       <div style="color:#888;font-size:0.68rem">Now Playing</div>
-      <div id="now-playing" style="color:#fca5a5;margin-top:3px">— silent —</div>
-      <div id="audio-health" style="font-size:0.62rem;color:#4ade80;margin-top:3px"></div>
+      <div id="now-playing" style="color:#fca5a5;margin-top:4px">— silent —</div>
     </div>
   </div>
   <div id="log" class="glass"></div>
@@ -65,399 +64,636 @@ input{font:inherit;background:#111;border:1px solid #555;color:#eee;padding:9px;
 <div id="controller-screen" class="hide">
   <div class="glass" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
     <span id="c-dot" class="dot err"></span><span id="c-status" style="flex:1;font-size:0.85rem">Not connected</span>
-    <input id="join-code" type="text" maxlength="6" placeholder="CODE" style="width:88px;text-align:center;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"/>
-    <button class="btn small" onclick="connectToRoom()">JOIN</button>
+    <input id="join-code" type="text" maxlength="6" placeholder="CODE" style="width:88px;text-align:center;text-transform:uppercase;font-weight:700" oninput="this.value=this.value.toUpperCase()"/>
+    <button class="btn small" id="join-btn" onclick="connectToRoom()">JOIN</button>
     <button class="btn small" onclick="location.reload()">Exit</button>
   </div>
   <div class="glass">
-    <div style="font-size:0.68rem;color:#888;margin-bottom:6px">Horror Pads</div>
+    <div style="font-size:0.68rem;color:#888;margin-bottom:6px">Horror Pads (work after connect)</div>
     <div id="pad-grid" class="pads"></div>
   </div>
   <div id="transport" class="glass hide">
-    <div id="c-now-title" style="color:#fca5a5;margin-bottom:4px;font-size:0.9rem">—</div>
-    <div style="display:flex;align-items:center;gap:5px;font-size:0.72rem">
+    <div id="c-now-title" style="color:#fca5a5;margin-bottom:6px;font-size:0.9rem">—</div>
+    <div style="display:flex;align-items:center;gap:6px;font-size:0.72rem">
       <span id="c-time-cur">0:00</span>
       <input id="seek-bar" type="range" min="0" max="1000" value="0" style="flex:1;accent-color:#ef4444" onchange="sendCmd({type:'seek',ratio:Number(this.value)/1000})"/>
       <span id="c-time-dur">0:00</span>
     </div>
-    <div style="display:flex;gap:5px;margin-top:6px">
+    <div style="display:flex;gap:6px;margin-top:8px">
       <button class="btn small" style="flex:1" onclick="sendCmd({type:'pause'})">⏸</button>
       <button class="btn small" style="flex:1" onclick="sendCmd({type:'resume'})">▶</button>
       <button class="btn small" style="flex:1" onclick="sendCmd({type:'stop'})">⏹</button>
     </div>
   </div>
   <div class="glass">
-    <div style="font-size:0.68rem;color:#888;margin-bottom:4px">D'Tunes</div>
-    <div style="display:flex;gap:5px;margin-bottom:6px">
-      <input id="saavn-query" type="search" placeholder="Search…" style="flex:1" onkeydown="if(event.key==='Enter')searchSaavn()"/>
+    <div style="font-size:0.68rem;color:#888;margin-bottom:6px">D'Tunes</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px">
+      <input id="saavn-query" type="search" placeholder="Search…" onkeydown="if(event.key==='Enter')searchSaavn()"/>
       <button class="btn small" onclick="searchSaavn()">Go</button>
     </div>
-    <div id="saavn-results" style="font-size:0.8rem;max-height:130px;overflow-y:auto"></div>
+    <div id="saavn-results" style="font-size:0.82rem;max-height:130px;overflow-y:auto"></div>
     <div id="pinned-section" class="hide" style="margin-top:8px;border-top:1px solid #333;padding-top:6px">
       <div style="font-size:0.68rem;color:#888">Pinned</div>
-      <div id="pinned-list" style="font-size:0.8rem"></div>
-      <button class="btn small" id="preload-btn" disabled onclick="preloadPinnedOnPlayer()" style="margin-top:4px">Preload → Player</button>
+      <div id="pinned-list" style="font-size:0.82rem"></div>
+      <button class="btn small" id="preload-btn" disabled onclick="preloadPinnedOnPlayer()">Preload → Player</button>
     </div>
   </div>
-  <button class="btn" style="background:#450a0a" onclick="sendCmd({type:'stop'})">🛑 STOP ALL</button>
+  <button class="btn" style="background:#3f0a0a" onclick="sendCmd({type:'stop'})">🛑 STOP ALL</button>
   <div id="clog" class="glass"></div>
 </div>
 
 <script>
 const SOUNDS=[
-{id:'whisper',name:'Whisper',emoji:'🗣️'},{id:'jumpscare',name:'Jumpscare',emoji:'😱'},
-{id:'doorcreak',name:'Door Creak',emoji:'🚪'},{id:'heartbeat',name:'Heartbeat',emoji:'❤️'},
-{id:'scream',name:'Scream',emoji:'👻'},{id:'footsteps',name:'Footsteps',emoji:'👣'},
-{id:'thunder',name:'Thunder',emoji:'⚡'},{id:'laugh',name:'Evil Laugh',emoji:'😈'},
-{id:'chains',name:'Chains',emoji:'⛓️'},{id:'wind',name:'Ghost Wind',emoji:'💨'},
-{id:'growl',name:'Growl',emoji:'🐺'},{id:'bell',name:'Death Bell',emoji:'🔔'}
+{id:'whisper',name:'Whisper',emoji:'🗣️'},
+{id:'jumpscare',name:'Jumpscare',emoji:'😱'},
+{id:'doorcreak',name:'Door',emoji:'🚪'},
+{id:'heartbeat',name:'Heart',emoji:'❤️'},
+{id:'scream',name:'Scream',emoji:'👻'},
+{id:'footsteps',name:'Steps',emoji:'👣'},
+{id:'thunder',name:'Thunder',emoji:'⚡'},
+{id:'laugh',name:'Laugh',emoji:'😈'},
+{id:'chains',name:'Chains',emoji:'⛓️'},
+{id:'wind',name:'Wind',emoji:'💨'},
+{id:'growl',name:'Growl',emoji:'🐺'},
+{id:'bell',name:'Bell',emoji:'🔔'},
 ];
-const ICE={iceServers:[
-{urls:'stun:stun.l.google.com:19302'},
-{urls:'stun:stun1.l.google.com:19302'},
-{urls:'stun:stun.cloudflare.com:3478'},
-{urls:'turn:openrelay.metered.ca:80',username:'openrelayproject',credential:'openrelayproject'},
-{urls:'turn:openrelay.metered.ca:443',username:'openrelayproject',credential:'openrelayproject'},
-{urls:'turn:openrelay.metered.ca:443?transport=tcp',username:'openrelayproject',credential:'openrelayproject'},
-{urls:'turn:openrelay.metered.ca:80?transport=tcp',username:'openrelayproject',credential:'openrelayproject'}
-]};
 
-let peer=null,conn=null,mode=null,roomCode='',pinnedSongs=[];
-let audioUnlocked=false,songPool={},currentSong=null,currentSongMeta=null;
-let keepalive=null,progressTimer=null,keepAliveInterval=null,pingInterval=null,audioCtx=null;
+const ICE = {
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:80?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+  ],
+  sdpSemantics: 'unified-plan'
+};
 
-function log(msg){
-  const el=document.getElementById(mode==='controller'?'clog':'log')||document.getElementById('boot-log');
-  if(!el)return;
-  el.textContent=(new Date().toLocaleTimeString()+'  '+msg+'\n')+el.textContent.slice(0,700);
-  console.log(msg);
+let peer = null, conn = null, mode = null, roomCode = '', pinnedSongs = [];
+let audioUnlocked = false, songPool = {}, currentSong = null, currentSongMeta = null;
+let keepalive = null, progressTimer = null, keepAliveInterval = null, pingInterval = null, audioCtx = null;
+let connectAttempts = 0;
+
+function log(msg) {
+  const id = mode === 'controller' ? 'clog' : (mode === 'player' ? 'log' : 'boot-log');
+  const el = document.getElementById(id) || document.getElementById('boot-log');
+  if (!el) return;
+  const t = new Date().toLocaleTimeString();
+  el.textContent = t + '  ' + msg + '\n' + el.textContent.slice(0, 700);
+  console.log('[HR]', msg);
 }
-function bootLog(m){const el=document.getElementById('boot-log');if(el)el.textContent+='\n'+m;console.log(m);}
+function bootLog(m) {
+  const el = document.getElementById('boot-log');
+  if (el) el.textContent += '\n' + m;
+  console.log('[boot]', m);
+}
 
 bootLog('JS loaded');
-if(typeof Peer==='undefined')bootLog('ERROR: PeerJS CDN blocked');
+if (typeof Peer === 'undefined') bootLog('ERROR: PeerJS CDN blocked');
 else bootLog('PeerJS OK');
 
-function setPlaybackSession(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}}
-function ensureAudioCtx(){
-  try{
-    if(!audioCtx){const AC=window.AudioContext||window.webkitAudioContext;if(AC)audioCtx=new AC();}
-    if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();
-  }catch(e){log('AudioCtx: '+e.message);}
+function setPlaybackSession() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+}
+function ensureAudioCtx() {
+  try {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) { log('AudioCtx: ' + e.message); }
   return audioCtx;
 }
-function forceResumeAudio(){
-  if(!audioUnlocked)return;
+function forceResumeAudio() {
+  if (!audioUnlocked) return;
   setPlaybackSession();
   ensureAudioCtx();
-  if(keepalive){try{keepalive.play().catch(()=>{});}catch(e){}}
-  if(currentSong&&!currentSong.paused){try{currentSong.play().catch(()=>{});}catch(e){}}
-  const el=document.getElementById('audio-health');
-  if(el)el.textContent='warm '+new Date().toLocaleTimeString();
+  if (keepalive) {
+    try { if (keepalive.paused) keepalive.play().catch(() => {}); } catch (e) {}
+  }
+  if (currentSong && !currentSong.paused) {
+    try { currentSong.play().catch(() => {}); } catch (e) {}
+  }
 }
 
-function playProceduralSFX(id){
-  const ctx=ensureAudioCtx();
-  if(!ctx){log('No AudioContext');return;}
-  const now=ctx.currentTime;
-  const master=ctx.createGain();master.connect(ctx.destination);master.gain.value=0.95;
-  function noise(dur,vol=0.3){
-    const n=Math.floor(ctx.sampleRate*dur);
-    const buf=ctx.createBuffer(1,n,ctx.sampleRate);
-    const d=buf.getChannelData(0);
-    for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*vol;
-    const src=ctx.createBufferSource();src.buffer=buf;src.connect(master);src.start(now);src.stop(now+dur);
+function playProceduralSFX(id) {
+  const ctx = ensureAudioCtx();
+  if (!ctx) { log('No AudioContext'); return; }
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.connect(ctx.destination);
+  master.gain.value = 0.9;
+  function noise(dur, vol) {
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (vol || 0.3);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(master); src.start(now); src.stop(now + dur);
   }
-  function osc(type,f,dur,vol=0.4,slideTo){
-    const o=ctx.createOscillator(),g=ctx.createGain();
-    o.type=type;o.frequency.setValueAtTime(f,now);
-    if(slideTo!=null)o.frequency.exponentialRampToValueAtTime(Math.max(20,slideTo),now+dur);
-    g.gain.setValueAtTime(vol,now);g.gain.exponentialRampToValueAtTime(0.001,now+dur);
-    o.connect(g);g.connect(master);o.start(now);o.stop(now+dur+0.05);
+  function osc(type, f, dur, vol, slideTo) {
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, now);
+    if (slideTo != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), now + dur);
+    g.gain.setValueAtTime(vol || 0.4, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    o.connect(g); g.connect(master); o.start(now); o.stop(now + dur + 0.05);
   }
-  switch(id){
-    case 'whisper': noise(1.6,0.12);osc('sine',180,1.4,0.09,90);break;
-    case 'jumpscare': noise(0.22,0.75);osc('sawtooth',70,0.35,0.95,25);osc('square',700,0.12,0.7,2200);break;
-    case 'doorcreak': osc('sawtooth',85,1.7,0.28,40);noise(1.4,0.09);break;
+  switch (id) {
+    case 'whisper': noise(1.6, 0.12); osc('sine', 180, 1.4, 0.08, 90); break;
+    case 'jumpscare': noise(0.22, 0.7); osc('sawtooth', 70, 0.35, 0.9, 25); osc('square', 700, 0.12, 0.55, 1800); break;
+    case 'doorcreak': osc('sawtooth', 85, 1.7, 0.28, 40); noise(1.4, 0.08); break;
     case 'heartbeat':
-      for(let i=0;i<4;i++){const t=now+i*0.65;const o=ctx.createOscillator(),g=ctx.createGain();
-        o.type='sine';o.frequency.value=52;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.75,t+0.035);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
-        o.connect(g);g.connect(master);o.start(t);o.stop(t+0.28);}
+      for (let i = 0; i < 4; i++) {
+        const t = now + i * 0.65;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = 55;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.75, t + 0.035);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.28);
+      }
       break;
-    case 'scream': osc('sawtooth',380,0.85,0.55,950);noise(0.7,0.28);break;
+    case 'scream': osc('sawtooth', 380, 0.85, 0.5, 950); noise(0.7, 0.22); break;
     case 'footsteps':
-      for(let i=0;i<6;i++){const t=now+i*0.32;const o=ctx.createOscillator(),g=ctx.createGain();
-        o.type='triangle';o.frequency.value=75+Math.random()*35;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.4,t+0.015);g.gain.exponentialRampToValueAtTime(0.001,t+0.1);
-        o.connect(g);g.connect(master);o.start(t);o.stop(t+0.13);}
+      for (let i = 0; i < 5; i++) {
+        const t = now + i * 0.32;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = 75 + Math.random() * 40;
+        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.35, t + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.14);
+      }
       break;
-    case 'thunder': noise(2.0,0.6);osc('sine',35,1.6,0.65,18);break;
+    case 'thunder': noise(2.0, 0.55); osc('sine', 35, 1.6, 0.55, 18); break;
     case 'laugh':
-      for(let i=0;i<5;i++){const t=now+i*0.2;const o=ctx.createOscillator(),g=ctx.createGain();
-        o.type='sawtooth';o.frequency.setValueAtTime(170+i*28,t);o.frequency.linearRampToValueAtTime(110,t+0.16);
-        g.gain.setValueAtTime(0.32,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.18);o.connect(g);g.connect(master);o.start(t);o.stop(t+0.2);}
+      for (let i = 0; i < 5; i++) {
+        const t = now + i * 0.2;
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.setValueAtTime(170 + i * 28, t);
+        o.frequency.linearRampToValueAtTime(110, t + 0.16);
+        g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + 0.2);
+      }
       break;
-    case 'chains': for(let i=0;i<7;i++){noise(0.07,0.22);osc('square',750+Math.random()*450,0.05,0.18);}break;
-    case 'wind': noise(3.2,0.22);osc('sine',85,3.0,0.13,65);break;
-    case 'growl': osc('sawtooth',65,1.5,0.55,35);noise(1.2,0.22);break;
-    case 'bell': osc('sine',440,2.3,0.45,440);osc('sine',880,2.0,0.22,880);break;
-    default: noise(0.35,0.35);osc('square',200,0.28,0.45);
+    case 'chains': for (let i = 0; i < 7; i++) { noise(0.07, 0.18); osc('square', 700 + Math.random() * 500, 0.05, 0.14); } break;
+    case 'wind': noise(3.0, 0.18); osc('sine', 85, 2.8, 0.1, 60); break;
+    case 'growl': osc('sawtooth', 65, 1.5, 0.5, 35); noise(1.2, 0.18); break;
+    case 'bell': osc('sine', 440, 2.2, 0.4, 440); osc('sine', 880, 1.9, 0.18, 880); break;
+    default: noise(0.35, 0.3); osc('square', 200, 0.25, 0.35);
   }
-  log('SFX played: '+id);
 }
 
-function unlockAudio(){
-  try{
+function unlockAudio() {
+  try {
     setPlaybackSession();
     ensureAudioCtx();
-    if(!keepalive){
-      keepalive=new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-      keepalive.loop=true;
-      keepalive.volume=0.01;
+    if (!keepalive) {
+      keepalive = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      keepalive.loop = true;
+      keepalive.volume = 0.001;
     }
-    keepalive.play().catch(e=>log('keepalive note: '+e.message));
-    audioUnlocked=true;
+    keepalive.play().catch(e => log('keepalive note: ' + (e.message || e.name)));
+    audioUnlocked = true;
     document.getElementById('unlock-gate').classList.add('hide');
     document.getElementById('player-main').classList.remove('hide');
-    setPlayerStatus(conn&&conn.open?'ok':'wait',conn&&conn.open?'Controller connected':'Waiting for controller…');
-    if(keepAliveInterval)clearInterval(keepAliveInterval);
-    keepAliveInterval=setInterval(forceResumeAudio,8000);
+    setPlayerStatus(conn && conn.open ? 'ok' : 'wait', conn && conn.open ? 'Controller connected' : 'Waiting for controller…');
+    if (keepAliveInterval) clearInterval(keepAliveInterval);
+    keepAliveInterval = setInterval(forceResumeAudio, 12000);
     forceResumeAudio();
-    log('Audio unlocked ✓');
+    log('Audio unlocked');
     playProceduralSFX('bell');
-  }catch(e){log('Unlock FAILED: '+e.message);alert('Audio unlock failed: '+e.message);}
+  } catch (e) {
+    log('Unlock fail: ' + e.message);
+    alert('Audio unlock failed: ' + e.message);
+  }
 }
 
-function testLocalSFX(){
-  if(!audioUnlocked){alert('Unlock audio first');return;}
+function testLocalSFX() {
+  if (!audioUnlocked) { alert('Enable audio first'); return; }
   playProceduralSFX('jumpscare');
   setNowPlaying('TEST jumpscare');
 }
 
-function setNowPlaying(t){const el=document.getElementById('now-playing');if(el)el.textContent=t;}
-function playSFX(id){if(!audioUnlocked)return;forceResumeAudio();playProceduralSFX(id);const s=SOUNDS.find(x=>x.id===id);setNowPlaying(s?s.name:id);}
-function stopAll(){if(currentSong){try{currentSong.pause();currentSong.currentTime=0;}catch(e){}currentSong=null;currentSongMeta=null;}setNowPlaying('— silent —');reportProgress();}
-function playSong(id,url,title){
-  if(!audioUnlocked)return;forceResumeAudio();stopAll();
-  let a=songPool[id];
-  if(!a){a=new Audio();a.crossOrigin='anonymous';a.preload='auto';a.src=url;songPool[id]=a;}
-  a.currentTime=0;a.volume=1;currentSong=a;currentSongMeta={id,url,title};
-  a.onended=()=>{setNowPlaying('— silent —');reportProgress();};
-  a.play().catch(err=>{
-    log('Song fail, recreate: '+err.message);
-    try{const na=new Audio();na.crossOrigin='anonymous';na.src=url;songPool[id]=na;currentSong=na;currentSongMeta={id,url,title};na.play().catch(e=>log('Still fail: '+e.message));}catch(e){}
-  });
-  setNowPlaying(title||'Song');startProgressLoop();log('Song start: '+title);
+function setNowPlaying(t) {
+  const el = document.getElementById('now-playing');
+  if (el) el.textContent = t;
 }
-function pauseSong(){if(currentSong&&!currentSong.paused){currentSong.pause();reportProgress();}}
-function resumeSong(){
-  if(!audioUnlocked)return;forceResumeAudio();
-  if(currentSong&&currentSong.paused){
-    currentSong.play().catch(()=>{
-      if(currentSongMeta){const na=new Audio();na.crossOrigin='anonymous';na.src=currentSongMeta.url;na.currentTime=currentSong.currentTime||0;songPool[currentSongMeta.id]=na;currentSong=na;na.play().catch(()=>{});}
+function playSFX(id) {
+  if (!audioUnlocked) return;
+  forceResumeAudio();
+  playProceduralSFX(id);
+  const s = SOUNDS.find(x => x.id === id);
+  setNowPlaying(s ? s.name : id);
+}
+function stopAll() {
+  if (currentSong) {
+    try { currentSong.pause(); currentSong.currentTime = 0; } catch (e) {}
+    currentSong = null; currentSongMeta = null;
+  }
+  setNowPlaying('— silent —');
+  reportProgress();
+}
+function playSong(id, url, title) {
+  if (!audioUnlocked) return;
+  forceResumeAudio();
+  stopAll();
+  let a = songPool[id];
+  if (!a) {
+    a = new Audio();
+    a.crossOrigin = 'anonymous';
+    a.preload = 'auto';
+    a.src = url;
+    songPool[id] = a;
+  }
+  a.currentTime = 0;
+  a.volume = 1;
+  currentSong = a;
+  currentSongMeta = { id, url, title };
+  a.onended = () => { setNowPlaying('— silent —'); reportProgress(); };
+  a.play().catch(err => {
+    log('Song fail, retry: ' + err.message);
+    try {
+      const na = new Audio();
+      na.crossOrigin = 'anonymous';
+      na.src = url;
+      songPool[id] = na;
+      currentSong = na;
+      currentSongMeta = { id, url, title };
+      na.onended = a.onended;
+      na.play().catch(e => log('Song still fail: ' + e.message));
+    } catch (e) {}
+  });
+  setNowPlaying(title || 'Song');
+  startProgressLoop();
+  log('Playing song: ' + (title || id));
+}
+function pauseSong() {
+  if (currentSong && !currentSong.paused) { currentSong.pause(); reportProgress(); }
+}
+function resumeSong() {
+  if (!audioUnlocked) return;
+  forceResumeAudio();
+  if (currentSong && currentSong.paused) {
+    currentSong.play().catch(() => {
+      if (currentSongMeta) {
+        const na = new Audio();
+        na.crossOrigin = 'anonymous';
+        na.src = currentSongMeta.url;
+        na.currentTime = currentSong.currentTime || 0;
+        songPool[currentSongMeta.id] = na;
+        currentSong = na;
+        na.play().catch(() => {});
+      }
     });
     startProgressLoop();
   }
 }
-function seekSong(ratio){if(!currentSong||!isFinite(currentSong.duration))return;currentSong.currentTime=ratio*currentSong.duration;reportProgress();}
-async function preloadSong(url,id){
-  if(songPool[id])return true;
-  try{const a=new Audio();a.crossOrigin='anonymous';a.preload='auto';a.src=url;
-  await new Promise(r=>{a.addEventListener('canplaythrough',r,{once:true});a.addEventListener('error',r,{once:true});a.load();setTimeout(r,10000);});
-  songPool[id]=a;return true;}catch{return false;}
+function seekSong(ratio) {
+  if (!currentSong || !isFinite(currentSong.duration)) return;
+  currentSong.currentTime = ratio * currentSong.duration;
+  reportProgress();
 }
-function reportProgress(){
-  if(!conn||!conn.open)return;
-  if(!currentSong){conn.send({type:'progress',playing:false,title:'',cur:0,dur:0});return;}
-  conn.send({type:'progress',playing:!currentSong.paused,title:currentSongMeta?.title||'',cur:currentSong.currentTime||0,dur:currentSong.duration||0});
+async function preloadSong(url, id) {
+  if (songPool[id]) return true;
+  try {
+    const a = new Audio();
+    a.crossOrigin = 'anonymous';
+    a.preload = 'auto';
+    a.src = url;
+    await new Promise(r => {
+      a.addEventListener('canplaythrough', r, { once: true });
+      a.addEventListener('error', r, { once: true });
+      a.load();
+      setTimeout(r, 10000);
+    });
+    songPool[id] = a;
+    return true;
+  } catch { return false; }
 }
-function startProgressLoop(){
-  if(progressTimer)clearInterval(progressTimer);
-  progressTimer=setInterval(()=>{if(currentSong)reportProgress();else if(progressTimer){clearInterval(progressTimer);progressTimer=null;}},500);
+function reportProgress() {
+  if (!conn || !conn.open) return;
+  if (!currentSong) {
+    conn.send({ type: 'progress', playing: false, title: '', cur: 0, dur: 0 });
+    return;
+  }
+  conn.send({
+    type: 'progress',
+    playing: !currentSong.paused,
+    title: currentSongMeta?.title || '',
+    cur: currentSong.currentTime || 0,
+    dur: currentSong.duration || 0
+  });
 }
-function generateCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+function startProgressLoop() {
+  if (progressTimer) clearInterval(progressTimer);
+  progressTimer = setInterval(() => {
+    if (currentSong) reportProgress();
+    else if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+  }, 500);
+}
+function generateCode() {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
 
-function startAs(m){
-  mode=m;
+function startAs(m) {
+  mode = m;
   document.getElementById('mode-select').classList.add('hide');
-  if(m==='player'){
+  if (m === 'player') {
     document.getElementById('player-screen').classList.remove('hide');
-    roomCode=generateCode();
-    document.getElementById('room-code').textContent=roomCode;
-    log('Creating Peer room: '+roomCode);
-    try{
-      peer=new Peer(roomCode,{debug:1,config:ICE});
-      peer.on('open',id=>{log('Peer ready ✓ ID='+id);});
-      peer.on('connection',c=>{
-        log('Incoming connection from '+c.peer);
-        conn=c;
+    roomCode = generateCode();
+    document.getElementById('room-code').textContent = roomCode;
+    log('Creating room ' + roomCode);
+    try {
+      peer = new Peer(roomCode, {
+        debug: 2,
+        config: ICE,
+        secure: true
+      });
+      peer.on('open', id => {
+        log('Room ready: ' + id);
+        setPlayerStatus('wait', 'Waiting for controller…');
+      });
+      peer.on('connection', c => {
+        log('Incoming connection from ' + (c.peer || '?'));
+        conn = c;
         setupConnection(c);
-        if(audioUnlocked)setPlayerStatus('ok','Controller connected');
       });
-      peer.on('error',e=>{
-        log('Peer ERROR: '+e.type+(e.message?' '+e.message:''));
-        setPlayerStatus('err','Error: '+e.type);
+      peer.on('error', e => {
+        log('Peer error: ' + (e.type || '') + ' ' + (e.message || ''));
+        setPlayerStatus('err', 'Error – try refresh');
       });
-      peer.on('disconnected',()=>log('Peer disconnected from signaling'));
-    }catch(e){log('Peer create EXCEPTION: '+e.message);alert('PeerJS error: '+e.message);}
-  }else{
+      peer.on('disconnected', () => log('Peer disconnected from broker'));
+    } catch (e) {
+      log('Peer create failed: ' + e.message);
+      alert('Cannot start Peer: ' + e.message);
+    }
+  } else {
     document.getElementById('controller-screen').classList.remove('hide');
-    renderPads();loadPinnedFromStorage();
-    log('Controller mode ready');
+    renderPads();
+    loadPinnedFromStorage();
+    log('Controller ready – enter code and JOIN');
   }
 }
 
-function connectToRoom(){
-  const code=document.getElementById('join-code').value.trim().toUpperCase();
-  if(code.length<4){alert('Enter the 6-letter room code');return;}
-  log('Connecting to room '+code+' …');
-  setControllerStatus('wait','Connecting…');
-  try{
-    if(peer){try{peer.destroy();}catch(e){}}
-    peer=new Peer({debug:1,config:ICE});
-    peer.on('open',id=>{
-      log('Local peer open ('+id+'), calling '+code);
-      conn=peer.connect(code,{reliable:true,serialization:'json'});
-      if(!conn){log('connect() returned null');setControllerStatus('err','connect() failed');return;}
-      setupConnection(conn);
-      setTimeout(()=>{
-        if(conn && !conn.open){
-          log('Connection timed out (15s)');
-          setControllerStatus('err','Timeout – check code & network');
-        }
-      },15000);
-    });
-    peer.on('error',e=>{
-      log('Peer ERROR: '+e.type+(e.message?' '+e.message:''));
-      setControllerStatus('err',e.type);
-      if(e.type==='peer-unavailable')alert('Room code not found. Is Player still open and showing the code?');
-      else alert('Connect error: '+e.type);
-    });
-  }catch(e){log('Exception: '+e.message);alert(e.message);}
-}
+function connectToRoom() {
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
+  if (code.length < 4) { alert('Enter the 6-letter room code'); return; }
+  connectAttempts++;
+  log('Attempt #' + connectAttempts + ' → ' + code);
+  setControllerStatus('wait', 'Connecting…');
+  document.getElementById('join-btn').disabled = true;
 
-function setupConnection(c){
-  c.on('open',()=>{
-    log('✅ Data channel OPEN with '+c.peer);
-    if(mode==='controller'){
-      setControllerStatus('ok','Connected ✓');
-      document.getElementById('preload-btn').disabled=false;
-      try{c.send({type:'hello',from:'controller'});}catch(e){}
-    }
-    if(mode==='player'){
-      if(audioUnlocked)setPlayerStatus('ok','Controller connected ✓');
-      else setPlayerStatus('wait','Controller here – unlock audio!');
-    }
-    if(pingInterval)clearInterval(pingInterval);
-    pingInterval=setInterval(()=>{
-      if(c.open){
-        try{c.send({type:'ping',t:Date.now()});}catch(e){}
+  try { if (peer) { peer.destroy(); peer = null; } } catch (e) {}
+
+  try {
+    peer = new Peer({
+      debug: 2,
+      config: ICE,
+      secure: true
+    });
+
+    const timeout = setTimeout(() => {
+      log('Connection timeout (15s)');
+      setControllerStatus('err', 'Timeout – try again');
+      document.getElementById('join-btn').disabled = false;
+    }, 15000);
+
+    peer.on('open', id => {
+      log('Local peer open: ' + id + ' → connecting to ' + code);
+      conn = peer.connect(code, {
+        reliable: true,
+        serialization: 'json',
+        metadata: { role: 'controller' }
+      });
+      if (!conn) {
+        log('peer.connect returned null');
+        clearTimeout(timeout);
+        setControllerStatus('err', 'Connect failed');
+        document.getElementById('join-btn').disabled = false;
+        return;
       }
-    },7000);
-  });
-  c.on('data',d=>{
-    if(!d)return;
-    if(d.type==='ping'){
-      if(mode==='player' && c.open){try{c.send({type:'pong'});}catch(e){}}
-      return;
+      setupConnection(conn, timeout);
+    });
+
+    peer.on('error', e => {
+      clearTimeout(timeout);
+      log('Peer error: ' + (e.type || e.message || e));
+      setControllerStatus('err', 'Failed: ' + (e.type || 'error'));
+      document.getElementById('join-btn').disabled = false;
+      if (e.type === 'peer-unavailable') {
+        alert('Room code not found. Make sure Player is open and unlocked, then try the exact code again.');
+      }
+    });
+  } catch (e) {
+    log('Exception: ' + e.message);
+    setControllerStatus('err', 'Error');
+    document.getElementById('join-btn').disabled = false;
+    alert(e.message);
+  }
+}
+
+function setupConnection(c, timeoutId) {
+  c.on('open', () => {
+    if (timeoutId) clearTimeout(timeoutId);
+    log('✅ DATA CHANNEL OPEN');
+    if (mode === 'controller') {
+      setControllerStatus('ok', 'Connected!');
+      document.getElementById('join-btn').disabled = false;
+      document.getElementById('preload-btn').disabled = false;
     }
-    if(d.type==='pong'){log('pong');return;}
-    if(d.type==='hello'){log('Hello from controller');return;}
-    log('CMD received: '+d.type+(d.id?' '+d.id:''));
-    if(mode==='player')handlePlayerCmd(d);
-    if(mode==='controller')handleControllerMsg(d);
+    if (mode === 'player') {
+      setPlayerStatus('ok', 'Controller connected!');
+      if (audioUnlocked) log('Ready to receive commands');
+      else log('Controller connected – still need to unlock audio');
+    }
+    if (pingInterval) clearInterval(pingInterval);
+    pingInterval = setInterval(() => {
+      if (c.open) {
+        try { c.send({ type: 'ping', t: Date.now() }); } catch (e) {}
+      }
+    }, 7000);
   });
-  c.on('close',()=>{
-    log('Connection CLOSED');
-    if(mode==='player')setPlayerStatus('wait','Disconnected');
-    if(mode==='controller'){setControllerStatus('err','Disconnected');document.getElementById('preload-btn').disabled=true;}
-    if(pingInterval){clearInterval(pingInterval);pingInterval=null;}
+
+  c.on('data', d => {
+    if (!d || d.type === 'ping') return;
+    if (mode === 'player') handlePlayerCmd(d);
+    if (mode === 'controller') handleControllerMsg(d);
   });
-  c.on('error',e=>log('Conn error: '+(e.message||e)));
+
+  c.on('close', () => {
+    log('Connection closed');
+    if (mode === 'player') setPlayerStatus('wait', 'Disconnected – waiting…');
+    if (mode === 'controller') {
+      setControllerStatus('err', 'Disconnected');
+      document.getElementById('preload-btn').disabled = true;
+    }
+    if (pingInterval) { clearInterval(pingInterval); pingInterval = null; }
+  });
+
+  c.on('error', e => log('Channel error: ' + (e.message || e)));
 }
 
-function setPlayerStatus(s,t){document.getElementById('p-dot').className='dot '+s;document.getElementById('p-status').textContent=t;}
-function setControllerStatus(s,t){document.getElementById('c-dot').className='dot '+s;document.getElementById('c-status').textContent=t;}
-function sendCmd(cmd){
-  if(conn&&conn.open){
-    try{conn.send(cmd);log('→ sent '+cmd.type+(cmd.id?' '+cmd.id:''));}
-    catch(e){log('send failed: '+e.message);}
-  }else{
-    log('NOT CONNECTED – cannot send');
-    alert('Not connected. Join the room code first.');
+function setPlayerStatus(s, t) {
+  document.getElementById('p-dot').className = 'dot ' + s;
+  document.getElementById('p-status').textContent = t;
+}
+function setControllerStatus(s, t) {
+  document.getElementById('c-dot').className = 'dot ' + s;
+  document.getElementById('c-status').textContent = t;
+}
+function sendCmd(cmd) {
+  if (conn && conn.open) {
+    try {
+      conn.send(cmd);
+      log('→ ' + cmd.type + (cmd.id ? ' ' + cmd.id : ''));
+    } catch (e) {
+      log('Send failed: ' + e.message);
+    }
+  } else {
+    log('Not connected – cannot send');
   }
 }
 
-async function handlePlayerCmd(cmd){
-  if(!audioUnlocked){log('Ignored (unlock audio first)');return;}
+async function handlePlayerCmd(cmd) {
+  if (!audioUnlocked) {
+    log('Cmd ignored (unlock audio first)');
+    return;
+  }
   forceResumeAudio();
-  if(cmd.type==='play')playSFX(cmd.id);
-  else if(cmd.type==='stop')stopAll();
-  else if(cmd.type==='pause')pauseSong();
-  else if(cmd.type==='resume')resumeSong();
-  else if(cmd.type==='seek')seekSong(cmd.ratio||0);
-  else if(cmd.type==='song')playSong(cmd.id||cmd.url,cmd.url,cmd.title);
-  else if(cmd.type==='preload'){
-    const list=cmd.songs||[];let done=0;
-    for(const s of list){await preloadSong(s.url,s.id);done++;}
-    log('Preloaded '+done);
+  if (cmd.type === 'play') playSFX(cmd.id);
+  else if (cmd.type === 'stop') stopAll();
+  else if (cmd.type === 'pause') pauseSong();
+  else if (cmd.type === 'resume') resumeSong();
+  else if (cmd.type === 'seek') seekSong(cmd.ratio || 0);
+  else if (cmd.type === 'song') playSong(cmd.id || cmd.url, cmd.url, cmd.title);
+  else if (cmd.type === 'preload') {
+    const list = cmd.songs || [];
+    let done = 0;
+    for (const s of list) {
+      await preloadSong(s.url, s.id);
+      done++;
+    }
+    log('Preloaded ' + done + ' songs');
   }
 }
-function handleControllerMsg(msg){
-  if(msg.type!=='progress')return;
+function handleControllerMsg(msg) {
+  if (msg.type !== 'progress') return;
   document.getElementById('transport').classList.remove('hide');
-  document.getElementById('c-now-title').textContent=msg.title||'—';
-  document.getElementById('c-time-cur').textContent=fmt(msg.cur);
-  document.getElementById('c-time-dur').textContent=fmt(msg.dur);
-  const bar=document.getElementById('seek-bar');
-  if(msg.dur>0&&document.activeElement!==bar)bar.value=Math.round((msg.cur/msg.dur)*1000);
+  document.getElementById('c-now-title').textContent = msg.title || '—';
+  document.getElementById('c-time-cur').textContent = fmt(msg.cur);
+  document.getElementById('c-time-dur').textContent = fmt(msg.dur);
+  const bar = document.getElementById('seek-bar');
+  if (msg.dur > 0 && document.activeElement !== bar) {
+    bar.value = Math.round((msg.cur / msg.dur) * 1000);
+  }
 }
-function fmt(sec){if(!sec||!isFinite(sec))return'0:00';const m=Math.floor(sec/60),s=Math.floor(sec%60);return m+':'+String(s).padStart(2,'0');}
+function fmt(sec) {
+  if (!sec || !isFinite(sec)) return '0:00';
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ':' + String(s).padStart(2, '0');
+}
 
-function renderPads(){
-  const grid=document.getElementById('pad-grid');grid.innerHTML='';
-  SOUNDS.forEach(s=>{
-    const div=document.createElement('div');div.className='pad';
-    div.innerHTML='<div class="icon">'+s.emoji+'</div>'+s.name;
-    div.onpointerdown=e=>{e.preventDefault();sendCmd({type:'play',id:s.id});};
+function renderPads() {
+  const grid = document.getElementById('pad-grid');
+  grid.innerHTML = '';
+  SOUNDS.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'pad';
+    div.innerHTML = '<div class="icon">' + s.emoji + '</div>' + s.name;
+    div.onpointerdown = e => {
+      e.preventDefault();
+      sendCmd({ type: 'play', id: s.id });
+    };
     grid.appendChild(div);
   });
 }
-function loadPinnedFromStorage(){try{pinnedSongs=JSON.parse(localStorage.getItem('horror_pinned')||'[]');}catch{pinnedSongs=[];}renderPinned();}
-function savePinned(){localStorage.setItem('horror_pinned',JSON.stringify(pinnedSongs));renderPinned();}
-function togglePin(song){const i=pinnedSongs.findIndex(p=>p.id===song.id);if(i>=0)pinnedSongs.splice(i,1);else pinnedSongs.push(song);savePinned();}
-function renderPinned(){
-  const section=document.getElementById('pinned-section'),list=document.getElementById('pinned-list');
-  if(!pinnedSongs.length){section.classList.add('hide');return;}
+function loadPinnedFromStorage() {
+  try { pinnedSongs = JSON.parse(localStorage.getItem('horror_pinned') || '[]'); } catch { pinnedSongs = []; }
+  renderPinned();
+}
+function savePinned() {
+  localStorage.setItem('horror_pinned', JSON.stringify(pinnedSongs));
+  renderPinned();
+}
+function togglePin(song) {
+  const i = pinnedSongs.findIndex(p => p.id === song.id);
+  if (i >= 0) pinnedSongs.splice(i, 1);
+  else pinnedSongs.push(song);
+  savePinned();
+}
+function renderPinned() {
+  const section = document.getElementById('pinned-section');
+  const list = document.getElementById('pinned-list');
+  if (!pinnedSongs.length) { section.classList.add('hide'); return; }
   section.classList.remove('hide');
-  list.innerHTML=pinnedSongs.map(s=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid #333"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">'+s.title+'</span><button class="btn small" onclick="playPinned(\''+s.id+'\')">Play</button></div>').join('');
+  list.innerHTML = pinnedSongs.map(s =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #333">' +
+    '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">' + s.title + '</span>' +
+    '<button class="btn small" onclick="playPinned(\'' + s.id + '\')">Play</button></div>'
+  ).join('');
 }
-function playPinned(id){const s=pinnedSongs.find(p=>p.id===id);if(!s)return;sendCmd({type:'song',id:s.id,url:s.url,title:s.title});}
-function preloadPinnedOnPlayer(){
-  if(!conn||!conn.open){alert('Connect first');return;}
-  if(!pinnedSongs.length){alert('Pin songs first');return;}
-  sendCmd({type:'preload',songs:pinnedSongs});
+function playPinned(id) {
+  const s = pinnedSongs.find(p => p.id === id);
+  if (!s) return;
+  sendCmd({ type: 'song', id: s.id, url: s.url, title: s.title });
 }
-async function searchSaavn(){
-  const q=document.getElementById('saavn-query').value.trim();if(!q)return;
-  const box=document.getElementById('saavn-results');box.innerHTML='Searching…';
-  try{
-    const res=await fetch('https://saavn.sumit.co/api/search/songs?query='+encodeURIComponent(q)+'&limit=8');
-    const json=await res.json();const results=json?.data?.results||[];
-    if(!results.length){box.innerHTML='No results';return;}
-    box.innerHTML=results.map(r=>{
-      const title=(r.name||'?').replace(/'/g,"\\'");
-      let url='';if(r.downloadUrl&&r.downloadUrl.length)url=r.downloadUrl[r.downloadUrl.length-1]?.url||r.downloadUrl[0]?.url||'';
-      const id=r.id||url;const artists=((r.artists?.primary||[]).map(a=>a.name).join(', ')||'').replace(/'/g,"\\'");
-      return '<div style="display:flex;justify-content:space-between;gap:5px;padding:5px 0;border-bottom:1px solid #333"><div style="overflow:hidden;flex:1"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r.name||'?')+'</div><div style="font-size:0.68rem;color:#888">'+artists+'</div></div><button class="btn small" '+(url?'':'disabled')+' onclick="playFromSearch(\''+id+'\',\''+url+'\',\''+title+'\')">Play</button><button class="btn small" onclick="togglePinFromSearch(\''+id+'\',\''+url+'\',\''+title+'\',\''+artists+'\')">★</button></div>';
+function preloadPinnedOnPlayer() {
+  if (!conn || !conn.open) { alert('Connect first'); return; }
+  if (!pinnedSongs.length) { alert('Pin some songs first'); return; }
+  sendCmd({ type: 'preload', songs: pinnedSongs });
+}
+async function searchSaavn() {
+  const q = document.getElementById('saavn-query').value.trim();
+  if (!q) return;
+  const box = document.getElementById('saavn-results');
+  box.innerHTML = 'Searching…';
+  try {
+    const res = await fetch('https://saavn.sumit.co/api/search/songs?query=' + encodeURIComponent(q) + '&limit=8');
+    const json = await res.json();
+    const results = json?.data?.results || [];
+    if (!results.length) { box.innerHTML = 'No results'; return; }
+    box.innerHTML = results.map(r => {
+      const title = (r.name || '?').replace(/'/g, "\\'");
+      let url = '';
+      if (r.downloadUrl && r.downloadUrl.length) {
+        url = r.downloadUrl[r.downloadUrl.length - 1]?.url || r.downloadUrl[0]?.url || '';
+      }
+      const id = r.id || url;
+      const artists = ((r.artists?.primary || []).map(a => a.name).join(', ') || '').replace(/'/g, "\\'");
+      return '<div style="display:flex;justify-content:space-between;gap:6px;padding:5px 0;border-bottom:1px solid #333">' +
+        '<div style="overflow:hidden;flex:1"><div style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (r.name || '?') + '</div>' +
+        '<div style="font-size:0.68rem;color:#888">' + artists + '</div></div>' +
+        '<button class="btn small" ' + (url ? '' : 'disabled') + ' onclick="playFromSearch(\'' + id + '\',\'' + url + '\',\'' + title + '\')">Play</button>' +
+        '<button class="btn small" onclick="togglePinFromSearch(\'' + id + '\',\'' + url + '\',\'' + title + '\',\'' + artists + '\')">★</button></div>';
     }).join('');
-  }catch(e){box.innerHTML='Search failed';log('Search: '+e.message);}
+  } catch (e) {
+    box.innerHTML = 'Search failed';
+    log('Search error: ' + e.message);
+  }
 }
-function playFromSearch(id,url,title){if(!url)return;sendCmd({type:'song',id,url,title});document.getElementById('transport').classList.remove('hide');document.getElementById('c-now-title').textContent=title;}
-function togglePinFromSearch(id,url,title,artists){if(!url)return;togglePin({id,url,title,artists});searchSaavn();}
+function playFromSearch(id, url, title) {
+  if (!url) return;
+  sendCmd({ type: 'song', id, url, title });
+  document.getElementById('transport').classList.remove('hide');
+  document.getElementById('c-now-title').textContent = title;
+}
+function togglePinFromSearch(id, url, title, artists) {
+  if (!url) return;
+  togglePin({ id, url, title, artists });
+  searchSaavn();
+}
 
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&audioUnlocked)forceResumeAudio();});
-window.addEventListener('pageshow',()=>{if(audioUnlocked)forceResumeAudio();});
-window.addEventListener('focus',()=>{if(audioUnlocked)forceResumeAudio();});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && audioUnlocked) forceResumeAudio();
+});
+window.addEventListener('pageshow', () => { if (audioUnlocked) forceResumeAudio(); });
+window.addEventListener('focus', () => { if (audioUnlocked) forceResumeAudio(); });
 </script>
 </body>
 </html>
