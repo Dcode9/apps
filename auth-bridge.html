@@ -11,6 +11,8 @@
     (() => {
       const DVERSE_SUPABASE_URL = window.DVERSE_SUPABASE_URL || 'https://gmwieijbrrztukqpfwkg.supabase.co';
       const DVERSE_SUPABASE_KEY = window.DVERSE_SUPABASE_KEY || 'sb_publishable_KX3MYtV84QJJdy9bPDuMEA_V99sLKSE';
+      const DVERSE_TOKENS_COOKIE = 'dverse_auth_tokens';
+
       const allowedOrigins = new Set([
         'https://ai.d-verse.in',
         'https://tunes.d-verse.in',
@@ -62,11 +64,41 @@
 
         try {
           if (message.type === 'dverse-auth:get-session') {
+            let session = null;
             const { data, error } = await client.auth.getSession();
-            if (error) throw error;
+            if (!error && data?.session) {
+              session = data.session;
+            }
+
+            // Fallback: check persistent tokens cookie on .d-verse.in if session was null or expired
+            if (!session) {
+              try {
+                const match = document.cookie.match(/(?:^|;\s*)dverse_auth_tokens=([^;]*)/);
+                if (match) {
+                  const tokens = JSON.parse(decodeURIComponent(match[1]));
+                  if (tokens?.refresh_token) {
+                    const { data: refData, error: refErr } = await client.auth.refreshSession({
+                      refresh_token: tokens.refresh_token
+                    });
+                    if (!refErr && refData?.session) {
+                      session = refData.session;
+                      const compact = {
+                        access_token: session.access_token || '',
+                        refresh_token: session.refresh_token,
+                        expires_at: session.expires_at,
+                        user_id: session.user?.id,
+                        email: session.user?.email
+                      };
+                      document.cookie = `dverse_auth_tokens=${encodeURIComponent(JSON.stringify(compact))}; domain=.d-verse.in; path=/; max-age=31536000; SameSite=Lax; Secure`;
+                    }
+                  }
+                }
+              } catch (_) {}
+            }
+
             reply(event.source, event.origin, message.requestId, {
               type: 'dverse-auth:session',
-              session: publicSession(data.session)
+              session: publicSession(session)
             });
             return;
           }
@@ -78,18 +110,34 @@
                 access_token: session.access_token,
                 refresh_token: session.refresh_token
               });
-              if (error) throw error;
+              if (error) {
+                await client.auth.refreshSession({ refresh_token: session.refresh_token });
+              }
+            } else if (session.refresh_token) {
+              await client.auth.refreshSession({ refresh_token: session.refresh_token });
             }
-            const { data, error } = await client.auth.getSession();
-            if (error) throw error;
+            const { data } = await client.auth.getSession();
+            if (data?.session) {
+              try {
+                const compact = {
+                  access_token: data.session.access_token || '',
+                  refresh_token: data.session.refresh_token,
+                  expires_at: data.session.expires_at,
+                  user_id: data.session.user?.id,
+                  email: data.session.user?.email
+                };
+                document.cookie = `dverse_auth_tokens=${encodeURIComponent(JSON.stringify(compact))}; domain=.d-verse.in; path=/; max-age=31536000; SameSite=Lax; Secure`;
+              } catch (_) {}
+            }
             reply(event.source, event.origin, message.requestId, {
               type: 'dverse-auth:saved',
-              session: publicSession(data.session)
+              session: publicSession(data?.session)
             });
             return;
           }
 
           if (message.type === 'dverse-auth:sign-out') {
+            document.cookie = 'dverse_auth_tokens=; domain=.d-verse.in; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax; Secure';
             const { error } = await client.auth.signOut();
             if (error) throw error;
             reply(event.source, event.origin, message.requestId, {
