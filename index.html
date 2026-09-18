@@ -323,6 +323,20 @@
                     session = data?.session;
                 }
 
+                if (session) {
+                    try {
+                        const compactTokens = {
+                            access_token: session.access_token || '',
+                            refresh_token: session.refresh_token,
+                            expires_at: session.expires_at,
+                            user_id: session.user?.id,
+                            email: session.user?.email
+                        };
+                        setCookie('dverse_auth_tokens', JSON.stringify(compactTokens), 31536000);
+                        setCookie('dverse_session_cache', JSON.stringify(compactTokens), 31536000);
+                    } catch (_) {}
+                }
+
                 // If return target is the portal itself, keep user on portal
                 const isPortalRoot = savedReturnTo === 'https://d-verse.in/' || 
                                      savedReturnTo === (window.location.origin + window.location.pathname);
