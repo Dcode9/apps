@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>D-Drop — Ephemeral, Zero-Knowledge File &amp; Text Vault</title>
+  <meta name="description" content="Share files and secret text anonymously with self-expiring 6-character codes and zero-knowledge encryption. No account required.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-base: #09090b;
+      --bg-surface: #121215;
+      --bg-elevated: #18181b;
+      --bg-input: #0e0e11;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(255, 255, 255, 0.25);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-violet: #8b5cf6;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, "SF Mono", monospace;
+      
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    /* Utilitarian grid & subtle ambient glow */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-glow {
+      position: fixed;
+      top: -160px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 750px;
+      height: 380px;
+      background: radial-gradient(ellipse at center, rgba(6, 182, 212, 0.07) 0%, rgba(139, 92, 246, 0.04) 40%, transparent 70%);
+      filter: blur(70px);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: #18181b;
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-cyan);
+    }
+
+    .logo-text {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      display: flex;
+      align-items: baseline;
+      gap: 0.45rem;
+    }
+
+    .logo-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--accent-emerald);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .header-links {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.825rem;
+      padding: 0.45rem 0.85rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn-ghost:hover {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border-color: var(--border-focus);
+    }
+
+    /* Main Navigation Tabs */
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-surface);
+      padding: 4px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      margin-bottom: 1.75rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Panel Card */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Sub-tabs (File vs Text) */
+    .sub-tabs {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 0.75rem;
+    }
+
+    .sub-tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.825rem;
+      font-weight: 500;
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .sub-tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .sub-tab-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 1.5px dashed rgba(255, 255, 255, 0.14);
+      border-radius: var(--radius-md);
+      background: rgba(18, 18, 21, 0.6);
+      padding: 2.75rem 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.85rem;
+      position: relative;
+    }
+
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent-cyan);
+      background: rgba(6, 182, 212, 0.04);
+    }
+
+    .dropzone-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .dropzone:hover .dropzone-icon, .dropzone.dragover .dropzone-icon {
+      color: var(--accent-cyan);
+      border-color: rgba(6, 182, 212, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .dropzone-title {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .dropzone-sub {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .file-input-hidden {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Selected File Box */
+    .selected-file-box {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      gap: 1rem;
+    }
+
+    .file-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .file-meta-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-sm);
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.2);
+      color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .file-info {
+      min-width: 0;
+    }
+
+    .file-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      font-size: 0.775rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .btn-remove-file {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      padding: 0.35rem;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .btn-remove-file:hover {
+      color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.1);
+    }
+
+    /* Text Note Area */
+    .text-editor-container {
+      display: none;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .text-editor-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .text-editor {
+      width: 100%;
+      min-height: 180px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .text-editor:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Settings Panel */
+    .settings-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      background: rgba(24, 24, 27, 0.5);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .setting-label-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .setting-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .setting-desc {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Pill Selectors */
+    .pill-group {
+      display: inline-flex;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      gap: 2px;
+    }
+
+    .pill-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      padding: 0.3rem 0.65rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .pill-btn:hover {
+      color: var(--text-main);
+    }
+
+    .pill-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Switch */
+    .switch-container {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch-container input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 22px;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .switch-slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--text-dim);
+      border-radius: 50%;
+      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    input:checked + .switch-slider {
+      background-color: rgba(6, 182, 212, 0.2);
+      border-color: var(--accent-cyan);
+    }
+
+    input:checked + .switch-slider:before {
+      transform: translateX(16px);
+      background-color: var(--accent-cyan);
+    }
+
+    /* Password Row */
+    .password-input-group {
+      display: none;
+      margin-top: 0.25rem;
+    }
+
+    .input-text {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.55rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.825rem;
+      font-family: var(--font-mono);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .input-text:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Button Primary */
+    .btn-primary {
+      background: var(--text-main);
+      color: #000;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-sans);
+      font-size: 0.925rem;
+      font-weight: 600;
+      padding: 0.85rem 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Progress */
+    .progress-container {
+      display: none;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-input);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+      transition: width 0.15s ease;
+    }
+
+    /* Created State */
+    .created-panel {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .success-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .badge-icon-success {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      color: var(--accent-emerald);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .success-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .success-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Code Display Card */
+    .code-display-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      position: relative;
+    }
+
+    .code-label {
+      font-size: 0.725rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+
+    .code-value {
+      font-family: var(--font-mono);
+      font-size: 2.25rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: #fff;
+      user-select: all;
+    }
+
+    .btn-copy-code {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy-code:hover {
+      color: var(--text-main);
+      border-color: var(--border-focus);
+    }
+
+    /* Share Link */
+    .share-link-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .share-link-input {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 0.85rem;
+      color: var(--text-main);
+      font-size: 0.825rem;
+      font-family: var(--font-mono);
+      outline: none;
+    }
+
+    .btn-copy-link {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0 1.1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.825rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .btn-copy-link:hover {
+      border-color: var(--border-focus);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* QR Code */
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    #qrcode-box {
+      width: 140px;
+      height: 140px;
+      background: #fff;
+      padding: 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #qrcode-box img {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .qr-caption {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Meta Badges */
+    .meta-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .badge-pill {
+      font-size: 0.725rem;
+      font-weight: 500;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .badge-pill.active-emerald {
+      color: var(--accent-emerald);
+      border-color: rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    .badge-pill.warning-amber {
+      color: var(--accent-amber);
+      border-color: rgba(245, 158, 11, 0.2);
+      background: rgba(245, 158, 11, 0.06);
+    }
+
+    .badge-pill.danger-rose {
+      color: var(--accent-rose);
+      border-color: rgba(244, 63, 94, 0.2);
+      background: rgba(244, 63, 94, 0.06);
+    }
+
+    .created-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: var(--border-focus);
+    }
+
+    .btn-danger-outline {
+      background: transparent;
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      color: var(--accent-rose);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: all 0.15s ease;
+    }
+
+    .btn-danger-outline:hover {
+      background: rgba(244, 63, 94, 0.08);
+      border-color: var(--accent-rose);
+    }
+
+    /* RECEIVE VIEW */
+    .receive-panel {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .code-input-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .code-input-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    .code-input-row {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .input-code-field {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 0.85rem 1rem;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 0.25em;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .input-code-field:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+    }
+
+    /* Retrieved Card */
+    .retrieved-card {
+      display: none;
+      flex-direction: column;
+      gap: 1.25rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+    }
+
+    .retrieved-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 1rem;
+    }
+
+    .retrieved-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .retrieved-filename {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+
+    .retrieved-sub {
+      font-size: 0.775rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .retrieved-content-view {
+      max-height: 400px;
+      overflow-y: auto;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text-main);
+      user-select: text;
+    }
+
+    .retrieved-image-preview {
+      max-height: 360px;
+      max-width: 100%;
+      border-radius: var(--radius-sm);
+      object-fit: contain;
+      align-self: center;
+      background: #000;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .burn-alert {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      background: rgba(244, 63, 94, 0.08);
+      border: 1px solid rgba(244, 63, 94, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.85rem;
+      font-size: 0.785rem;
+      color: var(--accent-rose);
+    }
+
+    .pwd-prompt-card {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      text-align: center;
+      align-items: center;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: #18181b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 0.825rem;
+      font-weight: 500;
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      pointer-events: auto;
+      animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      padding-top: 3rem;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-left a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .footer-left a:hover {
+      color: var(--text-main);
+    }
+
+    details.tech-details {
+      margin-top: 1rem;
+      background: transparent;
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 0.75rem;
+    }
+
+    details.tech-details summary {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+    }
+
+    details.tech-details summary:hover {
+      color: var(--text-muted);
+    }
+
+    .tech-details-content {
+      font-size: 0.725rem;
+      color: var(--text-dim);
+      padding-top: 0.5rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 600px) {
+      .app-wrapper {
+        padding: 1.25rem 1rem 3rem;
+      }
+      .code-value {
+        font-size: 1.75rem;
+      }
+      .setting-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .created-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Standalone QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="ambient-glow"></div>
+
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header>
+      <a href="/drop" class="logo-group">
+        <div class="logo-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span>D-Drop</span>
+          <span class="logo-badge">Anonymous</span>
+        </div>
+      </a>
+
+      <div class="header-links">
+        <a href="/" class="btn-ghost" title="Back to D'Verse Hub">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Apps
+        </a>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="nav-tabs" role="tablist">
+      <button class="tab-btn active" id="tab-send-btn" role="tab" aria-selected="true" aria-controls="panel-send">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        Send / Upload
+      </button>
+      <button class="tab-btn" id="tab-receive-btn" role="tab" aria-selected="false" aria-controls="panel-receive">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Receive / Access
+      </button>
+    </div>
+
+    <!-- MAIN PANEL: SEND / UPLOAD -->
+    <div class="card" id="panel-send" role="tabpanel">
+      <!-- Sub-tabs: File vs Text -->
+      <div class="sub-tabs">
+        <button class="sub-tab-btn active" id="subtab-file">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          File
+        </button>
+        <button class="sub-tab-btn" id="subtab-text">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 7 4 4 20 4 20 7"/>
+            <line x1="9" y1="20" x2="15" y2="20"/>
+            <line x1="12" y1="4" x2="12" y2="20"/>
+          </svg>
+          Secret Text / Code
+        </button>
+      </div>
+
+      <!-- FILE UPLOAD ZONE -->
+      <div id="file-drop-container">
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="file-input" class="file-input-hidden" title="Choose file">
+          <div class="dropzone-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div>
+            <div class="dropzone-title">Drop your file here, or click to browse</div>
+            <div class="dropzone-sub">Any file format up to 100 MB • Or paste clipboard file • No sign-in</div>
+          </div>
+        </div>
+
+        <!-- Selected file card -->
+        <div class="selected-file-box" id="selected-file-box">
+          <div class="file-meta">
+            <div class="file-meta-icon" id="file-icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              </svg>
+            </div>
+            <div class="file-info">
+              <div class="file-name" id="display-filename">document.pdf</div>
+              <div class="file-size" id="display-filesize">2.4 MB</div>
+            </div>
+          </div>
+          <button class="btn-remove-file" id="btn-remove-file" title="Remove file">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- TEXT / NOTE INPUT ZONE -->
+      <div class="text-editor-container" id="text-drop-container">
+        <div class="text-editor-toolbar">
+          <span>Type or paste sensitive text, code snippets, keys, or notes</span>
+          <span id="text-char-counter">0 chars</span>
+        </div>
+        <textarea id="text-input" class="text-editor" placeholder="// Paste or type your secret text here..."></textarea>
+      </div>
+
+      <!-- UTILITARIAN SETTINGS -->
+      <div class="settings-panel">
+        <!-- Expiration Time -->
+        <div class="setting-row">
+          <div class="setting-label-group">
+            <div class="setting-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Auto-Expiration (TTL)
+            </div>
+            <div class="setting-desc">File will be permanently deleted after this duration</div>
+          </div>
+          <div class="pill-group" id="ttl-pill-group">
+            <button class="pill-btn" data-ttl="600">10m</button>
+            <button class="pill-btn active" data-ttl="3600">1h</button>
+            <button class="pill-btn" data-ttl="86400">24h</button>
+            <button class="pill-btn" data-ttl="604800">7d</button>
+          </div>
+        </div>
+
+        <!-- Burn After Reading -->
+        <div class="setting-row">
+          <div class="setting-label-group">
+            <div class="setting-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+              </svg>
+              Burn After Reading
+            </div>
+            <div class="setting-desc">Self-destruct immediately after 1st access / download</div>
+          </div>
+          <label class="switch-container">
+            <input type="checkbox" id="setting-burn">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Zero-Knowledge Encryption -->
+        <div class="setting-row">
+          <div class="setting-label-group">
+            <div class="setting-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Zero-Knowledge Encryption
+            </div>
+            <div class="setting-desc">Client-side AES-256-GCM. Decryption key is never stored on server.</div>
+          </div>
+          <label class="switch-container">
+            <input type="checkbox" id="setting-encrypt" checked>
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <!-- Password Protection (Optional) -->
+        <div class="setting-row">
+          <div class="setting-label-group">
+            <div class="setting-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21 2-2 2m-6 6 7 7-3 3-7-7m0 0L7 13 3 9l4-4 4 4z"/>
+              </svg>
+              Password Protection
+            </div>
+            <div class="setting-desc">Derives encryption key directly from passphrase (no long keys needed)</div>
+          </div>
+          <label class="switch-container">
+            <input type="checkbox" id="setting-has-password">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div class="password-input-group" id="password-input-row">
+          <input type="password" id="input-password" class="input-text" placeholder="Enter unlock passphrase" autocomplete="new-password">
+        </div>
+      </div>
+
+      <!-- Upload Progress -->
+      <div class="progress-container" id="upload-progress-box">
+        <div class="progress-meta">
+          <span id="progress-status-text">Uploading &amp; Encrypting...</span>
+          <span id="progress-pct-text">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill-bar"></div>
+        </div>
+      </div>
+
+      <!-- Upload Button -->
+      <button class="btn-primary" id="btn-create-drop">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Secure Drop
+      </button>
+
+      <!-- Security / Technical Details Collapsible -->
+      <details class="tech-details">
+        <summary>Security &amp; Architecture details</summary>
+        <div class="tech-details-content">
+          • <strong>Zero-Knowledge:</strong> Files and text are encrypted locally in browser memory via the Web Crypto API using AES-256-GCM. The key is in the URL hash and never hits server logs.<br>
+          • <strong>Strict Lifecycles:</strong> PostgreSQL Row-Level Security automatically blocks expired or burned drops. Expired storage blobs are purged.<br>
+          • <strong>Safe Downloads:</strong> Downloads are served with <code>Content-Disposition: attachment</code> and sandboxed to prevent script execution.
+        </div>
+      </details>
+    </div>
+
+    <!-- DROP CREATED / SUCCESS VIEW (Replaces Send View once created) -->
+    <div class="card created-panel" id="panel-created">
+      <div class="success-header">
+        <div class="badge-icon-success">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="success-title">Drop Ready to Share</div>
+          <div class="success-sub">Share the 6-character code or the direct link below.</div>
+        </div>
+      </div>
+
+      <!-- Big Code Box -->
+      <div class="code-display-card">
+        <div class="code-label">Temporary Access Code</div>
+        <div class="code-value" id="created-code-text">--- ---</div>
+        <button class="btn-copy-code" id="btn-copy-code">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copy Code
+        </button>
+      </div>
+
+      <!-- Direct Share Link -->
+      <div class="share-link-group">
+        <input type="text" readonly id="created-link-input" class="share-link-input" value="">
+        <button class="btn-copy-link" id="btn-copy-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copy Link
+        </button>
+      </div>
+
+      <!-- QR Code Section -->
+      <div class="qr-container">
+        <div id="qrcode-box"></div>
+        <div class="qr-caption">Scan with phone camera to open directly with decryption key</div>
+      </div>
+
+      <!-- Meta Badges -->
+      <div class="meta-badges">
+        <span class="badge-pill active-emerald" id="badge-expiry-ticker">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          <span id="created-countdown-text">Expires in 1 hour</span>
+        </span>
+
+        <span class="badge-pill" id="badge-security-type">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          AES-256 Encrypted
+        </span>
+
+        <span class="badge-pill danger-rose" id="badge-burn-status" style="display: none;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+          Burns on 1st Read
+        </span>
+      </div>
+
+      <!-- Actions: Destroy early or New Drop -->
+      <div class="created-actions">
+        <button class="btn-secondary" id="btn-new-drop">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          Send Another
+        </button>
+        <button class="btn-danger-outline" id="btn-destroy-early">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Destroy Drop Now
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN PANEL: RECEIVE / ACCESS -->
+    <div class="card receive-panel" id="panel-receive" role="tabpanel">
+      <!-- Code Input Form -->
+      <div class="code-input-form" id="receive-input-box">
+        <div class="code-input-desc">Enter the 6-character code to retrieve the file or secret note:</div>
+        <div class="code-input-row">
+          <input type="text" id="receive-code-input" class="input-code-field" placeholder="XXX-XXX" maxlength="7" autofocus autocomplete="off" spellcheck="false">
+        </div>
+        <button class="btn-primary" id="btn-claim-drop" style="max-width: 380px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Access Drop
+        </button>
+      </div>
+
+      <!-- Password Prompt Card -->
+      <div class="pwd-prompt-card" id="receive-password-card">
+        <div class="logo-icon" style="color: var(--accent-amber); margin-bottom: 0.25rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div style="font-size: 0.95rem; font-weight: 600;">Passphrase Required</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 320px;">
+          This drop is protected with a password by the uploader.
+        </div>
+        <input type="password" id="receive-password-input" class="input-text" style="max-width: 320px;" placeholder="Enter unlock passphrase">
+        <button class="btn-primary" id="btn-unlock-password" style="max-width: 320px;">
+          Unlock Drop
+        </button>
+      </div>
+
+      <!-- Manual Key Prompt (Shown if encrypted and accessed by code alone without password or key in link) -->
+      <div class="pwd-prompt-card" id="receive-key-card" style="display: none;">
+        <div class="logo-icon" style="color: var(--accent-cyan); margin-bottom: 0.25rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m21 2-2 2m-6 6 7 7-3 3-7-7m0 0L7 13 3 9l4-4 4 4z"/>
+          </svg>
+        </div>
+        <div style="font-size: 0.95rem; font-weight: 600;">Decryption Key Required</div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); max-width: 320px;">
+          This drop was encrypted client-side. Paste the secret key from the sender or scan their QR code.
+        </div>
+        <input type="text" id="receive-key-input" class="input-text" style="max-width: 320px;" placeholder="Paste base64 decryption key">
+        <button class="btn-primary" id="btn-unlock-key" style="max-width: 320px;">
+          Decrypt &amp; View
+        </button>
+      </div>
+
+      <!-- Retrieved Content Display Card -->
+      <div class="retrieved-card" id="retrieved-card">
+        <!-- Burn Alert Banner -->
+        <div class="burn-alert" id="burn-warning-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+          </svg>
+          <span id="burn-warning-text"><strong>Burn on Read:</strong> This drop has self-destructed and is no longer accessible anywhere else.</span>
+        </div>
+
+        <div class="retrieved-header">
+          <div class="retrieved-title-group">
+            <div class="retrieved-filename" id="retrieved-name">secret-notes.txt</div>
+            <div class="retrieved-sub" id="retrieved-meta">File • 14.2 KB</div>
+          </div>
+          <div class="meta-badges">
+            <span class="badge-pill active-emerald" id="retrieved-crypto-badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Verified
+            </span>
+          </div>
+        </div>
+
+        <!-- Image preview if image -->
+        <img id="retrieved-img-preview" class="retrieved-image-preview" style="display: none;" alt="File preview">
+
+        <!-- Text preview if text -->
+        <div id="retrieved-text-box" class="retrieved-content-view" style="display: none;"></div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
+          <button class="btn-primary" id="btn-download-file" style="display: none; flex: 1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download File
+          </button>
+          <button class="btn-primary" id="btn-copy-retrieved-text" style="display: none; flex: 1;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            Copy Text
+          </button>
+          <button class="btn-secondary" id="btn-receive-another" style="flex: 1;">
+            Access Another Code
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="footer-left">
+        <span>Part of the <a href="/">D'Verse</a> Suite</span>
+        <span>•</span>
+        <span>Zero Logs</span>
+      </div>
+      <div>
+        <span>Temporary &amp; Anonymous</span>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      // Configuration
+      const SUPABASE_URL = 'https://gmwieijbrrztukqpfwkg.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_KX3MYtV84QJJdy9bPDuMEA_V99sLKSE';
+      const BUCKET_NAME = 'drops';
+
+      const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // State
+      let currentMode = 'file'; // 'file' | 'text'
+      let selectedFile = null;
+      let selectedTTL = 3600; // 1 hour default
+      let activeCreatedDrop = null;
+      let activeTickerInterval = null;
+      let activeClaimedDrop = null;
+      let cachedDecryptionKey = null;
+      let activePasswordEntered = null;
+
+      // DOM Elements
+      const tabSendBtn = document.getElementById('tab-send-btn');
+      const tabReceiveBtn = document.getElementById('tab-receive-btn');
+      const panelSend = document.getElementById('panel-send');
+      const panelCreated = document.getElementById('panel-created');
+      const panelReceive = document.getElementById('panel-receive');
+
+      const subtabFile = document.getElementById('subtab-file');
+      const subtabText = document.getElementById('subtab-text');
+      const fileDropContainer = document.getElementById('file-drop-container');
+      const textDropContainer = document.getElementById('text-drop-container');
+
+      const dropzone = document.getElementById('dropzone');
+      const fileInput = document.getElementById('file-input');
+      const selectedFileBox = document.getElementById('selected-file-box');
+      const displayFilename = document.getElementById('display-filename');
+      const displayFilesize = document.getElementById('display-filesize');
+      const btnRemoveFile = document.getElementById('btn-remove-file');
+
+      const textInput = document.getElementById('text-input');
+      const textCharCounter = document.getElementById('text-char-counter');
+
+      const ttlPillGroup = document.getElementById('ttl-pill-group');
+      const settingBurn = document.getElementById('setting-burn');
+      const settingEncrypt = document.getElementById('setting-encrypt');
+      const settingHasPassword = document.getElementById('setting-has-password');
+      const passwordInputRow = document.getElementById('password-input-row');
+      const inputPassword = document.getElementById('input-password');
+
+      const btnCreateDrop = document.getElementById('btn-create-drop');
+      const uploadProgressBox = document.getElementById('upload-progress-box');
+      const progressStatusText = document.getElementById('progress-status-text');
+      const progressPctText = document.getElementById('progress-pct-text');
+      const progressFillBar = document.getElementById('progress-fill-bar');
+
+      // Created elements
+      const createdCodeText = document.getElementById('created-code-text');
+      const btnCopyCode = document.getElementById('btn-copy-code');
+      const createdLinkInput = document.getElementById('created-link-input');
+      const btnCopyLink = document.getElementById('btn-copy-link');
+      const qrcodeBox = document.getElementById('qrcode-box');
+      const createdCountdownText = document.getElementById('created-countdown-text');
+      const badgeBurnStatus = document.getElementById('badge-burn-status');
+      const badgeSecurityType = document.getElementById('badge-security-type');
+      const btnNewDrop = document.getElementById('btn-new-drop');
+      const btnDestroyEarly = document.getElementById('btn-destroy-early');
+
+      // Receive elements
+      const receiveInputBox = document.getElementById('receive-input-box');
+      const receiveCodeInput = document.getElementById('receive-code-input');
+      const btnClaimDrop = document.getElementById('btn-claim-drop');
+      const receivePasswordCard = document.getElementById('receive-password-card');
+      const receivePasswordInput = document.getElementById('receive-password-input');
+      const btnUnlockPassword = document.getElementById('btn-unlock-password');
+      const receiveKeyCard = document.getElementById('receive-key-card');
+      const receiveKeyInput = document.getElementById('receive-key-input');
+      const btnUnlockKey = document.getElementById('btn-unlock-key');
+
+      const retrievedCard = document.getElementById('retrieved-card');
+      const burnWarningBanner = document.getElementById('burn-warning-banner');
+      const retrievedName = document.getElementById('retrieved-name');
+      const retrievedMeta = document.getElementById('retrieved-meta');
+      const retrievedTextBox = document.getElementById('retrieved-text-box');
+      const retrievedImgPreview = document.getElementById('retrieved-img-preview');
+      const btnDownloadFile = document.getElementById('btn-download-file');
+      const btnCopyRetrievedText = document.getElementById('btn-copy-retrieved-text');
+      const btnReceiveAnother = document.getElementById('btn-receive-another');
+
+      const toastContainer = document.getElementById('toast-container');
+
+      // Helper: Format bytes
+      function formatBytes(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      // Helper: Toast
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            ${type === 'success' 
+              ? '<polyline points="20 6 9 17 4 12"></polyline>' 
+              : type === 'error'
+              ? '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
+              : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line>'}
+          </svg>
+          <span>${message}</span>
+        `;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px) scale(0.9)';
+          toast.style.transition = 'all 0.25s ease';
+          setTimeout(() => toast.remove(), 250);
+        }, 2600);
+      }
+
+      // Cryptography Helpers (Zero-Knowledge Web Crypto API)
+      async function generateAESKey() {
+        return await window.crypto.subtle.generateKey(
+          { name: 'AES-GCM', length: 256 },
+          true,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async function deriveKeyFromPassword(password, saltBytes) {
+        const enc = new TextEncoder();
+        const keyMaterial = await window.crypto.subtle.importKey(
+          'raw',
+          enc.encode(password),
+          { name: 'PBKDF2' },
+          false,
+          ['deriveKey']
+        );
+        return await window.crypto.subtle.deriveKey(
+          {
+            name: 'PBKDF2',
+            salt: saltBytes,
+            iterations: 100000,
+            hash: 'SHA-256'
+          },
+          keyMaterial,
+          { name: 'AES-GCM', length: 256 },
+          true,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async function exportKeyBase64(key) {
+        const raw = await window.crypto.subtle.exportKey('raw', key);
+        let binary = '';
+        const bytes = new Uint8Array(raw);
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      }
+
+      async function importKeyBase64(base64) {
+        let b64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        const binary = atob(b64);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return await window.crypto.subtle.importKey(
+          'raw',
+          bytes,
+          { name: 'AES-GCM' },
+          true,
+          ['encrypt', 'decrypt']
+        );
+      }
+
+      async function encryptData(key, buffer) {
+        const iv = window.crypto.getRandomValues(new Uint8Array(12));
+        const encrypted = await window.crypto.subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key,
+          buffer
+        );
+        return {
+          ciphertext: encrypted,
+          iv: btoa(String.fromCharCode(...iv))
+        };
+      }
+
+      async function decryptData(key, ciphertextBuffer, ivBase64) {
+        const ivBytes = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+        return await window.crypto.subtle.decrypt(
+          { name: 'AES-GCM', iv: ivBytes },
+          key,
+          ciphertextBuffer
+        );
+      }
+
+      // UI Tab Switching
+      function switchMainTab(tab) {
+        if (tab === 'send') {
+          tabSendBtn.classList.add('active');
+          tabReceiveBtn.classList.remove('active');
+          tabSendBtn.setAttribute('aria-selected', 'true');
+          tabReceiveBtn.setAttribute('aria-selected', 'false');
+          if (activeCreatedDrop) {
+            panelCreated.style.display = 'flex';
+            panelSend.style.display = 'none';
+          } else {
+            panelSend.style.display = 'flex';
+            panelCreated.style.display = 'none';
+          }
+          panelReceive.style.display = 'none';
+        } else {
+          tabReceiveBtn.classList.add('active');
+          tabSendBtn.classList.remove('active');
+          tabReceiveBtn.setAttribute('aria-selected', 'true');
+          tabSendBtn.setAttribute('aria-selected', 'false');
+          panelSend.style.display = 'none';
+          panelCreated.style.display = 'none';
+          panelReceive.style.display = 'flex';
+          receiveCodeInput.focus();
+        }
+      }
+
+      tabSendBtn.addEventListener('click', () => switchMainTab('send'));
+      tabReceiveBtn.addEventListener('click', () => switchMainTab('receive'));
+
+      // Sub-tab Switching (File vs Text)
+      subtabFile.addEventListener('click', () => {
+        currentMode = 'file';
+        subtabFile.classList.add('active');
+        subtabText.classList.remove('active');
+        fileDropContainer.style.display = 'block';
+        textDropContainer.style.display = 'none';
+      });
+
+      subtabText.addEventListener('click', () => {
+        currentMode = 'text';
+        subtabText.classList.add('active');
+        subtabFile.classList.remove('active');
+        fileDropContainer.style.display = 'none';
+        textDropContainer.style.display = 'flex';
+        textInput.focus();
+      });
+
+      // Text input character counter
+      textInput.addEventListener('input', () => {
+        textCharCounter.textContent = `${textInput.value.length} chars`;
+      });
+
+      // TTL pill group selection
+      ttlPillGroup.querySelectorAll('.pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          ttlPillGroup.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedTTL = parseInt(btn.dataset.ttl, 10);
+        });
+      });
+
+      // Password toggle
+      settingHasPassword.addEventListener('change', () => {
+        passwordInputRow.style.display = settingHasPassword.checked ? 'block' : 'none';
+        if (settingHasPassword.checked) inputPassword.focus();
+      });
+
+      // Drag and Drop Handling
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dropzone.classList.remove('dragover');
+        });
+      });
+
+      dropzone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFileSelection(e.dataTransfer.files[0]);
+        }
+      });
+
+      fileInput.addEventListener('change', () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          handleFileSelection(fileInput.files[0]);
+        }
+      });
+
+      function handleFileSelection(file) {
+        if (file.size > 104857600) { // 100 MB limit
+          showToast('File size exceeds the 100 MB limit', 'error');
+          return;
+        }
+        selectedFile = file;
+        displayFilename.textContent = file.name;
+        displayFilesize.textContent = formatBytes(file.size);
+        dropzone.style.display = 'none';
+        selectedFileBox.style.display = 'flex';
+      }
+
+      btnRemoveFile.addEventListener('click', () => {
+        selectedFile = null;
+        fileInput.value = '';
+        selectedFileBox.style.display = 'none';
+        dropzone.style.display = 'flex';
+      });
+
+      // Global Clipboard Paste Support (Cmd+V / Ctrl+V anywhere)
+      window.addEventListener('paste', (e) => {
+        if (document.activeElement === textInput || document.activeElement === receiveCodeInput || document.activeElement === inputPassword || document.activeElement === receivePasswordInput) {
+          return; // Let normal input paste proceed
+        }
+
+        if (e.clipboardData && e.clipboardData.files && e.clipboardData.files.length > 0) {
+          e.preventDefault();
+          switchMainTab('send');
+          subtabFile.click();
+          handleFileSelection(e.clipboardData.files[0]);
+          showToast('File pasted from clipboard', 'info');
+          return;
+        }
+
+        const pastedText = e.clipboardData ? e.clipboardData.getData('text') : null;
+        if (pastedText && pastedText.trim().length > 0 && !selectedFile) {
+          // If 6-character code, paste into receive
+          const stripped = pastedText.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+          if (stripped.length === 6) {
+            switchMainTab('receive');
+            receiveCodeInput.value = stripped.substring(0, 3) + '-' + stripped.substring(3, 6);
+            btnClaimDrop.click();
+            return;
+          }
+
+          // Otherwise paste into secret text
+          switchMainTab('send');
+          subtabText.click();
+          textInput.value = pastedText;
+          textCharCounter.textContent = `${textInput.value.length} chars`;
+          showToast('Text pasted from clipboard', 'info');
+        }
+      });
+
+      // CREATE DROP ACTION
+      btnCreateDrop.addEventListener('click', async () => {
+        try {
+          let payloadType = currentMode;
+          let fileDataBuffer = null;
+          let textData = null;
+          let filename = null;
+          let filesize = 0;
+          let mimetype = 'application/octet-stream';
+
+          if (payloadType === 'file') {
+            if (!selectedFile) {
+              showToast('Please select or drop a file first', 'error');
+              return;
+            }
+            filename = selectedFile.name;
+            filesize = selectedFile.size;
+            mimetype = selectedFile.type || 'application/octet-stream';
+            fileDataBuffer = await selectedFile.arrayBuffer();
+          } else {
+            textData = textInput.value.trim();
+            if (!textData) {
+              showToast('Please enter text or code to share', 'error');
+              return;
+            }
+            filesize = new Blob([textData]).size;
+            mimetype = 'text/plain';
+            fileDataBuffer = new TextEncoder().encode(textData).buffer;
+          }
+
+          // Settings
+          const isEncrypted = settingEncrypt.checked;
+          const isBurn = settingBurn.checked;
+          const hasPassword = settingHasPassword.checked && inputPassword.value.trim().length > 0;
+          const passwordVal = hasPassword ? inputPassword.value.trim() : null;
+
+          // Progress UI
+          btnCreateDrop.disabled = true;
+          uploadProgressBox.style.display = 'flex';
+          progressStatusText.textContent = isEncrypted ? 'Encrypting with AES-256-GCM...' : 'Preparing drop...';
+          progressFillBar.style.width = '20%';
+          progressPctText.textContent = '20%';
+
+          let encKey = null;
+          let encKeyB64 = null;
+          let encryptionIv = null;
+          let encryptionSaltB64 = null;
+          let uploadPayload = null;
+
+          if (isEncrypted) {
+            if (hasPassword) {
+              // Derive key from password via PBKDF2
+              const saltBytes = window.crypto.getRandomValues(new Uint8Array(16));
+              encryptionSaltB64 = btoa(String.fromCharCode(...saltBytes));
+              encKey = await deriveKeyFromPassword(passwordVal, saltBytes);
+              // Do not need to share raw key in URL when password-derived!
+              encKeyB64 = null;
+            } else {
+              // Random 256-bit AES key
+              encKey = await generateAESKey();
+              encKeyB64 = await exportKeyBase64(encKey);
+            }
+
+            const encResult = await encryptData(encKey, fileDataBuffer);
+            uploadPayload = encResult.ciphertext;
+            encryptionIv = encResult.iv;
+          } else {
+            uploadPayload = fileDataBuffer;
+          }
+
+          progressFillBar.style.width = '45%';
+          progressPctText.textContent = '45%';
+          progressStatusText.textContent = 'Creating secure drop record...';
+
+          // 1. Create drop in Postgres via RPC
+          const createRpcPayload = {
+            p_type: payloadType,
+            p_file_name: filename,
+            p_file_size: uploadPayload.byteLength,
+            p_mime_type: mimetype,
+            p_text_content: payloadType === 'text' && !isEncrypted ? textData : (payloadType === 'text' && isEncrypted ? btoa(String.fromCharCode(...new Uint8Array(uploadPayload))) : null),
+            p_encrypted: isEncrypted,
+            p_encryption_iv: encryptionIv,
+            p_encryption_salt: encryptionSaltB64,
+            p_has_password: hasPassword,
+            p_password: passwordVal,
+            p_burn_after_reading: isBurn,
+            p_ttl_seconds: selectedTTL,
+            p_max_downloads: isBurn ? 1 : 100
+          };
+
+          const { data: dropRecord, error: rpcError } = await sb.rpc('create_drop', createRpcPayload);
+          if (rpcError) throw rpcError;
+          if (!dropRecord || !dropRecord.success) throw new Error(dropRecord?.message || 'Could not create drop');
+
+          // 2. If it's a file, upload binary to Supabase Storage
+          if (payloadType === 'file') {
+            progressFillBar.style.width = '65%';
+            progressPctText.textContent = '65%';
+            progressStatusText.textContent = 'Uploading to vault...';
+
+            const { error: storageError } = await sb.storage
+              .from(BUCKET_NAME)
+              .upload(dropRecord.storage_path, uploadPayload, {
+                contentType: isEncrypted ? 'application/octet-stream' : mimetype,
+                upsert: false
+              });
+
+            if (storageError) throw storageError;
+          }
+
+          progressFillBar.style.width = '100%';
+          progressPctText.textContent = '100%';
+          progressStatusText.textContent = 'Done!';
+
+          // Populate Created Screen
+          activeCreatedDrop = {
+            ...dropRecord,
+            encKeyB64: encKeyB64,
+            hasPassword: hasPassword,
+            isEncrypted: isEncrypted,
+            expiresAt: new Date(dropRecord.expires_at)
+          };
+
+          displayCreatedScreen(activeCreatedDrop);
+          showToast('Drop created successfully!', 'success');
+
+        } catch (err) {
+          console.error('Error creating drop:', err);
+          showToast(err.message || 'Failed to create drop', 'error');
+        } finally {
+          btnCreateDrop.disabled = false;
+          setTimeout(() => {
+            uploadProgressBox.style.display = 'none';
+            progressFillBar.style.width = '0%';
+          }, 600);
+        }
+      });
+
+      // Display Created Screen
+      function displayCreatedScreen(drop) {
+        panelSend.style.display = 'none';
+        panelCreated.style.display = 'flex';
+
+        createdCodeText.textContent = drop.code;
+        
+        // Build direct share URL (with hash key for E2EE zero-knowledge)
+        const baseUrl = window.location.origin + window.location.pathname;
+        let shareUrl = `${baseUrl}#code=${drop.normalized_code}`;
+        if (drop.encKeyB64) {
+          shareUrl += `&key=${drop.encKeyB64}`;
+        }
+        createdLinkInput.value = shareUrl;
+
+        // Render QR Code using qrcodejs
+        qrcodeBox.innerHTML = '';
+        if (window.QRCode) {
+          try {
+            new QRCode(qrcodeBox, {
+              text: shareUrl,
+              width: 140,
+              height: 140,
+              colorDark: '#000000',
+              colorLight: '#ffffff',
+              correctLevel: QRCode.CorrectLevel.M
+            });
+          } catch (e) {
+            console.error('QR code render error:', e);
+          }
+        }
+
+        // Expiry & Badges
+        badgeBurnStatus.style.display = drop.burn_after_reading ? 'inline-flex' : 'none';
+        badgeSecurityType.textContent = drop.hasPassword 
+          ? 'Password Protected' 
+          : drop.isEncrypted 
+          ? 'AES-256 Encrypted' 
+          : 'Standard Vault';
+
+        startExpirationTicker(drop.expiresAt);
+      }
+
+      // Expiration countdown ticker
+      function startExpirationTicker(expiresAt) {
+        if (activeTickerInterval) clearInterval(activeTickerInterval);
+
+        const updateTicker = () => {
+          const now = Date.now();
+          const diff = expiresAt.getTime() - now;
+          if (diff <= 0) {
+            createdCountdownText.textContent = 'Expired';
+            clearInterval(activeTickerInterval);
+            return;
+          }
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+          if (hours > 0) {
+            createdCountdownText.textContent = `Expires in ${hours}h ${mins}m`;
+          } else {
+            createdCountdownText.textContent = `Expires in ${mins}m ${secs}s`;
+          }
+        };
+
+        updateTicker();
+        activeTickerInterval = setInterval(updateTicker, 1000);
+      }
+
+      // Copy Code
+      btnCopyCode.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(activeCreatedDrop?.code || createdCodeText.textContent);
+          showToast('Code copied to clipboard', 'success');
+        } catch (_) {
+          showToast('Code copied', 'success');
+        }
+      });
+
+      // Copy Link
+      btnCopyLink.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(createdLinkInput.value);
+          showToast('Direct link copied to clipboard', 'success');
+        } catch (_) {
+          createdLinkInput.select();
+          showToast('Direct link copied', 'success');
+        }
+      });
+
+      // Reset / Send another drop
+      btnNewDrop.addEventListener('click', () => {
+        activeCreatedDrop = null;
+        if (activeTickerInterval) clearInterval(activeTickerInterval);
+        selectedFile = null;
+        fileInput.value = '';
+        textInput.value = '';
+        textCharCounter.textContent = '0 chars';
+        selectedFileBox.style.display = 'none';
+        dropzone.style.display = 'flex';
+        inputPassword.value = '';
+        settingHasPassword.checked = false;
+        passwordInputRow.style.display = 'none';
+        panelCreated.style.display = 'none';
+        panelSend.style.display = 'flex';
+      });
+
+      // Destroy drop early
+      btnDestroyEarly.addEventListener('click', async () => {
+        if (!activeCreatedDrop) return;
+        if (!confirm('Are you sure you want to permanently destroy this drop right now?')) return;
+
+        try {
+          const { data, error } = await sb.rpc('delete_drop', {
+            p_code: activeCreatedDrop.code,
+            p_delete_token: activeCreatedDrop.delete_token
+          });
+          if (error) throw error;
+
+          if (data && data.storage_path) {
+            await sb.storage.from(BUCKET_NAME).remove([data.storage_path]);
+          }
+
+          showToast('Drop destroyed permanently', 'success');
+          btnNewDrop.click();
+        } catch (e) {
+          console.error('Destroy error:', e);
+          showToast(e.message || 'Could not destroy drop', 'error');
+        }
+      });
+
+      // RECEIVE: Format code input as user types
+      receiveCodeInput.addEventListener('input', (e) => {
+        let val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (val.length > 3) {
+          val = val.substring(0, 3) + '-' + val.substring(3, 6);
+        }
+        e.target.value = val;
+
+        if (val.replace('-', '').length === 6) {
+          btnClaimDrop.click();
+        }
+      });
+
+      // RECEIVE: Claim / Access Drop
+      btnClaimDrop.addEventListener('click', async () => {
+        const rawCode = receiveCodeInput.value.trim();
+        if (!rawCode) {
+          showToast('Please enter a 6-character code', 'error');
+          return;
+        }
+
+        btnClaimDrop.disabled = true;
+        btnClaimDrop.innerHTML = '<span class="spinner" style="width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;display:inline-block;animation:spin 0.8s linear infinite;"></span> Accessing...';
+
+        try {
+          await accessDrop(rawCode, null);
+        } catch (err) {
+          console.error('Access error:', err);
+          showToast(err.message || 'Error accessing drop', 'error');
+        } finally {
+          btnClaimDrop.disabled = false;
+          btnClaimDrop.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Access Drop
+          `;
+        }
+      });
+
+      // Password Unlock Action
+      btnUnlockPassword.addEventListener('click', async () => {
+        const pwd = receivePasswordInput.value.trim();
+        if (!pwd) {
+          showToast('Please enter the password', 'error');
+          return;
+        }
+        btnUnlockPassword.disabled = true;
+        try {
+          activePasswordEntered = pwd;
+          await accessDrop(receiveCodeInput.value.trim(), pwd);
+        } catch (err) {
+          console.error(err);
+          showToast(err.message || 'Invalid password', 'error');
+        } finally {
+          btnUnlockPassword.disabled = false;
+        }
+      });
+
+      // Manual Key Unlock Action
+      btnUnlockKey.addEventListener('click', async () => {
+        const keyVal = receiveKeyInput.value.trim();
+        if (!keyVal) {
+          showToast('Please paste the decryption key', 'error');
+          return;
+        }
+        cachedDecryptionKey = keyVal;
+        receiveKeyCard.style.display = 'none';
+        renderRetrievedContent(activeClaimedDrop);
+      });
+
+      // Access Drop Flow
+      async function accessDrop(code, password = null) {
+        const cleanCode = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+        // Use p_increment: false on initial inspect to avoid burning before download
+        const { data: res, error } = await sb.rpc('claim_drop', {
+          p_code: cleanCode,
+          p_password: password,
+          p_increment: false
+        });
+
+        if (error) throw error;
+
+        // If password is required
+        if (!res.success && res.error === 'PASSWORD_REQUIRED') {
+          receiveInputBox.style.display = 'none';
+          receiveKeyCard.style.display = 'none';
+          receivePasswordCard.style.display = 'flex';
+          receivePasswordInput.focus();
+          return;
+        }
+
+        if (!res.success) {
+          throw new Error(res.message || 'Could not claim drop');
+        }
+
+        // Successfully claimed!
+        activeClaimedDrop = res;
+        receivePasswordCard.style.display = 'none';
+        receiveInputBox.style.display = 'none';
+
+        // Check if encryption key is needed and not available
+        const hasKeyInHash = cachedDecryptionKey || extractKeyFromHash();
+        if (res.encrypted && !res.has_password && !hasKeyInHash) {
+          receiveKeyCard.style.display = 'flex';
+          receiveKeyInput.focus();
+          return;
+        }
+
+        renderRetrievedContent(res);
+      }
+
+      // Render the retrieved drop
+      async function renderRetrievedContent(res) {
+        retrievedCard.style.display = 'flex';
+
+        if (res.burn_after_reading) {
+          burnWarningBanner.style.display = 'flex';
+        } else {
+          burnWarningBanner.style.display = 'none';
+        }
+
+        retrievedName.textContent = res.file_name || (res.type === 'text' ? 'Secret Note / Code' : 'file.bin');
+        retrievedMeta.textContent = `${res.type.toUpperCase()} • ${formatBytes(res.file_size)} • ${res.encrypted ? 'AES-256-GCM Encrypted' : 'Standard Vault'}`;
+
+        // TEXT DROP
+        if (res.type === 'text') {
+          // If burn after reading, consume the drop now on viewing
+          if (res.burn_after_reading) {
+            sb.rpc('claim_drop', {
+              p_code: res.code,
+              p_password: activePasswordEntered,
+              p_increment: true
+            }).catch(console.error);
+          }
+
+          let text = res.text_content;
+          if (res.encrypted) {
+            try {
+              let cryptoKey;
+              if (res.has_password && activePasswordEntered && res.encryption_salt) {
+                const saltBytes = Uint8Array.from(atob(res.encryption_salt), c => c.charCodeAt(0));
+                cryptoKey = await deriveKeyFromPassword(activePasswordEntered, saltBytes);
+              } else {
+                const keyB64 = cachedDecryptionKey || extractKeyFromHash();
+                if (!keyB64) throw new Error('Decryption key not provided');
+                cryptoKey = await importKeyBase64(keyB64);
+              }
+
+              const rawCipher = Uint8Array.from(atob(res.text_content), c => c.charCodeAt(0));
+              const decryptedBuffer = await decryptData(cryptoKey, rawCipher.buffer, res.encryption_iv);
+              text = new TextDecoder().decode(decryptedBuffer);
+            } catch (e) {
+              console.error('Decryption failed:', e);
+              text = '[Decryption failed: Incorrect key or damaged ciphertext]';
+            }
+          }
+
+          retrievedTextBox.textContent = text;
+          retrievedTextBox.style.display = 'block';
+          retrievedImgPreview.style.display = 'none';
+          btnCopyRetrievedText.style.display = 'inline-flex';
+          btnDownloadFile.style.display = 'none';
+
+          btnCopyRetrievedText.onclick = async () => {
+            await navigator.clipboard.writeText(text);
+            showToast('Text copied to clipboard', 'success');
+          };
+        } 
+        // FILE DROP
+        else if (res.type === 'file') {
+          retrievedTextBox.style.display = 'none';
+          btnCopyRetrievedText.style.display = 'none';
+          btnDownloadFile.style.display = 'inline-flex';
+
+          btnDownloadFile.onclick = async () => {
+            btnDownloadFile.disabled = true;
+            btnDownloadFile.textContent = 'Downloading...';
+            try {
+              // 1. Increment/Burn on actual download
+              await sb.rpc('claim_drop', {
+                p_code: res.code,
+                p_password: activePasswordEntered,
+                p_increment: true
+              });
+
+              // 2. Download from Supabase Storage
+              const { data: fileBlob, error: dlErr } = await sb.storage
+                .from(BUCKET_NAME)
+                .download(res.storage_path);
+
+              if (dlErr) throw dlErr;
+
+              let finalBlob = fileBlob;
+
+              // Decrypt if client-side encrypted
+              if (res.encrypted) {
+                let cryptoKey;
+                if (res.has_password && activePasswordEntered && res.encryption_salt) {
+                  const saltBytes = Uint8Array.from(atob(res.encryption_salt), c => c.charCodeAt(0));
+                  cryptoKey = await deriveKeyFromPassword(activePasswordEntered, saltBytes);
+                } else {
+                  const keyB64 = cachedDecryptionKey || extractKeyFromHash();
+                  if (!keyB64) throw new Error('Decryption key not found');
+                  cryptoKey = await importKeyBase64(keyB64);
+                }
+
+                const cipherBuffer = await fileBlob.arrayBuffer();
+                const decryptedBuffer = await decryptData(cryptoKey, cipherBuffer, res.encryption_iv);
+                finalBlob = new Blob([decryptedBuffer], { type: res.mime_type || 'application/octet-stream' });
+              }
+
+              // Trigger safe browser download
+              const downloadUrl = URL.createObjectURL(finalBlob);
+              const a = document.createElement('a');
+              a.href = downloadUrl;
+              a.download = res.file_name || 'download.bin';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(downloadUrl);
+              showToast('Download started', 'success');
+
+              // If burned, remove storage object now
+              if (res.burn_after_reading) {
+                sb.storage.from(BUCKET_NAME).remove([res.storage_path]).catch(() => {});
+              }
+            } catch (err) {
+              console.error('File download error:', err);
+              showToast(err.message || 'Download failed', 'error');
+            } finally {
+              btnDownloadFile.disabled = false;
+              btnDownloadFile.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Download File
+              `;
+            }
+          };
+
+          // If unencrypted image type, show preview
+          if (res.mime_type && res.mime_type.startsWith('image/') && !res.encrypted) {
+            try {
+              const { data: imgBlob } = await sb.storage.from(BUCKET_NAME).download(res.storage_path);
+              if (imgBlob) {
+                retrievedImgPreview.src = URL.createObjectURL(imgBlob);
+                retrievedImgPreview.style.display = 'block';
+              }
+            } catch (_) {}
+          }
+        }
+      }
+
+      btnReceiveAnother.addEventListener('click', () => {
+        activeClaimedDrop = null;
+        cachedDecryptionKey = null;
+        activePasswordEntered = null;
+        receiveCodeInput.value = '';
+        retrievedCard.style.display = 'none';
+        receivePasswordCard.style.display = 'none';
+        receiveKeyCard.style.display = 'none';
+        receiveInputBox.style.display = 'flex';
+        receiveCodeInput.focus();
+      });
+
+      // Helper: Parse Key from URL Hash
+      function extractKeyFromHash() {
+        if (!window.location.hash) return null;
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        return params.get('key') || params.get('k');
+      }
+
+      // Check URL on load for direct link (#code=... or ?code=...)
+      function checkIncomingLink() {
+        let code = null;
+        let key = null;
+
+        if (window.location.hash) {
+          const hash = window.location.hash.substring(1);
+          const params = new URLSearchParams(hash);
+          code = params.get('code') || params.get('c');
+          key = params.get('key') || params.get('k');
+        }
+
+        if (!code) {
+          const urlParams = new URLSearchParams(window.location.search);
+          code = urlParams.get('code') || urlParams.get('c');
+        }
+
+        if (code) {
+          cachedDecryptionKey = key;
+          switchMainTab('receive');
+          receiveCodeInput.value = code;
+          accessDrop(code).catch(err => {
+            console.error('Auto access error:', err);
+            showToast(err.message || 'Drop expired or invalid', 'error');
+          });
+        }
+      }
+
+      // Keyboard shortcuts (Cmd+Enter to create drop)
+      window.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          if (panelSend.style.display !== 'none' && !btnCreateDrop.disabled) {
+            btnCreateDrop.click();
+          }
+        }
+      });
+
+      // Initialize
+      checkIncomingLink();
+
+    })();
+  </script>
+</body>
+</html>
