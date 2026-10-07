@@ -215,12 +215,12 @@ $('drop').addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)play(
 $('lev').onclick=()=>{st.lev=!st.lev;if(!st.lev&&agc)agc.gain.setTargetAtTime(1,ctx.currentTime,.05);render()};
 $('tg').addEventListener('input',e=>{st.tg=+e.target.value;save();render()});
 const dbOf=(an,buf)=>{an.getFloatTimeDomainData(buf);let s=0;for(let i=0;i<buf.length;i++)s+=buf[i]*buf[i];return 20*Math.log10(Math.sqrt(s/buf.length)+1e-9)};
-let bi=null,bo=null;const H=[];let curGain=0,pIn=1e-9,pOut=1e-9;const K=1-Math.exp(-.05/.35);
+let bi=null,bo=null;const H=[];let curGain=0,pIn=1e-9,pOut=1e-9;const K=1-Math.exp(-.05/.25);
 const toDb=p=>10*Math.log10(p+1e-12);
 setInterval(()=>{if(!ctx||!playing){return}
  bi=bi||new Float32Array(inAn.fftSize);bo=bo||new Float32Array(outAn.fftSize);
  pIn+=(Math.pow(10,dbOf(inAn,bi)/10)-pIn)*K;const di=toDb(pIn);
- if(st.lev&&di>-60){const want=Math.max(-24,Math.min(30,st.tg-di));const rate=want<curGain?.3:.05;curGain+=(want-curGain)*rate}
+ if(st.lev&&di>-60){const want=Math.max(-24,Math.min(30,st.tg-di));const rate=want<curGain?.45:.18;curGain+=(want-curGain)*rate}
  else if(!st.lev){curGain+=(0-curGain)*.3}
  agc.gain.setTargetAtTime(Math.pow(10,curGain/20),ctx.currentTime,.03);
  pOut+=(Math.pow(10,dbOf(outAn,bo)/10)-pOut)*K;
