@@ -6,10 +6,10 @@
     <title>Soundboard - D'Verse</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
         
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Trebuchet MS', sans-serif;
             background-color: #0a0a0a;
             color: #ededed;
             overflow: hidden;
@@ -106,7 +106,21 @@
             height: 24px;
             animation: spin 1s linear infinite;
         }
-    </style>
+    @media(max-width:640px){
+body{padding:12px!important;gap:12px!important;height:100dvh!important;overflow-y:auto}
+header{flex-wrap:wrap;gap:16px;padding:16px!important}
+header>div:last-child{flex:1 1 100%;justify-content:space-between;gap:12px}
+header>div:last-child>div{flex:1;min-width:0;gap:8px}
+#master-vol{width:100%;min-width:50px}
+#panic-btn{padding:10px 12px;white-space:nowrap}
+main{min-height:540px;padding:16px!important}
+#pad-grid{gap:16px;padding-bottom:100px}
+.sound-btn{width:118px;height:118px}
+main>p{left:12px;right:12px;width:auto!important;bottom:56px}
+main>div:nth-last-child(2){bottom:28px;font-size:11px;width:100%;text-align:center}
+main>div:last-child{bottom:10px;left:0;right:0;width:100%;text-align:center;font-size:9px}
+}
+</style>
 </head>
 <body class="h-screen w-screen flex flex-col p-6 gap-6">
 
