@@ -52,4 +52,4 @@ function esc(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&l
 $('searchBtn').onclick=search;$('query').onkeydown=e=>{if(e.key==='Enter')search()};$('results').onclick=e=>{const b=e.target.closest('[data-i]');if(!b)return;const s=$('results')._songs[+b.dataset.i];playMusic(s,true)};
 function playMusic(s,broadcast){if(!s.url){toast('This result has no playable URL');return}music.src=s.url;music.play().then(()=>{$('now').innerHTML=`Now playing: <b>${esc(s.title)}</b> · ${esc(s.artist)}`;if(broadcast)send({type:'music',song:s})}).catch(()=>toast('Tap the page once, then play again'))}
 makePeer();renderSounds();
-</script></body></html>
+</script><script src="/haptics.js" defer></script></body></html>
