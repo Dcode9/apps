@@ -83,99 +83,10 @@
             min-height: 100vh;
             width: 100vw;
             position: relative;
-            background: #030305 radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.12), transparent);
-            padding: 2.5rem 1.5rem;
+            background: #030305 radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.08), transparent);
+            padding: 0 1.5rem 0.75rem 1.5rem;
             user-select: none;
             overflow: hidden;
-        }
-
-        /* Ambient Starfield & Glow Layer */
-        .stars-container {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            overflow: hidden;
-            z-index: 0;
-        }
-
-        .star-particle {
-            position: absolute;
-            background: white;
-            border-radius: 50%;
-            opacity: 0.3;
-            animation: twinkle 3s infinite alternate ease-in-out;
-        }
-
-        @keyframes twinkle {
-            0% { opacity: 0.15; transform: scale(0.8); }
-            100% { opacity: 0.8; transform: scale(1.2); }
-        }
-
-        /* Top Bar */
-        .cs-header {
-            position: relative;
-            z-index: 20;
-            width: 100%;
-            max-width: 1100px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .cs-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 800;
-            font-size: 1.25rem;
-            letter-spacing: -0.03em;
-            color: #ffffff;
-        }
-
-        .cs-brand-pill {
-            display: inline-grid;
-            place-items: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            font-size: 1rem;
-            color: var(--accent-cyan);
-            box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
-        }
-
-        .cs-status-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(20, 20, 25, 0.6);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            color: rgba(255, 255, 255, 0.8);
-            text-transform: uppercase;
-        }
-
-        .cs-status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #22c55e;
-            box-shadow: 0 0 8px #22c55e;
-            animation: pulse-dot 2s infinite ease-in-out;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(0.75); opacity: 0.5; }
         }
 
         /* Center WWDC / D'UI Optical Text Effect */
@@ -189,7 +100,7 @@
             margin: auto;
             width: 100%;
             max-width: 1200px;
-            padding: 3rem 0;
+            padding: 0;
             --light-pos: 82%;
         }
 
@@ -480,19 +391,20 @@
             transform: translateX(4px);
         }
 
-        /* Footer */
+        /* Minimal Bottom Footer */
         .cs-footer {
             position: relative;
             z-index: 20;
             width: 100%;
-            max-width: 1100px;
+            max-width: 1200px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.4);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 1.5rem;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.35);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 0 0.25rem 0;
+            margin-top: auto;
         }
 
         .cs-footer a {
@@ -987,21 +899,6 @@
     <!-- 1. APEX DOMAIN (d-verse.in): COMING SOON IN D'UI / D'VERSE FONT & GLOW    -->
     <!-- ========================================================================= -->
     <div id="coming-soon-view">
-        <!-- Procedural Subtle Stars Background -->
-        <div class="stars-container" id="stars-container"></div>
-
-        <!-- Header -->
-        <header class="cs-header">
-            <a href="https://d-verse.in/" class="cs-brand">
-                <span class="cs-brand-pill">d</span>
-                <span>D'Verse</span>
-            </a>
-            <div class="cs-status-badge">
-                <span class="cs-status-dot"></span>
-                <span>Ecosystem Live</span>
-            </div>
-        </header>
-
         <!-- Main WWDC / D'UI Optical Text Effect -->
         <main class="wwdc-stage">
             <div class="wwdc-text-container" id="wwdcText">
@@ -1022,23 +919,9 @@
                 <span class="layer-core-bloom" aria-hidden="true">Coming Soon</span>
                 <span class="layer-apex-filament" aria-hidden="true">Coming Soon</span>
             </div>
-
-            <p class="cs-caption">
-                The central portal is calibrating. Explore our live micro-apps and tools in the meantime.
-            </p>
-
-            <div class="cs-actions">
-                <a href="https://apps.d-verse.in/" class="cs-pill-btn">
-                    <span>Explore Small Apps (apps.d-verse.in)</span>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </a>
-            </div>
         </main>
 
-        <!-- Footer -->
+        <!-- Minimal Bottom Footer -->
         <footer class="cs-footer">
             <span>&copy; 2026 D'Verse by Dhairya Shah</span>
             <span>
@@ -1441,24 +1324,6 @@
 
     <!-- Background Starfield Generator & D'UI Light Sweep Animation Script -->
     <script>
-        // Generate Starfield Particles for Coming Soon
-        (function initStars() {
-            const container = document.getElementById('stars-container');
-            if (!container) return;
-            const count = 48;
-            for (let i = 0; i < count; i++) {
-                const star = document.createElement('div');
-                star.className = 'star-particle';
-                const size = Math.random() * 2.5 + 1;
-                star.style.width = size + 'px';
-                star.style.height = size + 'px';
-                star.style.left = Math.random() * 100 + '%';
-                star.style.top = Math.random() * 100 + '%';
-                star.style.animationDelay = (Math.random() * 4) + 's';
-                star.style.animationDuration = (Math.random() * 3 + 2) + 's';
-                container.appendChild(star);
-            }
-        })();
 
         // D'UI Kinetic Light Sweep on Mount
         (function initLightSweep() {
