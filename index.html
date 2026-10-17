@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="theme-color" content="#050508">
-    <meta name="description" content="D'Verse - the ecosystem by Dhairya Shah: music, AI, games, quizzes, notes and small apps.">
+    <meta name="description" content="D'Verse - Small Apps Launchpad and Ecosystem">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -890,37 +890,6 @@
             .cs-footer { flex-direction: column; gap: 12px; text-align: center; }
             footer.apps-footer { flex-direction: column; gap: 12px; text-align: center; }
         }
-
-        /* ===== D'Verse hub (apex): D'UI obsidian + grain-blur glass ===== */
-        [data-view="coming-soon"] #coming-soon-view { justify-content: flex-start; overflow: visible; min-height: 100vh; }
-        [data-view="coming-soon"] .wwdc-stage { margin: 0 auto; padding: clamp(3.5rem, 12vh, 8rem) 0 1rem; }
-        [data-view="coming-soon"] .wwdc-text-container { font-size: clamp(3.6rem, 12vw, 10rem); }
-        .dv-hub { position: relative; z-index: 10; width: 100%; max-width: 1200px; padding: 2rem 0 3rem; user-select: none; }
-        .dv-eyebrow { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.45); margin: 0; }
-        .dv-title { text-wrap: balance; font-size: clamp(1.5rem, 3.4vw, 2.4rem); font-weight: 700; letter-spacing: -.03em; margin: .4rem 0 1.75rem; color: #fff; }
-        .dv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        .dv-card {
-            position: relative; display: flex; flex-direction: column; gap: .25rem; min-height: 168px;
-            padding: 1.25rem; border-radius: 28px; text-decoration: none; color: #fff; overflow: hidden;
-            background: rgba(8,8,12,.65); border: 1px solid rgba(255,255,255,.16);
-            box-shadow: 0 20px 50px rgba(0,0,0,.6), inset 0 1px 1px rgba(255,255,255,.22);
-            backdrop-filter: blur(8.5px); -webkit-backdrop-filter: blur(8.5px);
-            transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s, background .3s;
-        }
-        .dv-card::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-            background: radial-gradient(120% 90% at 0% 0%, rgba(34,211,238,.10), transparent 55%); opacity: .7; transition: opacity .3s; }
-        .dv-card:hover { transform: translateY(-4px); border-color: rgba(255,255,255,.32); background: rgba(14,14,20,.7); }
-        .dv-card:hover::before { opacity: 1; }
-        .dv-card:active { transform: scale(.98); }
-        .dv-card:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
-        .dv-ic { width: 30px; height: 30px; color: #fff; margin-bottom: auto; position: relative; }
-        .dv-tag { position: relative; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: .64rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.45); margin-top: 1.5rem; }
-        .dv-name { position: relative; font-size: 1.3rem; font-weight: 700; letter-spacing: -.02em; }
-        .dv-desc { position: relative; font-size: .85rem; color: rgba(255,255,255,.55); }
-        .dv-go { position: absolute; top: 1rem; right: 1.1rem; font-size: 1.1rem; color: rgba(255,255,255,.4); transition: transform .3s, color .3s; }
-        .dv-card:hover .dv-go { transform: translate(2px,-2px); color: #fff; }
-        @media (max-width: 900px) { .dv-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .dv-grid { gap: .75rem; } .dv-card { min-height: 150px; padding: 1rem; border-radius: 24px; } .dv-name { font-size: 1.1rem; } }
     </style>
     <script src="/haptics.js" defer></script>
 </head>
@@ -940,80 +909,17 @@
                 <div class="bloom-ambient"></div>
 
                 <!-- 9-Stage Optical Physics Typography Stack -->
-                <span class="layer-base">D’Verse</span>
-                <span class="layer-stroke" aria-hidden="true">D’Verse</span>
-                <span class="layer-top-catch" aria-hidden="true">D’Verse</span>
-                <span class="layer-metal-light" aria-hidden="true">D’Verse</span>
-                <span class="layer-opposite-rim" aria-hidden="true">D’Verse</span>
-                <span class="layer-amber-fringe" aria-hidden="true">D’Verse</span>
-                <span class="layer-cyan-fringe" aria-hidden="true">D’Verse</span>
-                <span class="layer-core-bloom" aria-hidden="true">D’Verse</span>
-                <span class="layer-apex-filament" aria-hidden="true">D’Verse</span>
+                <span class="layer-base">Coming Soon</span>
+                <span class="layer-stroke" aria-hidden="true">Coming Soon</span>
+                <span class="layer-top-catch" aria-hidden="true">Coming Soon</span>
+                <span class="layer-metal-light" aria-hidden="true">Coming Soon</span>
+                <span class="layer-opposite-rim" aria-hidden="true">Coming Soon</span>
+                <span class="layer-amber-fringe" aria-hidden="true">Coming Soon</span>
+                <span class="layer-cyan-fringe" aria-hidden="true">Coming Soon</span>
+                <span class="layer-core-bloom" aria-hidden="true">Coming Soon</span>
+                <span class="layer-apex-filament" aria-hidden="true">Coming Soon</span>
             </div>
- </main>
-
-        <section class="dv-hub" aria-labelledby="dv-hub-title">
-            <p class="dv-eyebrow">The ecosystem</p>
-            <h2 id="dv-hub-title" class="dv-title">One account. Eight places to be.</h2>
-            <div class="dv-grid">
-                <a class="dv-card" href="https://tunes.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/></svg>
-                    <span class="dv-tag">Music</span>
-                    <span class="dv-name">D’Tunes</span>
-                    <span class="dv-desc">Stream and play.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://ai.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 16.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>
-                    <span class="dv-tag">Assistant</span>
-                    <span class="dv-name">D’Ai</span>
-                    <span class="dv-desc">Chat that does things.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://d-quest.vercel.app/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 8.7l5.4-.8z"/></svg>
-                    <span class="dv-tag">Learn</span>
-                    <span class="dv-name">D’Quest</span>
-                    <span class="dv-desc">Create and play quizzes.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://games.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="11" rx="5"/><path d="M8 10.5v4M6 12.5h4"/><circle cx="15.5" cy="11.5" r=".8"/><circle cx="17.5" cy="13.5" r=".8"/></svg>
-                    <span class="dv-tag">Play</span>
-                    <span class="dv-name">D’Games</span>
-                    <span class="dv-desc">Arcade and puzzles.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://apps.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></svg>
-                    <span class="dv-tag">Tools</span>
-                    <span class="dv-name">D’Apps</span>
-                    <span class="dv-desc">Small apps for everyday.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://note.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>
-                    <span class="dv-tag">Write</span>
-                    <span class="dv-name">D’Note</span>
-                    <span class="dv-desc">Notes with a real toolbar.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://slides.d-verse.in/">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8M8 10l3-3 2 2 3-3"/></svg>
-                    <span class="dv-tag">Present</span>
-                    <span class="dv-name">Slides</span>
-                    <span class="dv-desc">Decks, hosted.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-                <a class="dv-card" href="https://d-ui-eta.vercel.app/components">
-                    <svg class="dv-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 12.5l9 5 9-5M3 16.5l9 5 9-5"/></svg>
-                    <span class="dv-tag">Design</span>
-                    <span class="dv-name">D’UI</span>
-                    <span class="dv-desc">The material behind it all.</span>
-                    <span class="dv-go" aria-hidden="true">&#8599;</span>
-                </a>
-            </div>
-        </section>
+        </main>
 
         <!-- Minimal Bottom Footer -->
         <footer class="cs-footer">
@@ -1023,7 +929,7 @@
                 <a href="https://tunes.d-verse.in/">D'Tunes</a> &bull; 
                 <a href="https://ai.d-verse.in/">D'Ai</a> &bull; 
                 <a href="https://games.d-verse.in/">D'Games</a> &bull; 
-                <a href="https://d-quest.vercel.app/">D'Quest</a>
+                <a href="https://quest.d-verse.in/">D'Quest</a>
             </span>
         </footer>
     </div>
