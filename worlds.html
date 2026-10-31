@@ -291,7 +291,7 @@
         }
 
         .key-input-wrap input {
-            padding-right: 5rem;
+            padding-right: 5.5rem;
         }
 
         .key-btn-group {
@@ -859,6 +859,8 @@
             transform: translateY(100px);
             opacity: 0;
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 420px;
+            line-height: 1.4;
         }
 
         .toast.show {
@@ -949,7 +951,7 @@
                     <div class="control-group">
                         <div class="control-label">
                             <span>World Labs API Key</span>
-                            <a href="https://marble.worldlabs.ai" target="_blank" rel="noopener noreferrer" class="control-hint" style="text-decoration: underline; color: var(--amber-glow);">Get Key &nearr;</a>
+                            <a href="https://platform.worldlabs.ai/api-keys" target="_blank" rel="noopener noreferrer" class="control-hint" style="text-decoration: underline; color: var(--amber-glow);">Get Developer Key &nearr;</a>
                         </div>
                         <div class="key-input-wrap">
                             <input type="password" id="apiKeyInput" class="input-text input-mono" placeholder="wlt_********************" autocomplete="off" spellcheck="false">
@@ -958,6 +960,21 @@
                                 <button type="button" id="testKeyBtn" class="btn-mini" title="Validate Key">Test</button>
                             </div>
                         </div>
+
+                        <!-- Diagnostic Notice for 401 Unauthorized -->
+                        <div id="keyNotice" style="display: none; margin-top: 0.5rem; padding: 0.85rem; border-radius: var(--radius-sm); font-size: 0.76rem; background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.3); color: #fca5a5;">
+                            <div style="font-weight: 700; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; color: #f87171;">
+                                <svg class="icon" viewBox="0 0 24 24" style="width: 15px; height: 15px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                <span>World Labs Authentication Error (HTTP 401)</span>
+                            </div>
+                            <p style="margin-bottom: 0.4rem; color: #e2e8f0; line-height: 1.4;">World Labs rejected this API key. Please check the following:</p>
+                            <ol style="margin-left: 1.25rem; line-height: 1.55; color: #cbd5e1;">
+                                <li><strong>Developer Portal Key:</strong> You must create your key at <a href="https://platform.worldlabs.ai/api-keys" target="_blank" style="color: var(--amber-glow); font-weight: 600; text-decoration: underline;">platform.worldlabs.ai/api-keys</a>. <em>(Note: Consumer web logins at marble.worldlabs.ai will not work as API keys).</em></li>
+                                <li><strong>Developer Billing / Credits:</strong> The Developer API requires credits purchased under <strong>Settings → Billing</strong> at <a href="https://platform.worldlabs.ai" target="_blank" style="color: var(--amber-glow); text-decoration: underline;">platform.worldlabs.ai</a>.</li>
+                                <li><strong>Full Key Copied:</strong> Ensure no missing prefix or trailing characters were truncated.</li>
+                            </ol>
+                        </div>
+
                         <span class="control-hint">Stored securely in your browser's local memory only.</span>
                     </div>
 
@@ -1102,7 +1119,7 @@
                             </svg>
                         </div>
                         <p style="font-size: 0.95rem; font-weight: 600; color: var(--lumina);">No 3D World Activated</p>
-                        <p style="font-size: 0.78rem; max-width: 320px;">Configure your API Key and click Synthesize to generate an explorable Gaussian Splat world.</p>
+                        <p style="font-size: 0.78rem; max-width: 320px;">Configure your Developer API Key and click Synthesize to generate an explorable Gaussian Splat world.</p>
                     </div>
 
                     <img id="stageImage" class="stage-image" alt="Generated World Preview">
@@ -1120,7 +1137,7 @@
                         <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
                             <polygon points="6 2 18 2 18 6 6 6 6 2"></polygon>
                             <rect x="3" y="6" width="18" height="12" rx="2"></rect>
-                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="12" cy="2" r="2"></circle>
                         </svg>
                         <span>Launch Interactive Marble 3D Viewer &nearr;</span>
                     </a>
@@ -1194,7 +1211,12 @@
             // Configuration & State
             const STORAGE_KEY = 'dverse_worldlabs_api_key';
             const HISTORY_KEY = 'dverse_worldlabs_history';
-            let apiKey = localStorage.getItem(STORAGE_KEY) || '';
+            
+            function cleanKey(k) {
+                return (k || '').trim().replace(/^Bearer\s+/i, '').replace(/^["']|["']$/g, '').trim();
+            }
+
+            let apiKey = cleanKey(localStorage.getItem(STORAGE_KEY));
             let currentWorld = null;
             let pollingTimer = null;
             let stopwatchTimer = null;
@@ -1208,6 +1230,7 @@
             const testKeyBtn = document.getElementById('testKeyBtn');
             const apiKeyStatusBadge = document.getElementById('apiKeyStatusBadge');
             const apiStatusText = document.getElementById('apiStatusText');
+            const keyNotice = document.getElementById('keyNotice');
 
             const modeTextBtn = document.getElementById('modeTextBtn');
             const modeImageBtn = document.getElementById('modeImageBtn');
@@ -1264,12 +1287,17 @@
                 updateKeyStatus(false);
             }
 
-            // Save key on change
-            apiKeyInput.addEventListener('input', () => {
-                apiKey = apiKeyInput.value.trim();
+            // Save key on change/paste/input
+            const handleKeyUpdate = () => {
+                apiKey = cleanKey(apiKeyInput.value);
                 localStorage.setItem(STORAGE_KEY, apiKey);
                 updateKeyStatus(apiKey.length > 5);
-            });
+                if (keyNotice) keyNotice.style.display = 'none';
+            };
+
+            apiKeyInput.addEventListener('input', handleKeyUpdate);
+            apiKeyInput.addEventListener('change', handleKeyUpdate);
+            apiKeyInput.addEventListener('paste', () => setTimeout(handleKeyUpdate, 50));
 
             // Toggle Key Visibility
             toggleKeyVisibility.addEventListener('click', () => {
@@ -1299,12 +1327,12 @@
                 toast.className = `toast show ${type}`;
                 setTimeout(() => {
                     toast.classList.remove('show');
-                }, 3500);
+                }, 4500);
             }
 
             // API Routing Helper (uses Vercel serverless proxy with automatic fallback)
             async function callWorldLabsApi(action, payload = {}, params = {}) {
-                const effectiveKey = apiKey || apiKeyInput.value.trim();
+                const effectiveKey = cleanKey(apiKeyInput.value || apiKey);
                 if (!effectiveKey) {
                     throw new Error('Please enter your World Labs API Key first.');
                 }
@@ -1328,11 +1356,19 @@
 
                     const data = await response.json();
                     if (!response.ok) {
-                        throw new Error(data.error || `Proxy error: HTTP ${response.status}`);
+                        const err = new Error(data.error || `Proxy error: HTTP ${response.status}`);
+                        err.status = response.status;
+                        err.details = data;
+                        throw err;
                     }
                     return data;
                 } catch (proxyErr) {
-                    console.warn('Proxy route failed or unavailable, attempting direct endpoint fallback...', proxyErr);
+                    // If error is 401 or has an explicit API error from proxy, don't fall back to direct fetch (which will get CORS error)
+                    if (proxyErr.status === 401 || (proxyErr.message && proxyErr.message.includes('401'))) {
+                        throw proxyErr;
+                    }
+
+                    console.warn('Proxy route unavailable, trying direct fetch...', proxyErr);
                     
                     // Direct API fallback
                     const BASE = 'https://api.worldlabs.ai/marble/v1';
@@ -1354,6 +1390,9 @@
                         directUrl = `${BASE}/worlds:list`;
                         directMethod = 'POST';
                         directBody = JSON.stringify(payload || { page_size: 20 });
+                    } else if (action === 'credits') {
+                        directUrl = `${BASE}/credits`;
+                        directMethod = 'GET';
                     }
 
                     const directRes = await fetch(directUrl, {
@@ -1367,7 +1406,9 @@
 
                     const directData = await directRes.json();
                     if (!directRes.ok) {
-                        throw new Error(directData.error?.message || directData.error || `Direct API error: HTTP ${directRes.status}`);
+                        const err = new Error(directData.error?.message || directData.error || `Direct API error: HTTP ${directRes.status}`);
+                        err.status = directRes.status;
+                        throw err;
                     }
                     return directData;
                 }
@@ -1375,19 +1416,32 @@
 
             // Test Key
             testKeyBtn.addEventListener('click', async () => {
-                const key = apiKeyInput.value.trim();
+                const key = cleanKey(apiKeyInput.value);
                 if (!key) {
                     showToast('Please enter an API Key to test', 'error');
+                    apiKeyInput.focus();
                     return;
                 }
                 testKeyBtn.textContent = 'Testing...';
+                if (keyNotice) keyNotice.style.display = 'none';
+
                 try {
-                    await callWorldLabsApi('list', { page_size: 1 });
-                    showToast('API Key validated successfully!', 'success');
+                    let res;
+                    try {
+                        res = await callWorldLabsApi('credits');
+                    } catch {
+                        res = await callWorldLabsApi('list', { page_size: 1 });
+                    }
+                    
+                    const creditsMsg = res.credits !== undefined ? ` (${res.credits} credits)` : '';
+                    showToast(`API Key verified successfully!${creditsMsg}`, 'success');
                     updateKeyStatus(true);
                 } catch (err) {
-                    showToast(err.message || 'Key validation failed', 'error');
+                    showToast(err.message || 'Key validation failed (HTTP 401)', 'error');
                     updateKeyStatus(false);
+                    if (err.status === 401 || (err.message && err.message.includes('401'))) {
+                        if (keyNotice) keyNotice.style.display = 'block';
+                    }
                 } finally {
                     testKeyBtn.textContent = 'Test';
                 }
@@ -1420,7 +1474,7 @@
 
             // Generation Process
             generateBtn.addEventListener('click', async () => {
-                const currentKey = apiKeyInput.value.trim();
+                const currentKey = cleanKey(apiKeyInput.value || apiKey);
                 if (!currentKey) {
                     showToast('Enter your World Labs API Key first', 'error');
                     apiKeyInput.focus();
@@ -1480,7 +1534,6 @@
 
             // Start Pipeline
             async function startGenerationPipeline(requestBody) {
-                // UI lock & timer
                 generateBtn.disabled = true;
                 progressCard.style.display = 'flex';
                 elapsedSeconds = 0;
@@ -1516,6 +1569,9 @@
                 } catch (err) {
                     stopPipeline();
                     showToast(err.message || 'Generation failed to dispatch', 'error');
+                    if (err.status === 401 || (err.message && err.message.includes('401'))) {
+                        if (keyNotice) keyNotice.style.display = 'block';
+                    }
                 }
             }
 
@@ -1541,7 +1597,6 @@
                             if (worldId) {
                                 await fetchAndActivateWorld(worldId, originalRequest);
                             } else {
-                                // If response already returned full world object
                                 if (opRes.response?.world_marble_url) {
                                     activateWorld(opRes.response);
                                 } else {

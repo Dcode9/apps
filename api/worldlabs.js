@@ -1,6 +1,6 @@
 // /api/worldlabs.js
 // Vercel Serverless Function Proxy for World Labs Marble API
-// Solves browser CORS restrictions and securely routes World Labs operations.
+// Solves browser CORS restrictions, sanitizes keys, and provides transparent diagnostic logging.
 
 export default async function handler(req, res) {
     // CORS setup for apps.d-verse.in and local development
@@ -16,22 +16,42 @@ export default async function handler(req, res) {
         return res.status(200).end();
     }
 
-    // Extract API key: from headers, body payload, or env variable fallback
-    const incomingKey =
+    // Safely parse body if received as raw text
+    let reqBody = req.body;
+    if (typeof reqBody === 'string') {
+        try {
+            reqBody = JSON.parse(reqBody);
+        } catch {
+            reqBody = {};
+        }
+    } else if (!reqBody) {
+        reqBody = {};
+    }
+
+    // Extract API key: from headers, body payload, query string, or env variable fallback
+    const rawKey =
         req.headers['wlt-api-key'] ||
         req.headers['x-worldlabs-key'] ||
         (req.headers['authorization'] ? req.headers['authorization'].replace(/^Bearer\s+/i, '') : null) ||
-        req.body?.apiKey ||
+        reqBody.apiKey ||
+        req.query?.apiKey ||
         process.env.WORLDLABS_API_KEY ||
         process.env.WLT_API_KEY;
 
-    if (!incomingKey) {
+    // Sanitize API key: remove whitespace, quotes, and 'Bearer ' prefixes
+    const cleanKey = (rawKey || '')
+        .trim()
+        .replace(/^Bearer\s+/i, '')
+        .replace(/^["']|["']$/g, '')
+        .trim();
+
+    if (!cleanKey) {
         return res.status(401).json({
-            error: 'Missing World Labs API Key. Enter your WLT API Key in the application interface or configure WORLDLABS_API_KEY.'
+            error: 'Missing World Labs API Key. Enter your Developer API key from https://platform.worldlabs.ai/api-keys in the application.'
         });
     }
 
-    const { action, operationId, worldId, payload } = req.body || {};
+    const { action, operationId, worldId, payload } = reqBody;
     const actionParam = action || req.query?.action;
     const opId = operationId || req.query?.operationId;
     const wId = worldId || req.query?.worldId;
@@ -46,7 +66,7 @@ export default async function handler(req, res) {
         if (actionParam === 'generate') {
             targetUrl = `${BASE_URL}/worlds:generate`;
             targetMethod = 'POST';
-            targetBody = payload || req.body;
+            targetBody = payload || reqBody;
         } else if (actionParam === 'operation') {
             if (!opId) return res.status(400).json({ error: 'operationId parameter is required' });
             targetUrl = `${BASE_URL}/operations/${encodeURIComponent(opId)}`;
@@ -59,14 +79,17 @@ export default async function handler(req, res) {
             targetUrl = `${BASE_URL}/worlds:list`;
             targetMethod = 'POST';
             targetBody = payload || { page_size: 20 };
+        } else if (actionParam === 'credits') {
+            targetUrl = `${BASE_URL}/credits`;
+            targetMethod = 'GET';
         } else {
             return res.status(400).json({
-                error: `Unknown action: "${actionParam}". Supported actions: generate, operation, world, list.`
+                error: `Unknown action: "${actionParam}". Supported actions: generate, operation, world, list, credits.`
             });
         }
 
         const headers = {
-            'WLT-Api-Key': incomingKey.trim(),
+            'WLT-Api-Key': cleanKey,
             'Content-Type': 'application/json'
         };
 
@@ -76,12 +99,12 @@ export default async function handler(req, res) {
         };
 
         if (targetMethod === 'POST' && targetBody) {
-            const cleanBody = targetBody.payload ? { ...targetBody.payload } : { ...targetBody };
-            delete cleanBody.apiKey;
-            delete cleanBody.action;
-            delete cleanBody.operationId;
-            delete cleanBody.worldId;
-            fetchOptions.body = JSON.stringify(cleanBody);
+            const sanitized = targetBody.payload ? { ...targetBody.payload } : { ...targetBody };
+            delete sanitized.apiKey;
+            delete sanitized.action;
+            delete sanitized.operationId;
+            delete sanitized.worldId;
+            fetchOptions.body = JSON.stringify(sanitized);
         }
 
         const response = await fetch(targetUrl, fetchOptions);
@@ -100,8 +123,16 @@ export default async function handler(req, res) {
         }
 
         if (!response.ok) {
+            let errorMsg = data.error?.message || data.error || data.message || `World Labs API returned status ${response.status}`;
+            
+            // Enrich 401 error with diagnostic guidance
+            if (response.status === 401) {
+                errorMsg = 'World Labs API returned 401 Unauthorized. Ensure you are using a Developer API key created from https://platform.worldlabs.ai/api-keys (not a platform dashboard session token) and that your developer account has active billing/credits.';
+            }
+
             return res.status(response.status).json({
-                error: data.error?.message || data.error || data.message || `World Labs API returned status ${response.status}`,
+                error: errorMsg,
+                statusCode: response.status,
                 details: data
             });
         }
