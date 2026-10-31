@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Labs Studio | D'Verse Worlds</title>
+    <meta name="description" content="Generate explorable 3D worlds, Gaussian splats, and collider meshes using the World Labs Marble API.">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%2311151c'/%3E%3Cpath d='M32 10 L54 22 L54 42 L32 54 L10 42 L10 22 Z' fill='none' stroke='%23e59344' stroke-width='4'/%3E%3Ccircle cx='32' cy='32' r='6' fill='%23e59344'/%3E%3C/svg%3E">
+
+    <!-- Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --canvas: #08090d;
+            --panel: #0f131a;
+            --panel-soft: #141923;
+            --border: #1e2636;
+            --border-highlight: #2f3b52;
+            --lumina: #f0f4f8;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+            --amber-glow: #e59344;
+            --amber-hover: #f0a359;
+            --amber-subtle: rgba(229, 147, 68, 0.12);
+            --emerald: #34d399;
+            --emerald-subtle: rgba(52, 211, 153, 0.12);
+            --crimson: #f87171;
+            --crimson-subtle: rgba(248, 113, 113, 0.12);
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--canvas);
+            color: var(--lumina);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navigation Bar */
+        .header {
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 19, 26, 0.85);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 0.85rem 1.5rem;
+        }
+
+        .header-inner {
+            max-width: 1440px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand-cluster {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .brand-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, #18202d, #0f131a);
+            border: 1px solid var(--border-highlight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--amber-glow);
+            box-shadow: 0 0 16px rgba(229, 147, 68, 0.15);
+        }
+
+        .brand-text h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: var(--lumina);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .brand-text p {
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .back-link {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.45rem 0.85rem;
+            border-radius: var(--radius-sm);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            transition: all 0.15s ease;
+        }
+
+        .back-link:hover {
+            color: var(--lumina);
+            border-color: var(--border-highlight);
+        }
+
+        .status-pill {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-tertiary);
+        }
+
+        .status-pill.connected {
+            background: var(--emerald-subtle);
+            border-color: rgba(52, 211, 153, 0.3);
+            color: #6ee7b7;
+        }
+
+        .status-pill.connected .status-indicator {
+            background: var(--emerald);
+            box-shadow: 0 0 8px var(--emerald);
+        }
+
+        .status-pill.warning {
+            background: var(--amber-subtle);
+            border-color: rgba(229, 147, 68, 0.3);
+            color: #fbd38d;
+        }
+
+        .status-pill.warning .status-indicator {
+            background: var(--amber-glow);
+            box-shadow: 0 0 8px var(--amber-glow);
+        }
+
+        /* Main Workspace Layout */
+        .workspace-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            width: 100%;
+            flex: 1;
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        @media (max-width: 1080px) {
+            .workspace-shell {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Panels */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(20, 25, 35, 0.5);
+        }
+
+        .panel-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: var(--lumina);
+            letter-spacing: -0.01em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-body {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Form Controls */
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .control-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .control-hint {
+            font-size: 0.72rem;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+            font-weight: normal;
+        }
+
+        .input-text, .input-textarea, .input-select {
+            width: 100%;
+            background: #090c12;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--lumina);
+            font-family: var(--font-main);
+            font-size: 0.86rem;
+            padding: 0.65rem 0.85rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+            outline: none;
+        }
+
+        .input-text:focus, .input-textarea:focus, .input-select:focus {
+            border-color: var(--amber-glow);
+            box-shadow: 0 0 0 2px rgba(229, 147, 68, 0.15);
+        }
+
+        .input-mono {
+            font-family: var(--font-mono);
+            font-size: 0.82rem;
+        }
+
+        .input-textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.5;
+        }
+
+        .key-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .key-input-wrap input {
+            padding-right: 5rem;
+        }
+
+        .key-btn-group {
+            position: absolute;
+            right: 4px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-mini {
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            padding: 0.3rem 0.55rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-mini:hover {
+            color: var(--lumina);
+            border-color: var(--border-highlight);
+        }
+
+        /* Preset Pills */
+        .preset-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.2rem;
+        }
+
+        .preset-pill {
+            font-size: 0.72rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 9999px;
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .preset-pill:hover {
+            color: var(--lumina);
+            border-color: var(--amber-glow);
+            background: rgba(229, 147, 68, 0.08);
+        }
+
+        /* Mode Selector Toggle */
+        .mode-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #090c12;
+            padding: 3px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            gap: 4px;
+        }
+
+        .mode-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.45rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            background: var(--panel-soft);
+            color: var(--lumina);
+            border: 1px solid var(--border-highlight);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Submit Button */
+        .btn-primary {
+            background: var(--amber-glow);
+            color: #120e09;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 0.92rem;
+            font-weight: 700;
+            padding: 0.85rem 1.25rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+            box-shadow: 0 4px 18px rgba(229, 147, 68, 0.25);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--amber-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(229, 147, 68, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Progress Card & Telemetry */
+        .progress-card {
+            background: #090c12;
+            border: 1px solid var(--border-highlight);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .progress-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .progress-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--lumina);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--amber-glow);
+            animation: pulseAnim 1.6s infinite ease-in-out;
+        }
+
+        @keyframes pulseAnim {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 10px var(--amber-glow); }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        .telemetry-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            padding: 0.65rem 0.75rem;
+            background: var(--panel-soft);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .telemetry-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+        }
+
+        .telemetry-label {
+            font-size: 0.68rem;
+            color: var(--text-tertiary);
+            font-family: var(--font-mono);
+        }
+
+        .telemetry-val {
+            font-size: 0.76rem;
+            font-family: var(--font-mono);
+            color: var(--lumina);
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stepper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            font-size: 0.76rem;
+            color: var(--text-tertiary);
+        }
+
+        .step-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
+            background: #090c12;
+        }
+
+        .step-item.active {
+            color: var(--lumina);
+        }
+
+        .step-item.active .step-circle {
+            border-color: var(--amber-glow);
+            color: var(--amber-glow);
+            background: var(--amber-subtle);
+        }
+
+        .step-item.done {
+            color: #6ee7b7;
+        }
+
+        .step-item.done .step-circle {
+            border-color: var(--emerald);
+            background: var(--emerald);
+            color: #052e16;
+        }
+
+        /* Right Column: Viewport & Exhibition */
+        .exhibition-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .viewport-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+        }
+
+        .viewport-stage {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            background: #06070a;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .empty-stage-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-tertiary);
+        }
+
+        .empty-stage-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+
+        .stage-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            transition: transform 0.4s ease;
+        }
+
+        .viewport-stage:hover .stage-image {
+            transform: scale(1.02);
+        }
+
+        .stage-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(8, 9, 13, 0.85) 0%, transparent 60%);
+            display: none;
+            pointer-events: none;
+        }
+
+        .stage-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(15, 19, 26, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-highlight);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.74rem;
+            font-family: var(--font-mono);
+            color: var(--lumina);
+            display: none;
+        }
+
+        .stage-meta {
+            position: absolute;
+            bottom: 1rem;
+            left: 1.25rem;
+            right: 1.25rem;
+            display: none;
+            flex-direction: column;
+            gap: 0.25rem;
+            z-index: 2;
+        }
+
+        .stage-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .stage-prompt {
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Action Bar for Active World */
+        .viewport-actions {
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--panel);
+        }
+
+        .btn-marble-launch {
+            background: linear-gradient(135deg, #e59344 0%, #d97706 100%);
+            color: #1a0f00;
+            border: none;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 0.9rem 1.4rem;
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 18px rgba(229, 147, 68, 0.28);
+        }
+
+        .btn-marble-launch:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.05);
+            box-shadow: 0 6px 24px rgba(229, 147, 68, 0.38);
+        }
+
+        .asset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .asset-btn {
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            color: var(--lumina);
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.45rem;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .asset-btn:hover {
+            border-color: var(--border-highlight);
+            background: #19202c;
+            color: #ffffff;
+        }
+
+        .asset-btn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Library & History Section */
+        .library-section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+
+        .library-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            background: rgba(20, 25, 35, 0.5);
+            padding: 0 0.5rem;
+        }
+
+        .library-tab {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-main);
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.85rem 1rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .library-tab:hover {
+            color: var(--lumina);
+        }
+
+        .library-tab.active {
+            color: var(--amber-glow);
+            border-bottom-color: var(--amber-glow);
+        }
+
+        .library-grid {
+            padding: 1.25rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            min-height: 180px;
+        }
+
+        .world-card {
+            background: var(--panel-soft);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .world-card:hover {
+            border-color: var(--amber-glow);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .world-card-thumb {
+            width: 100%;
+            height: 120px;
+            background: #090c12;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .world-card-body {
+            padding: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            flex: 1;
+        }
+
+        .world-card-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--lumina);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .world-card-prompt {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+        }
+
+        .world-card-footer {
+            margin-top: auto;
+            padding-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            font-family: var(--font-mono);
+            color: var(--text-tertiary);
+        }
+
+        /* JSON Inspector Modal / Collapsible */
+        .meta-drawer {
+            border-top: 1px solid var(--border);
+            background: #090c12;
+            padding: 1rem;
+            display: none;
+        }
+
+        .meta-drawer.open {
+            display: block;
+        }
+
+        .json-viewer {
+            font-family: var(--font-mono);
+            font-size: 0.72rem;
+            color: #94a3b8;
+            background: #06080b;
+            padding: 0.85rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            max-height: 240px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #18202d;
+            border: 1px solid var(--border-highlight);
+            color: var(--lumina);
+            padding: 0.8rem 1.25rem;
+            border-radius: var(--radius-md);
+            font-size: 0.82rem;
+            font-weight: 500;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            z-index: 100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            border-color: var(--crimson);
+            background: #231215;
+            color: #fca5a5;
+        }
+
+        .toast.success {
+            border-color: var(--emerald);
+            background: #0d221a;
+            color: #6ee7b7;
+        }
+
+        /* SVGs */
+        .icon {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="https://apps.d-verse.in/" class="brand-cluster" title="D'Verse Apps">
+                <div class="brand-badge">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2" stroke="currentColor" fill="none" stroke-width="2"/>
+                        <polyline points="2 17 12 22 22 17" stroke="currentColor" fill="none" stroke-width="2"/>
+                        <polyline points="2 12 12 17 22 12" stroke="currentColor" fill="none" stroke-width="2"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>World Labs Studio</h1>
+                    <p>Marble 3D Volumetric Synthesizer &bull; apps.d-verse.in/worlds</p>
+                </div>
+            </a>
+
+            <div class="header-actions">
+                <div id="apiKeyStatusBadge" class="status-pill warning" title="API Key configuration status">
+                    <span class="status-indicator"></span>
+                    <span id="apiStatusText">Key Required</span>
+                </div>
+                <a href="https://apps.d-verse.in/" class="back-link">
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Back to Apps</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Workspace Container -->
+    <main class="workspace-shell">
+        
+        <!-- Left Column: Synthesis Console -->
+        <section class="synthesis-column">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg class="icon" viewBox="0 0 24 24" style="color: var(--amber-glow);">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>Synthesis Console</span>
+                    </div>
+                    <span class="control-hint">Marble API v1</span>
+                </div>
+
+                <div class="panel-body">
+                    
+                    <!-- API Key Authentication -->
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>World Labs API Key</span>
+                            <a href="https://marble.worldlabs.ai" target="_blank" rel="noopener noreferrer" class="control-hint" style="text-decoration: underline; color: var(--amber-glow);">Get Key &nearr;</a>
+                        </div>
+                        <div class="key-input-wrap">
+                            <input type="password" id="apiKeyInput" class="input-text input-mono" placeholder="wlt_********************" autocomplete="off" spellcheck="false">
+                            <div class="key-btn-group">
+                                <button type="button" id="toggleKeyVisibility" class="btn-mini" title="Show/Hide Key">View</button>
+                                <button type="button" id="testKeyBtn" class="btn-mini" title="Validate Key">Test</button>
+                            </div>
+                        </div>
+                        <span class="control-hint">Stored securely in your browser's local memory only.</span>
+                    </div>
+
+                    <!-- Prompt Mode Toggle -->
+                    <div class="control-group">
+                        <label class="control-label">Generation Mode</label>
+                        <div class="mode-toggle">
+                            <button type="button" id="modeTextBtn" class="mode-btn active">Text Prompt</button>
+                            <button type="button" id="modeImageBtn" class="mode-btn">Image Reference</button>
+                        </div>
+                    </div>
+
+                    <!-- Text Mode Inputs -->
+                    <div id="textModeGroup" class="control-group">
+                        <div class="control-label">
+                            <span>World Description</span>
+                            <span class="control-hint">Natural language</span>
+                        </div>
+                        <textarea id="promptInput" class="input-textarea" placeholder="A moss-covered brutalist observatory atop a misty Scandinavian fjord with luminous dusk skies..." rows="4"></textarea>
+                        
+                        <!-- Inspiration Presets -->
+                        <div class="preset-grid">
+                            <span class="preset-pill" data-prompt="A misty Scandinavian coastal fjord with a modernist glass beacon at twilight, waves gently lapping dark rocks">Nordic Fjord</span>
+                            <span class="preset-pill" data-prompt="A neo-brutalist sunken courtyard overgrown with emerald ferns, monolithic basalt blocks, and a silent reflection pool">Brutalist Courtyard</span>
+                            <span class="preset-pill" data-prompt="A celestial observatory dome overlooking a ringed gas giant planet with glowing aurora ribbons">Cosmic Observatory</span>
+                            <span class="preset-pill" data-prompt="An ancient desert ruin carved into sandstone cliffs during a golden solar eclipse">Desert Canyon</span>
+                        </div>
+                    </div>
+
+                    <!-- Image Mode Inputs -->
+                    <div id="imageModeGroup" class="control-group" style="display: none;">
+                        <div class="control-label">
+                            <span>Image URL (Public HTTPS)</span>
+                            <span class="control-hint">Direct image link</span>
+                        </div>
+                        <input type="url" id="imageUriInput" class="input-text input-mono" placeholder="https://images.unsplash.com/photo-...">
+                        
+                        <div class="control-label" style="margin-top: 0.5rem;">
+                            <span>Optional Guiding Text</span>
+                        </div>
+                        <textarea id="imageContextInput" class="input-textarea" placeholder="Provide extra atmosphere or directional guidance for the 3D scene..." rows="2"></textarea>
+                    </div>
+
+                    <!-- Model & Display Name Parameters -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div class="control-group">
+                            <label class="control-label" for="modelSelect">Marble Model</label>
+                            <select id="modelSelect" class="input-select">
+                                <option value="marble-1.1" selected>marble-1.1 (Standard)</option>
+                                <option value="marble-1.1-plus">marble-1.1-plus (High-res)</option>
+                                <option value="marble-1.0">marble-1.0 (Standard)</option>
+                                <option value="marble-1.0-draft">marble-1.0-draft (Draft)</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label" for="displayNameInput">Display Name</label>
+                            <input type="text" id="displayNameInput" class="input-text" placeholder="e.g. Nordic Twilight">
+                        </div>
+                    </div>
+
+                    <!-- Synthesis Trigger Button -->
+                    <button type="button" id="generateBtn" class="btn-primary">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 18px; height: 18px;">
+                            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon>
+                        </svg>
+                        <span>Synthesize 3D World</span>
+                    </button>
+
+                    <!-- Realtime Telemetry & Pipeline Card -->
+                    <div id="progressCard" class="progress-card">
+                        <div class="progress-header">
+                            <div class="progress-title">
+                                <div class="pulse-dot"></div>
+                                <span id="pipelineStatusText">Executing Marble Generation...</span>
+                            </div>
+                            <span id="elapsedTimeBadge" class="control-hint" style="color: var(--amber-glow); font-family: var(--font-mono);">00:00</span>
+                        </div>
+
+                        <div class="telemetry-row">
+                            <div class="telemetry-item">
+                                <span class="telemetry-label">OPERATION</span>
+                                <span id="opIdTelemetry" class="telemetry-val" title="Operation ID">-</span>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="telemetry-label">MODEL</span>
+                                <span id="modelTelemetry" class="telemetry-val">-</span>
+                            </div>
+                            <div class="telemetry-item">
+                                <span class="telemetry-label">POLL ATTEMPTS</span>
+                                <span id="pollTelemetry" class="telemetry-val">0</span>
+                            </div>
+                        </div>
+
+                        <div class="stepper">
+                            <div id="step1" class="step-item active">
+                                <div class="step-circle">1</div>
+                                <span>Dispatching payload to World Labs Marble</span>
+                            </div>
+                            <div id="step2" class="step-item">
+                                <div class="step-circle">2</div>
+                                <span>Synthesizing volumetric geometry & radiance field</span>
+                            </div>
+                            <div id="step3" class="step-item">
+                                <div class="step-circle">3</div>
+                                <span>Baking 3D Gaussian Splat (.spz) & Collider (.glb)</span>
+                            </div>
+                            <div id="step4" class="step-item">
+                                <div class="step-circle">4</div>
+                                <span>Packaging interactive Marble 3D web space</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Active Viewport & Exhibition Gallery -->
+        <section class="exhibition-column">
+            
+            <!-- Active Specimen Viewport -->
+            <div class="viewport-card">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <svg class="icon" viewBox="0 0 24 24" style="color: var(--emerald);">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>Active Specimen Viewport</span>
+                    </div>
+                    <button type="button" id="toggleJsonBtn" class="btn-mini">Inspect JSON</button>
+                </div>
+
+                <div class="viewport-stage" id="viewportStage">
+                    <div id="stageEmpty" class="empty-stage-state">
+                        <div class="empty-stage-icon">
+                            <svg class="icon" viewBox="0 0 24 24" style="width: 28px; height: 28px;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="2" y1="12" x2="22" y2="12"></line>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                            </svg>
+                        </div>
+                        <p style="font-size: 0.95rem; font-weight: 600; color: var(--lumina);">No 3D World Activated</p>
+                        <p style="font-size: 0.78rem; max-width: 320px;">Configure your API Key and click Synthesize to generate an explorable Gaussian Splat world.</p>
+                    </div>
+
+                    <img id="stageImage" class="stage-image" alt="Generated World Preview">
+                    <div id="stageOverlay" class="stage-overlay"></div>
+                    <div id="stageBadge" class="stage-badge">COMPLETED</div>
+                    <div id="stageMeta" class="stage-meta">
+                        <h2 id="stageTitle" class="stage-title">Nordic Twilight</h2>
+                        <p id="stagePrompt" class="stage-prompt">A misty Scandinavian coastal fjord...</p>
+                    </div>
+                </div>
+
+                <!-- Action & Asset Extraction Deck -->
+                <div class="viewport-actions">
+                    <a id="launchMarbleBtn" href="#" target="_blank" rel="noopener noreferrer" class="btn-marble-launch" style="display: none;">
+                        <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                            <polygon points="6 2 18 2 18 6 6 6 6 2"></polygon>
+                            <rect x="3" y="6" width="18" height="12" rx="2"></rect>
+                            <circle cx="12" cy="12" r="2"></circle>
+                        </svg>
+                        <span>Launch Interactive Marble 3D Viewer &nearr;</span>
+                    </a>
+
+                    <div class="asset-buttons">
+                        <a id="downloadSplatBtn" href="#" target="_blank" download class="asset-btn disabled" title="Download 3D Gaussian Splat (.spz)">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Splat (.spz)</span>
+                        </a>
+                        <a id="downloadMeshBtn" href="#" target="_blank" download class="asset-btn disabled" title="Download 3D Collider Mesh (.glb)">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            <span>Mesh (.glb)</span>
+                        </a>
+                        <a id="downloadThumbBtn" href="#" target="_blank" download class="asset-btn disabled" title="Download High-Res Thumbnail">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                            <span>Thumbnail</span>
+                        </a>
+                        <button type="button" id="copyWorldIdBtn" class="asset-btn disabled" title="Copy World Unique ID">
+                            <svg class="icon" viewBox="0 0 24 24">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy ID</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Raw JSON Inspection Drawer -->
+                <div id="metaDrawer" class="meta-drawer">
+                    <p style="font-size: 0.74rem; font-weight: 600; color: var(--lumina); margin-bottom: 0.4rem;">World Object Metadata</p>
+                    <pre id="jsonViewer" class="json-viewer">// No world active</pre>
+                </div>
+            </div>
+
+            <!-- Worlds Exhibition Library -->
+            <div class="library-section">
+                <div class="library-tabs">
+                    <button type="button" id="tabLocal" class="library-tab active">Recent Generations</button>
+                    <button type="button" id="tabRemote" class="library-tab">Remote API Library</button>
+                </div>
+
+                <div id="libraryGrid" class="library-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Global Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        (function() {
+            // Configuration & State
+            const STORAGE_KEY = 'dverse_worldlabs_api_key';
+            const HISTORY_KEY = 'dverse_worldlabs_history';
+            let apiKey = localStorage.getItem(STORAGE_KEY) || '';
+            let currentWorld = null;
+            let pollingTimer = null;
+            let stopwatchTimer = null;
+            let elapsedSeconds = 0;
+            let pollCounter = 0;
+            let activeTab = 'local'; // 'local' or 'remote'
+
+            // DOM Elements
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+            const testKeyBtn = document.getElementById('testKeyBtn');
+            const apiKeyStatusBadge = document.getElementById('apiKeyStatusBadge');
+            const apiStatusText = document.getElementById('apiStatusText');
+
+            const modeTextBtn = document.getElementById('modeTextBtn');
+            const modeImageBtn = document.getElementById('modeImageBtn');
+            const textModeGroup = document.getElementById('textModeGroup');
+            const imageModeGroup = document.getElementById('imageModeGroup');
+            const promptInput = document.getElementById('promptInput');
+            const imageUriInput = document.getElementById('imageUriInput');
+            const imageContextInput = document.getElementById('imageContextInput');
+            const modelSelect = document.getElementById('modelSelect');
+            const displayNameInput = document.getElementById('displayNameInput');
+            const generateBtn = document.getElementById('generateBtn');
+
+            const progressCard = document.getElementById('progressCard');
+            const pipelineStatusText = document.getElementById('pipelineStatusText');
+            const elapsedTimeBadge = document.getElementById('elapsedTimeBadge');
+            const opIdTelemetry = document.getElementById('opIdTelemetry');
+            const modelTelemetry = document.getElementById('modelTelemetry');
+            const pollTelemetry = document.getElementById('pollTelemetry');
+
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+            const step4 = document.getElementById('step4');
+
+            const stageEmpty = document.getElementById('stageEmpty');
+            const stageImage = document.getElementById('stageImage');
+            const stageOverlay = document.getElementById('stageOverlay');
+            const stageBadge = document.getElementById('stageBadge');
+            const stageMeta = document.getElementById('stageMeta');
+            const stageTitle = document.getElementById('stageTitle');
+            const stagePrompt = document.getElementById('stagePrompt');
+
+            const launchMarbleBtn = document.getElementById('launchMarbleBtn');
+            const downloadSplatBtn = document.getElementById('downloadSplatBtn');
+            const downloadMeshBtn = document.getElementById('downloadMeshBtn');
+            const downloadThumbBtn = document.getElementById('downloadThumbBtn');
+            const copyWorldIdBtn = document.getElementById('copyWorldIdBtn');
+
+            const toggleJsonBtn = document.getElementById('toggleJsonBtn');
+            const metaDrawer = document.getElementById('metaDrawer');
+            const jsonViewer = document.getElementById('jsonViewer');
+
+            const tabLocal = document.getElementById('tabLocal');
+            const tabRemote = document.getElementById('tabRemote');
+            const libraryGrid = document.getElementById('libraryGrid');
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+
+            // Initialize Key State
+            if (apiKey) {
+                apiKeyInput.value = apiKey;
+                updateKeyStatus(true);
+            } else {
+                updateKeyStatus(false);
+            }
+
+            // Save key on change
+            apiKeyInput.addEventListener('input', () => {
+                apiKey = apiKeyInput.value.trim();
+                localStorage.setItem(STORAGE_KEY, apiKey);
+                updateKeyStatus(apiKey.length > 5);
+            });
+
+            // Toggle Key Visibility
+            toggleKeyVisibility.addEventListener('click', () => {
+                if (apiKeyInput.type === 'password') {
+                    apiKeyInput.type = 'text';
+                    toggleKeyVisibility.textContent = 'Hide';
+                } else {
+                    apiKeyInput.type = 'password';
+                    toggleKeyVisibility.textContent = 'View';
+                }
+            });
+
+            // Update Badge
+            function updateKeyStatus(hasKey) {
+                if (hasKey) {
+                    apiKeyStatusBadge.className = 'status-pill connected';
+                    apiStatusText.textContent = 'Key Active';
+                } else {
+                    apiKeyStatusBadge.className = 'status-pill warning';
+                    apiStatusText.textContent = 'Key Required';
+                }
+            }
+
+            // Toast helper
+            function showToast(msg, type = 'normal') {
+                toastMessage.textContent = msg;
+                toast.className = `toast show ${type}`;
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3500);
+            }
+
+            // API Routing Helper (uses Vercel serverless proxy with automatic fallback)
+            async function callWorldLabsApi(action, payload = {}, params = {}) {
+                const effectiveKey = apiKey || apiKeyInput.value.trim();
+                if (!effectiveKey) {
+                    throw new Error('Please enter your World Labs API Key first.');
+                }
+
+                // Primary path: /api/worldlabs proxy (avoids browser CORS)
+                try {
+                    const response = await fetch('/api/worldlabs', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'WLT-Api-Key': effectiveKey
+                        },
+                        body: JSON.stringify({
+                            action,
+                            operationId: params.operationId,
+                            worldId: params.worldId,
+                            payload,
+                            apiKey: effectiveKey
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.error || `Proxy error: HTTP ${response.status}`);
+                    }
+                    return data;
+                } catch (proxyErr) {
+                    console.warn('Proxy route failed or unavailable, attempting direct endpoint fallback...', proxyErr);
+                    
+                    // Direct API fallback
+                    const BASE = 'https://api.worldlabs.ai/marble/v1';
+                    let directUrl = '';
+                    let directMethod = 'GET';
+                    let directBody = null;
+
+                    if (action === 'generate') {
+                        directUrl = `${BASE}/worlds:generate`;
+                        directMethod = 'POST';
+                        directBody = JSON.stringify(payload);
+                    } else if (action === 'operation') {
+                        directUrl = `${BASE}/operations/${encodeURIComponent(params.operationId)}`;
+                        directMethod = 'GET';
+                    } else if (action === 'world') {
+                        directUrl = `${BASE}/worlds/${encodeURIComponent(params.worldId)}`;
+                        directMethod = 'GET';
+                    } else if (action === 'list') {
+                        directUrl = `${BASE}/worlds:list`;
+                        directMethod = 'POST';
+                        directBody = JSON.stringify(payload || { page_size: 20 });
+                    }
+
+                    const directRes = await fetch(directUrl, {
+                        method: directMethod,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'WLT-Api-Key': effectiveKey
+                        },
+                        body: directBody
+                    });
+
+                    const directData = await directRes.json();
+                    if (!directRes.ok) {
+                        throw new Error(directData.error?.message || directData.error || `Direct API error: HTTP ${directRes.status}`);
+                    }
+                    return directData;
+                }
+            }
+
+            // Test Key
+            testKeyBtn.addEventListener('click', async () => {
+                const key = apiKeyInput.value.trim();
+                if (!key) {
+                    showToast('Please enter an API Key to test', 'error');
+                    return;
+                }
+                testKeyBtn.textContent = 'Testing...';
+                try {
+                    await callWorldLabsApi('list', { page_size: 1 });
+                    showToast('API Key validated successfully!', 'success');
+                    updateKeyStatus(true);
+                } catch (err) {
+                    showToast(err.message || 'Key validation failed', 'error');
+                    updateKeyStatus(false);
+                } finally {
+                    testKeyBtn.textContent = 'Test';
+                }
+            });
+
+            // Preset Pills
+            document.querySelectorAll('.preset-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    promptInput.value = pill.getAttribute('data-prompt');
+                    if (!displayNameInput.value) {
+                        displayNameInput.value = pill.textContent.trim();
+                    }
+                });
+            });
+
+            // Mode Switching
+            modeTextBtn.addEventListener('click', () => {
+                modeTextBtn.classList.add('active');
+                modeImageBtn.classList.remove('active');
+                textModeGroup.style.display = 'flex';
+                imageModeGroup.style.display = 'none';
+            });
+
+            modeImageBtn.addEventListener('click', () => {
+                modeImageBtn.classList.add('active');
+                modeTextBtn.classList.remove('active');
+                textModeGroup.style.display = 'none';
+                imageModeGroup.style.display = 'flex';
+            });
+
+            // Generation Process
+            generateBtn.addEventListener('click', async () => {
+                const currentKey = apiKeyInput.value.trim();
+                if (!currentKey) {
+                    showToast('Enter your World Labs API Key first', 'error');
+                    apiKeyInput.focus();
+                    return;
+                }
+
+                const isTextMode = modeTextBtn.classList.contains('active');
+                const model = modelSelect.value;
+                let displayName = displayNameInput.value.trim();
+                let promptPayload = {};
+
+                if (isTextMode) {
+                    const text = promptInput.value.trim();
+                    if (!text) {
+                        showToast('Please enter a description for your world', 'error');
+                        promptInput.focus();
+                        return;
+                    }
+                    promptPayload = {
+                        type: 'text',
+                        text_prompt: text
+                    };
+                    if (!displayName) {
+                        displayName = text.split(' ').slice(0, 3).join(' ') || 'Custom World';
+                    }
+                } else {
+                    const uri = imageUriInput.value.trim();
+                    if (!uri) {
+                        showToast('Please provide a valid image URL', 'error');
+                        imageUriInput.focus();
+                        return;
+                    }
+                    promptPayload = {
+                        type: 'image',
+                        image_prompt: {
+                            source: 'uri',
+                            uri: uri
+                        }
+                    };
+                    const context = imageContextInput.value.trim();
+                    if (context) {
+                        promptPayload.text_prompt = context;
+                    }
+                    if (!displayName) {
+                        displayName = 'Image Synthesized World';
+                    }
+                }
+
+                const requestBody = {
+                    display_name: displayName,
+                    model: model,
+                    world_prompt: promptPayload
+                };
+
+                startGenerationPipeline(requestBody);
+            });
+
+            // Start Pipeline
+            async function startGenerationPipeline(requestBody) {
+                // UI lock & timer
+                generateBtn.disabled = true;
+                progressCard.style.display = 'flex';
+                elapsedSeconds = 0;
+                pollCounter = 0;
+                elapsedTimeBadge.textContent = '00:00';
+                modelTelemetry.textContent = requestBody.model;
+                opIdTelemetry.textContent = 'Allocating...';
+                pollTelemetry.textContent = '0';
+                pipelineStatusText.textContent = 'Dispatching generation request...';
+
+                setStep(1);
+
+                stopwatchTimer = setInterval(() => {
+                    elapsedSeconds++;
+                    const mins = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+                    const secs = String(elapsedSeconds % 60).padStart(2, '0');
+                    elapsedTimeBadge.textContent = `${mins}:${secs}`;
+                }, 1000);
+
+                try {
+                    const genRes = await callWorldLabsApi('generate', requestBody);
+                    const operationId = genRes.operation_id;
+                    if (!operationId) {
+                        throw new Error('API did not return a valid operation_id.');
+                    }
+
+                    opIdTelemetry.textContent = operationId;
+                    pipelineStatusText.textContent = 'Synthesizing 3D strata & radiance fields...';
+                    setStep(2);
+
+                    // Start polling
+                    pollOperation(operationId, requestBody);
+                } catch (err) {
+                    stopPipeline();
+                    showToast(err.message || 'Generation failed to dispatch', 'error');
+                }
+            }
+
+            // Operation Polling Loop
+            async function pollOperation(operationId, originalRequest) {
+                const POLL_INTERVAL = 4500; // Poll every 4.5 seconds
+
+                pollingTimer = setInterval(async () => {
+                    pollCounter++;
+                    pollTelemetry.textContent = String(pollCounter);
+
+                    if (pollCounter > 4) setStep(3);
+
+                    try {
+                        const opRes = await callWorldLabsApi('operation', {}, { operationId });
+                        
+                        if (opRes.done) {
+                            clearInterval(pollingTimer);
+                            setStep(4);
+                            pipelineStatusText.textContent = 'World synthesized successfully!';
+
+                            const worldId = opRes.response?.world_id || opRes.response?.id;
+                            if (worldId) {
+                                await fetchAndActivateWorld(worldId, originalRequest);
+                            } else {
+                                // If response already returned full world object
+                                if (opRes.response?.world_marble_url) {
+                                    activateWorld(opRes.response);
+                                } else {
+                                    showToast('Operation finished but no world ID was returned.', 'error');
+                                }
+                            }
+                            stopPipeline(true);
+                        } else if (opRes.error) {
+                            clearInterval(pollingTimer);
+                            stopPipeline();
+                            showToast(`Marble Error: ${opRes.error.message || JSON.stringify(opRes.error)}`, 'error');
+                        }
+                    } catch (pollErr) {
+                        console.warn('Poll request warning:', pollErr);
+                    }
+                }, POLL_INTERVAL);
+            }
+
+            function setStep(stepNum) {
+                [step1, step2, step3, step4].forEach((el, idx) => {
+                    const currentIdx = idx + 1;
+                    if (currentIdx < stepNum) {
+                        el.className = 'step-item done';
+                    } else if (currentIdx === stepNum) {
+                        el.className = 'step-item active';
+                    } else {
+                        el.className = 'step-item';
+                    }
+                });
+            }
+
+            function stopPipeline(success = false) {
+                clearInterval(pollingTimer);
+                clearInterval(stopwatchTimer);
+                generateBtn.disabled = false;
+                if (!success) {
+                    progressCard.style.display = 'none';
+                }
+            }
+
+            // Fetch and activate world
+            async function fetchAndActivateWorld(worldId, requestMeta) {
+                try {
+                    const worldData = await callWorldLabsApi('world', {}, { worldId });
+                    activateWorld(worldData, requestMeta);
+                    showToast('3D World generated and ready!', 'success');
+                } catch (err) {
+                    showToast('Generated world ready, but failed to fetch details: ' + err.message, 'error');
+                }
+            }
+
+            // Activate World in Viewport
+            function activateWorld(world, fallbackMeta = {}) {
+                currentWorld = world;
+                saveToHistory(world, fallbackMeta);
+
+                // Stage Visibility
+                stageEmpty.style.display = 'none';
+                stageImage.style.display = 'block';
+                stageOverlay.style.display = 'block';
+                stageBadge.style.display = 'block';
+                stageMeta.style.display = 'flex';
+
+                const title = world.display_name || fallbackMeta.display_name || 'Generated World';
+                const prompt = world.world_prompt?.text_prompt || fallbackMeta.world_prompt?.text_prompt || '';
+                const thumb = world.assets?.thumbnail_url || world.thumbnail_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=800&q=80';
+
+                stageTitle.textContent = title;
+                stagePrompt.textContent = prompt || 'Interactive 3D Gaussian Splat';
+                stageImage.src = thumb;
+
+                // Marble Hosted Viewer
+                const marbleUrl = world.world_marble_url || `https://marble.worldlabs.ai/world/${world.world_id}`;
+                if (marbleUrl) {
+                    launchMarbleBtn.href = marbleUrl;
+                    launchMarbleBtn.style.display = 'flex';
+                } else {
+                    launchMarbleBtn.style.display = 'none';
+                }
+
+                // Asset buttons
+                const splatUrl = world.assets?.splat_url || world.splat_url;
+                if (splatUrl) {
+                    downloadSplatBtn.href = splatUrl;
+                    downloadSplatBtn.classList.remove('disabled');
+                } else {
+                    downloadSplatBtn.classList.add('disabled');
+                }
+
+                const meshUrl = world.assets?.mesh_url || world.mesh_url;
+                if (meshUrl) {
+                    downloadMeshBtn.href = meshUrl;
+                    downloadMeshBtn.classList.remove('disabled');
+                } else {
+                    downloadMeshBtn.classList.add('disabled');
+                }
+
+                if (thumb) {
+                    downloadThumbBtn.href = thumb;
+                    downloadThumbBtn.classList.remove('disabled');
+                } else {
+                    downloadThumbBtn.classList.add('disabled');
+                }
+
+                copyWorldIdBtn.classList.remove('disabled');
+
+                // Update JSON Drawer
+                jsonViewer.textContent = JSON.stringify(world, null, 2);
+
+                // Refresh Library
+                renderHistory();
+            }
+
+            // Copy ID
+            copyWorldIdBtn.addEventListener('click', () => {
+                if (currentWorld?.world_id) {
+                    navigator.clipboard.writeText(currentWorld.world_id);
+                    showToast('World ID copied to clipboard!', 'success');
+                }
+            });
+
+            // Toggle JSON Drawer
+            toggleJsonBtn.addEventListener('click', () => {
+                const isOpen = metaDrawer.classList.toggle('open');
+                toggleJsonBtn.textContent = isOpen ? 'Hide JSON' : 'Inspect JSON';
+            });
+
+            // History Management
+            function saveToHistory(world, meta) {
+                try {
+                    const raw = localStorage.getItem(HISTORY_KEY);
+                    let list = raw ? JSON.parse(raw) : [];
+                    const id = world.world_id || world.id;
+                    if (!id) return;
+
+                    // Deduplicate
+                    list = list.filter(item => (item.world_id || item.id) !== id);
+                    list.unshift({
+                        ...world,
+                        saved_at: new Date().toISOString(),
+                        display_name: world.display_name || meta.display_name,
+                        world_prompt: world.world_prompt || meta.world_prompt
+                    });
+
+                    // Keep top 20
+                    if (list.length > 20) list = list.slice(0, 20);
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+                } catch (e) {
+                    console.error('History save error:', e);
+                }
+            }
+
+            function renderHistory() {
+                if (activeTab !== 'local') return;
+
+                const raw = localStorage.getItem(HISTORY_KEY);
+                const list = raw ? JSON.parse(raw) : [];
+
+                if (list.length === 0) {
+                    libraryGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-tertiary);">
+                            <p style="font-size: 0.85rem;">No local world generations yet.</p>
+                            <p style="font-size: 0.74rem;">Synthesized worlds will automatically appear here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                libraryGrid.innerHTML = list.map(item => {
+                    const title = item.display_name || 'Untitled World';
+                    const prompt = item.world_prompt?.text_prompt || '3D Volumetric Scene';
+                    const thumb = item.assets?.thumbnail_url || item.thumbnail_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80';
+                    const date = item.saved_at ? new Date(item.saved_at).toLocaleDateString() : 'Recent';
+
+                    return `
+                        <div class="world-card" data-world-id="${item.world_id || ''}">
+                            <img class="world-card-thumb" src="${thumb}" alt="${title}" loading="lazy">
+                            <div class="world-card-body">
+                                <span class="world-card-title">${title}</span>
+                                <span class="world-card-prompt">${prompt}</span>
+                                <div class="world-card-footer">
+                                    <span>${item.model || 'marble-1.1'}</span>
+                                    <span>${date}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Card click event
+                libraryGrid.querySelectorAll('.world-card').forEach((card, index) => {
+                    card.addEventListener('click', () => {
+                        const item = list[index];
+                        if (item) activateWorld(item);
+                    });
+                });
+            }
+
+            // Remote Library Tab
+            async function fetchRemoteLibrary() {
+                libraryGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-tertiary);">
+                        <p style="font-size: 0.85rem;">Connecting to World Labs API...</p>
+                    </div>
+                `;
+
+                try {
+                    const res = await callWorldLabsApi('list', { page_size: 20 });
+                    const worlds = res.worlds || res.items || [];
+
+                    if (worlds.length === 0) {
+                        libraryGrid.innerHTML = `
+                            <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-tertiary);">
+                                <p style="font-size: 0.85rem;">No worlds found in your World Labs account.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    libraryGrid.innerHTML = worlds.map(item => {
+                        const title = item.display_name || item.world_id || 'Remote World';
+                        const prompt = item.world_prompt?.text_prompt || 'Explorable 3D World';
+                        const thumb = item.assets?.thumbnail_url || item.thumbnail_url || 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=400&q=80';
+                        const date = item.created_at ? new Date(item.created_at).toLocaleDateString() : '';
+
+                        return `
+                            <div class="world-card" data-world-id="${item.world_id}">
+                                <img class="world-card-thumb" src="${thumb}" alt="${title}" loading="lazy">
+                                <div class="world-card-body">
+                                    <span class="world-card-title">${title}</span>
+                                    <span class="world-card-prompt">${prompt}</span>
+                                    <div class="world-card-footer">
+                                        <span>${item.model || 'marble-1.1'}</span>
+                                        <span>${date}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    libraryGrid.querySelectorAll('.world-card').forEach((card, index) => {
+                        card.addEventListener('click', () => {
+                            const item = worlds[index];
+                            if (item) activateWorld(item);
+                        });
+                    });
+
+                } catch (err) {
+                    libraryGrid.innerHTML = `
+                        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--crimson);">
+                            <p style="font-size: 0.85rem;">Failed to load remote library: ${err.message}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Tab Switching
+            tabLocal.addEventListener('click', () => {
+                activeTab = 'local';
+                tabLocal.classList.add('active');
+                tabRemote.classList.remove('active');
+                renderHistory();
+            });
+
+            tabRemote.addEventListener('click', () => {
+                activeTab = 'remote';
+                tabRemote.classList.add('active');
+                tabLocal.classList.remove('active');
+                fetchRemoteLibrary();
+            });
+
+            // Initial render
+            renderHistory();
+
+        })();
+    </script>
+</body>
+</html>
