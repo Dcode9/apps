@@ -1,6 +1,5 @@
 export default async function handler(req, res) {
-    // Inject secure CORS headers to avoid browser blockages
-    res.setHeader('Access-Control-Allow-Credentials', true);
+    // Inject secure CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader(
@@ -25,7 +24,10 @@ export default async function handler(req, res) {
         }
 
         // Pull the key from your Vercel Environment Variables, fallback to hardcoded if not set yet
-        const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY || "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";
+        const NVIDIA_API_KEY = process.env.NVIDIA_API_KEY;
+        if (!NVIDIA_API_KEY) {
+            return res.status(500).json({ error: "Missing NVIDIA_API_KEY environment variable on Vercel." });
+        }
         const NVIDIA_ENDPOINT = "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux.2-klein-4b";
 
         const payload = {
