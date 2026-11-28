@@ -135,9 +135,15 @@ export default async function handler(req, res) {
           }).catch(() => {});
         }
 
-        const safeFilename = encodeURIComponent(claimResult.file_name || 'download.bin');
-        res.setHeader('Content-Type', claimResult.mime_type || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`);
+        const rawName = claimResult.file_name || 'download.bin';
+        const asciiFallback = rawName.replace(/[^\x20-\x7E]/g, '_').replace(/["\\]/g, '_');
+        const encodedFilename = encodeURIComponent(rawName);
+        const isVcf = /\.(vcf|vcard)$/i.test(rawName);
+        const contentType = (isVcf && (!claimResult.mime_type || claimResult.mime_type === 'application/octet-stream'))
+          ? 'text/vcard; charset=utf-8'
+          : (claimResult.mime_type || 'application/octet-stream');
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodedFilename}`);
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
