@@ -592,6 +592,8 @@
 
     /* Button Primary */
     .btn-primary {
+      background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+      border: none;
       color: #fff;
       border-radius: var(--radius-md);
       font-family: var(--font-sans);
@@ -1093,6 +1095,10 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* Footer */
     footer {
       margin-top: auto;
@@ -1524,7 +1530,7 @@
           This drop is protected with a password by the uploader.
         </div>
         <input type="password" id="receive-password-input" class="input-text" style="max-width: 320px;" placeholder="Enter unlock passphrase">
-        <button class="btn-primary" id="btn-unlock-password" style="max-width: 320px;">
+        <button class="btn-primary grain-accent" id="btn-unlock-password" style="max-width: 320px;">
           Unlock Drop
         </button>
       </div>
@@ -1541,7 +1547,7 @@
           This drop was encrypted client-side. Paste the secret key from the sender or scan their QR code.
         </div>
         <input type="text" id="receive-key-input" class="input-text" style="max-width: 320px;" placeholder="Paste base64 decryption key">
-        <button class="btn-primary" id="btn-unlock-key" style="max-width: 320px;">
+        <button class="btn-primary grain-accent" id="btn-unlock-key" style="max-width: 320px;">
           Decrypt &amp; View
         </button>
       </div>
@@ -1590,7 +1596,7 @@
 
         <!-- Action Buttons -->
         <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; flex-wrap: wrap;">
-          <button class="btn-primary" id="btn-download-file" style="display: none; flex: 1;">
+          <button class="btn-primary grain-accent" id="btn-download-file" style="display: none; flex: 1;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
@@ -1598,7 +1604,7 @@
             </svg>
             Download File
           </button>
-          <button class="btn-primary" id="btn-copy-retrieved-text" style="display: none; flex: 1;">
+          <button class="btn-primary grain-accent" id="btn-copy-retrieved-text" style="display: none; flex: 1;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -1849,6 +1855,15 @@
           true,
           ['encrypt', 'decrypt']
         );
+      }
+
+      function bytesToBase64(bytes) {
+        const chunkSize = 0x8000;
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += chunkSize) {
+          binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
       }
 
       async function exportKeyBase64(key) {
@@ -2123,7 +2138,7 @@
             p_file_name: filename,
             p_file_size: uploadPayload.byteLength,
             p_mime_type: mimetype,
-            p_text_content: payloadType === 'text' && !isEncrypted ? textData : (payloadType === 'text' && isEncrypted ? btoa(String.fromCharCode(...new Uint8Array(uploadPayload))) : null),
+            p_text_content: payloadType === 'text' && !isEncrypted ? textData : (payloadType === 'text' && isEncrypted ? bytesToBase64(new Uint8Array(uploadPayload)) : null),
             p_encrypted: isEncrypted,
             p_encryption_iv: encryptionIv,
             p_encryption_salt: encryptionSaltB64,
@@ -2142,9 +2157,18 @@
           if (payloadType === 'file') {
             // Real byte progress: XHR upload to the same Storage endpoint
             setTransferProgress('upload', 0, 'Uploading to vault...');
-            await storageTransfer('POST', dropRecord.storage_path, uploadPayload,
-              isEncrypted ? 'application/octet-stream' : mimetype,
-              (frac) => setTransferProgress('upload', frac));
+            try {
+              await storageTransfer('POST', dropRecord.storage_path, uploadPayload,
+                isEncrypted ? 'application/octet-stream' : mimetype,
+                (frac) => setTransferProgress('upload', frac));
+            } catch (uploadErr) {
+              // Roll back the drop record so no broken code is left behind
+              sb.rpc('delete_drop', {
+                p_code: dropRecord.code,
+                p_delete_token: dropRecord.delete_token
+              }).catch(() => {});
+              throw uploadErr;
+            }
           }
 
           finishProgress('upload', 'Done!');
@@ -2347,6 +2371,14 @@
         }
       });
 
+      receivePasswordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !btnUnlockPassword.disabled) btnUnlockPassword.click();
+      });
+
+      receiveKeyInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !btnUnlockKey.disabled) btnUnlockKey.click();
+      });
+
       // Password Unlock Action
       btnUnlockPassword.addEventListener('click', async () => {
         const pwd = receivePasswordInput.value.trim();
@@ -2489,17 +2521,21 @@
             downloadProgressBox.style.display = 'flex';
               beginNamedStage('download', 'Claiming drop...', false);
             try {
-              // 1. Increment/Burn on actual download
-              await sb.rpc('claim_drop', {
+              // 1. Download from Supabase Storage while drop is still active (before burning)
+              setTransferProgress('download', 0, 'Fetching from vault...');
+              const fileBlob = await storageTransfer('GET', res.storage_path, null, null,
+                (frac) => setTransferProgress('download', frac));
+
+              // 2. Increment download count / burn drop now that bytes are fetched
+              const { data: claimData, error: claimErr } = await sb.rpc('claim_drop', {
                 p_code: res.code,
                 p_password: activePasswordEntered,
                 p_increment: true
               });
-
-              // 2. Download from Supabase Storage with real byte progress
-              setTransferProgress('download', 0, 'Fetching from vault...');
-              const fileBlob = await storageTransfer('GET', res.storage_path, null, null,
-                (frac) => setTransferProgress('download', frac));
+              if (claimErr) throw claimErr;
+              if (claimData && !claimData.success) {
+                throw new Error(claimData.message || 'This drop is no longer available');
+              }
 
               let finalBlob = fileBlob;
 
