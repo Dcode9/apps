@@ -1037,6 +1037,53 @@
       border: 1px solid var(--border-subtle);
     }
 
+    .vcard-preview {
+      display: none;
+      flex-direction: column;
+      gap: 0.65rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1rem;
+    }
+
+    .vcard-preview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .vcard-entry {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .vcard-entry:first-of-type {
+      padding-top: 0;
+      border-top: none;
+    }
+
+    .vcard-name {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .vcard-detail {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      word-break: break-all;
+    }
+
     .burn-alert {
       display: none;
       align-items: center;
@@ -1580,6 +1627,9 @@
         <!-- Image preview if image -->
         <img id="retrieved-img-preview" class="retrieved-image-preview" style="display: none;" alt="File preview">
 
+        <!-- vCard (.vcf) contact preview -->
+        <div id="retrieved-vcard-preview" class="vcard-preview" style="display: none;"></div>
+
         <!-- Text preview if text -->
         <div id="retrieved-text-box" class="retrieved-content-view" style="display: none;"></div>
 
@@ -1603,6 +1653,21 @@
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             Download File
+          </button>
+          <button class="btn-secondary" id="btn-share-file" style="display: none; flex: 1;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+              <polyline points="16 6 12 2 8 6"></polyline>
+              <line x1="12" y1="2" x2="12" y2="15"></line>
+            </svg>
+            Save to Files / Share
+          </button>
+          <button class="btn-secondary" id="btn-open-vcard" style="display: none; flex: 1;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            Add to Contacts
           </button>
           <button class="btn-primary grain-accent" id="btn-copy-retrieved-text" style="display: none; flex: 1;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1652,6 +1717,7 @@
       let activeClaimedDrop = null;
       let cachedDecryptionKey = null;
       let activePasswordEntered = null;
+      let readyDownload = null; // Cached decrypted file for instant iOS Save to Files / Share / re-download
 
       // DOM Elements
       const tabSendBtn = document.getElementById('tab-send-btn');
@@ -1787,7 +1853,10 @@
       const retrievedMeta = document.getElementById('retrieved-meta');
       const retrievedTextBox = document.getElementById('retrieved-text-box');
       const retrievedImgPreview = document.getElementById('retrieved-img-preview');
+      const retrievedVcardPreview = document.getElementById('retrieved-vcard-preview');
       const btnDownloadFile = document.getElementById('btn-download-file');
+      const btnShareFile = document.getElementById('btn-share-file');
+      const btnOpenVcard = document.getElementById('btn-open-vcard');
       const btnCopyRetrievedText = document.getElementById('btn-copy-retrieved-text');
       const btnReceiveAnother = document.getElementById('btn-receive-another');
 
@@ -1800,6 +1869,205 @@
         const sizes = ['B', 'KB', 'MB', 'GB'];
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+      }
+
+      // Helper: Detect iOS / iPadOS (including iPadOS desktop-mode Safari)
+      function isIOSDevice() {
+        const ua = navigator.userAgent || '';
+        return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      }
+
+      // Helper: Check if a file is a vCard (.vcf / .vcard)
+      function isVcardFile(fileName, mimeType) {
+        const name = (fileName || '').toLowerCase();
+        const mime = (mimeType || '').toLowerCase();
+        return name.endsWith('.vcf') || name.endsWith('.vcard') || mime.includes('vcard');
+      }
+
+      // Helper: Normalize MIME type from filename when browser leaves it empty or generic
+      function inferMimeType(fileName, providedType) {
+        const cleanProvided = (providedType || '').split(';')[0].trim().toLowerCase();
+        const ext = ((fileName || '').split('.').pop() || '').toLowerCase();
+        if (ext === 'vcf' || ext === 'vcard' || cleanProvided === 'text/x-vcard' || cleanProvided === 'text/directory') {
+          return 'text/vcard';
+        }
+        if (cleanProvided && cleanProvided !== 'application/octet-stream') {
+          return cleanProvided;
+        }
+        const extMap = {
+          ics: 'text/calendar',
+          pdf: 'application/pdf',
+          json: 'application/json',
+          csv: 'text/csv',
+          txt: 'text/plain',
+          md: 'text/markdown',
+          zip: 'application/zip',
+          png: 'image/png',
+          jpg: 'image/jpeg',
+          jpeg: 'image/jpeg',
+          webp: 'image/webp',
+          gif: 'image/gif',
+          svg: 'image/svg+xml',
+          mp3: 'audio/mpeg',
+          m4a: 'audio/mp4',
+          wav: 'audio/wav',
+          mp4: 'video/mp4',
+          mov: 'video/quicktime'
+        };
+        return extMap[ext] || 'application/octet-stream';
+      }
+
+      // Helper: Parse basic fields from a vCard (.vcf) text for safe preview
+      function parseVcards(vcfText) {
+        const cards = [];
+        const blocks = vcfText.split(/BEGIN:VCARD/i).slice(1);
+        for (const rawBlock of blocks) {
+          const endIdx = rawBlock.search(/END:VCARD/i);
+          const block = endIdx >= 0 ? rawBlock.slice(0, endIdx) : rawBlock;
+          // Unfold RFC 6350 folded lines (CRLF/LF followed by space or tab)
+          const unfolded = block.replace(/\r?\n[ \t]/g, '');
+          const lines = unfolded.split(/\r?\n/);
+          let fn = '';
+          let nFallback = '';
+          let org = '';
+          const tels = [];
+          const emails = [];
+          for (const line of lines) {
+            const colon = line.indexOf(':');
+            if (colon < 0) continue;
+            const keyPart = line.slice(0, colon).toUpperCase();
+            const key = keyPart.split(';')[0].replace(/^[^.]*\./, '');
+            const val = line.slice(colon + 1).trim();
+            if (!val) continue;
+            if (key === 'FN') fn = val;
+            else if (key === 'N' && !nFallback) {
+              nFallback = val.split(';').filter(Boolean).reverse().join(' ').trim();
+            } else if (key === 'ORG') org = val.replace(/;+/g, ' ').trim();
+            else if (key === 'TEL') tels.push(val);
+            else if (key === 'EMAIL') emails.push(val);
+          }
+          if (fn || nFallback || tels.length || emails.length) {
+            cards.push({ name: fn || nFallback || 'Unnamed Contact', org, tels, emails });
+          }
+        }
+        return cards;
+      }
+
+      function renderVcardPreview(vcfText) {
+        const cards = parseVcards(vcfText);
+        if (!cards.length) {
+          retrievedVcardPreview.style.display = 'none';
+          return;
+        }
+        retrievedVcardPreview.innerHTML = '';
+        const header = document.createElement('div');
+        header.className = 'vcard-preview-header';
+        header.textContent = cards.length === 1 ? 'vCard Contact (1)' : `vCard Contacts (${cards.length})`;
+        retrievedVcardPreview.appendChild(header);
+
+        const maxShown = 5;
+        cards.slice(0, maxShown).forEach((c) => {
+          const entry = document.createElement('div');
+          entry.className = 'vcard-entry';
+          const nameEl = document.createElement('div');
+          nameEl.className = 'vcard-name';
+          nameEl.textContent = c.org ? `${c.name} — ${c.org}` : c.name;
+          entry.appendChild(nameEl);
+          c.tels.slice(0, 3).forEach((tel) => {
+            const d = document.createElement('div');
+            d.className = 'vcard-detail';
+            d.textContent = tel;
+            entry.appendChild(d);
+          });
+          c.emails.slice(0, 2).forEach((email) => {
+            const d = document.createElement('div');
+            d.className = 'vcard-detail';
+            d.textContent = email;
+            entry.appendChild(d);
+          });
+          retrievedVcardPreview.appendChild(entry);
+        });
+
+        if (cards.length > maxShown) {
+          const more = document.createElement('div');
+          more.className = 'vcard-detail';
+          more.textContent = `+ ${cards.length - maxShown} more contact${cards.length - maxShown === 1 ? '' : 's'} in this .vcf file`;
+          retrievedVcardPreview.appendChild(more);
+        }
+
+        retrievedVcardPreview.style.display = 'flex';
+      }
+
+      function clearReadyDownload() {
+        if (readyDownload) {
+          if (readyDownload.downloadBlobUrl) URL.revokeObjectURL(readyDownload.downloadBlobUrl);
+          if (readyDownload.vcardBlobUrl) URL.revokeObjectURL(readyDownload.vcardBlobUrl);
+          readyDownload = null;
+        }
+        btnShareFile.style.display = 'none';
+        btnOpenVcard.style.display = 'none';
+        retrievedVcardPreview.style.display = 'none';
+        retrievedVcardPreview.innerHTML = '';
+      }
+
+      // Trigger browser file download WITHOUT immediately revoking the blob URL (critical for iOS Safari)
+      function triggerFileDownload(downloadObj) {
+        const a = document.createElement('a');
+        a.href = downloadObj.downloadBlobUrl;
+        a.download = downloadObj.fileName;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+      // Open native iOS/mobile Share Sheet ("Save to Files", "Contacts", AirDrop) synchronously from tap
+      async function shareReadyFile(downloadObj) {
+        if (!navigator.share) {
+          triggerFileDownload(downloadObj);
+          return;
+        }
+        try {
+          let shareFile = new File([downloadObj.bytes], downloadObj.fileName, { type: downloadObj.mimeType });
+          if (navigator.canShare && !navigator.canShare({ files: [shareFile] })) {
+            shareFile = new File([downloadObj.bytes], downloadObj.fileName, { type: 'application/octet-stream' });
+          }
+          if (navigator.canShare && !navigator.canShare({ files: [shareFile] })) {
+            triggerFileDownload(downloadObj);
+            showToast('Direct download started', 'info');
+            return;
+          }
+          await navigator.share({
+            files: [shareFile],
+            title: downloadObj.fileName
+          });
+        } catch (err) {
+          if (err && err.name === 'AbortError') return; // User dismissed share sheet
+          console.warn('Web Share failed, falling back to direct download:', err);
+          triggerFileDownload(downloadObj);
+        }
+      }
+
+      // Open .vcf directly for iOS Contacts import
+      function openVcardInContacts(downloadObj) {
+        // Data URL works best on iOS Safari to trigger the native Contacts import card for small vCards
+        if (isIOSDevice() && downloadObj.bytes.byteLength <= 1500000) {
+          const b64 = bytesToBase64(new Uint8Array(downloadObj.bytes));
+          const dataUrl = `data:text/vcard;charset=utf-8;base64,${b64}`;
+          const a = document.createElement('a');
+          a.href = dataUrl;
+          a.download = downloadObj.fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = downloadObj.vcardBlobUrl || downloadObj.downloadBlobUrl;
+        a.download = downloadObj.fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
 
       // Helper: Toast
@@ -2079,7 +2347,7 @@
             }
             filename = selectedFile.name;
             filesize = selectedFile.size;
-            mimetype = selectedFile.type || 'application/octet-stream';
+            mimetype = inferMimeType(selectedFile.name, selectedFile.type);
             fileDataBuffer = await selectedFile.arrayBuffer();
           } else {
             textData = textInput.value.trim();
@@ -2511,15 +2779,48 @@
         } 
         // FILE DROP
         else if (res.type === 'file') {
+          clearReadyDownload();
           retrievedTextBox.style.display = 'none';
           btnCopyRetrievedText.style.display = 'none';
           btnDownloadFile.style.display = 'inline-flex';
+          const resolvedFileName = res.file_name || 'download.bin';
+          const resolvedMime = inferMimeType(resolvedFileName, res.mime_type);
+          const vcardDrop = isVcardFile(resolvedFileName, resolvedMime);
+          const ios = isIOSDevice();
+
+          const setDownloadBtnLabel = (label) => {
+            btnDownloadFile.innerHTML = `
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              ${label}
+            `;
+          };
+
+          setDownloadBtnLabel(ios ? 'Prepare & Download' : 'Download File');
+
+          btnShareFile.onclick = () => {
+            if (readyDownload) shareReadyFile(readyDownload);
+          };
+
+          btnOpenVcard.onclick = () => {
+            if (readyDownload) openVcardInContacts(readyDownload);
+          };
 
           btnDownloadFile.onclick = async () => {
+            // If already fetched & decrypted, trigger download synchronously (preserves iOS user gesture!)
+            if (readyDownload) {
+              triggerFileDownload(readyDownload);
+              showToast(ios ? 'Tap Download in Safari or use Save to Files' : 'Download started', 'success');
+              return;
+            }
+
             btnDownloadFile.disabled = true;
             btnDownloadFile.textContent = 'Downloading...';
             downloadProgressBox.style.display = 'flex';
-              beginNamedStage('download', 'Claiming drop...', false);
+            beginNamedStage('download', 'Claiming drop...', false);
             try {
               // 1. Download from Supabase Storage while drop is still active (before burning)
               setTransferProgress('download', 0, 'Fetching from vault...');
@@ -2537,7 +2838,7 @@
                 throw new Error(claimData.message || 'This drop is no longer available');
               }
 
-              let finalBlob = fileBlob;
+              let finalBytes;
 
               // Decrypt if client-side encrypted
               if (res.encrypted) {
@@ -2553,22 +2854,52 @@
                 }
 
                 const cipherBuffer = await fileBlob.arrayBuffer();
-                const decryptedBuffer = await decryptData(cryptoKey, cipherBuffer, res.encryption_iv);
-                finalBlob = new Blob([decryptedBuffer], { type: res.mime_type || 'application/octet-stream' });
+                finalBytes = await decryptData(cryptoKey, cipherBuffer, res.encryption_iv);
+              } else {
+                finalBytes = await fileBlob.arrayBuffer();
               }
 
-              // Trigger safe browser download
+              // On iOS, application/octet-stream on <a download> forces the native Safari "Download" prompt
+              // (saving to Files with the exact extension) instead of failing or inline-rendering .vcf/text.
+              const downloadBlobType = ios
+                ? 'application/octet-stream'
+                : (vcardDrop ? 'text/vcard;charset=utf-8' : resolvedMime);
+              const downloadBlob = new Blob([finalBytes], { type: downloadBlobType });
+              const downloadBlobUrl = URL.createObjectURL(downloadBlob);
+              const vcardBlobUrl = vcardDrop
+                ? URL.createObjectURL(new Blob([finalBytes], { type: 'text/vcard;charset=utf-8' }))
+                : null;
+
+              readyDownload = {
+                bytes: finalBytes,
+                fileName: resolvedFileName,
+                mimeType: resolvedMime,
+                downloadBlobUrl,
+                vcardBlobUrl
+              };
+
+              // Render vCard contact preview if .vcf
+              if (vcardDrop) {
+                try {
+                  const vcfText = new TextDecoder('utf-8').decode(finalBytes);
+                  renderVcardPreview(vcfText);
+                } catch (_) {}
+                btnOpenVcard.style.display = 'inline-flex';
+              }
+
+              // Show Save to Files / Share button whenever Web Share API is available (especially iOS)
+              if (navigator.share) {
+                btnShareFile.style.display = 'inline-flex';
+              }
+
+              // Trigger safe browser download (do NOT revoke blob URL immediately — iOS Safari reads it async)
               beginNamedStage('download', 'Saving file...', false);
-              const downloadUrl = URL.createObjectURL(finalBlob);
-              const a = document.createElement('a');
-              a.href = downloadUrl;
-              a.download = res.file_name || 'download.bin';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(downloadUrl);
-              finishProgress('download', 'Done!');
-              showToast('Download started', 'success');
+              triggerFileDownload(readyDownload);
+              finishProgress('download', 'Ready!');
+              showToast(
+                ios ? 'File ready — tap "Save to Files / Share" if Safari didn\'t prompt' : 'Download started',
+                'success'
+              );
 
               // If burned, remove storage object now
               if (res.burn_after_reading) {
@@ -2583,20 +2914,13 @@
                 downloadProgressBox.style.display = 'none';
                 progressFillBarDl.classList.remove('indeterminate');
                 progressFillBarDl.style.width = '0%';
-                    }, 800);
-              btnDownloadFile.innerHTML = `
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download File
-              `;
+              }, 800);
+              setDownloadBtnLabel(readyDownload ? 'Download File' : (ios ? 'Prepare & Download' : 'Download File'));
             }
           };
 
           // If unencrypted image type, show preview
-          if (res.mime_type && res.mime_type.startsWith('image/') && !res.encrypted) {
+          if (resolvedMime.startsWith('image/') && !res.encrypted) {
             try {
               const { data: imgBlob } = await sb.storage.from(BUCKET_NAME).download(res.storage_path);
               if (imgBlob) {
@@ -2605,10 +2929,21 @@
               }
             } catch (_) {}
           }
+
+          // If unencrypted .vcf and not burn-after-reading, preview contact details immediately
+          if (vcardDrop && !res.encrypted && !res.burn_after_reading) {
+            try {
+              const { data: vcfBlob } = await sb.storage.from(BUCKET_NAME).download(res.storage_path);
+              if (vcfBlob) {
+                renderVcardPreview(await vcfBlob.text());
+              }
+            } catch (_) {}
+          }
         }
       }
 
       btnReceiveAnother.addEventListener('click', () => {
+        clearReadyDownload();
         activeClaimedDrop = null;
         cachedDecryptionKey = null;
         activePasswordEntered = null;
