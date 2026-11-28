@@ -82,11 +82,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Drop code is required' });
       }
 
-      // Claim drop (increments download count if downloading or burn-after-reading)
+      // Inspect drop first (without burning) so storage download is permitted before burn
       const claimResult = await callRpc('claim_drop', {
         p_code: code,
         p_password: password,
-        p_increment: isDownload
+        p_increment: false
       });
 
       if (!claimResult.success) {
@@ -99,7 +99,7 @@ export default async function handler(req, res) {
 
       // If binary file download requested
       if (isDownload && claimResult.type === 'file' && claimResult.storage_path) {
-        const fileUrl = `${SUPABASE_URL}/storage/v1/object/authenticated/drops/${claimResult.storage_path}`;
+        const fileUrl = `${SUPABASE_URL}/storage/v1/object/drops/${claimResult.storage_path}`;
         const fileRes = await fetch(fileUrl, {
           headers: {
             'apikey': SUPABASE_ANON_KEY,
@@ -111,6 +111,30 @@ export default async function handler(req, res) {
           return res.status(fileRes.status).json({ error: 'Failed to retrieve storage file' });
         }
 
+        const buffer = await fileRes.arrayBuffer();
+
+        // Increment download count / burn after fetching bytes
+        const burnResult = await callRpc('claim_drop', {
+          p_code: code,
+          p_password: password,
+          p_increment: true
+        });
+        if (!burnResult.success) {
+          const statusCode = burnResult.error === 'EXPIRED' || burnResult.error === 'BURNED' ? 410 : 400;
+          return res.status(statusCode).json(burnResult);
+        }
+        if (burnResult.is_burned) {
+          fetch(`${SUPABASE_URL}/storage/v1/object/drops`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prefixes: [claimResult.storage_path] })
+          }).catch(() => {});
+        }
+
         const safeFilename = encodeURIComponent(claimResult.file_name || 'download.bin');
         res.setHeader('Content-Type', claimResult.mime_type || 'application/octet-stream');
         res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"; filename*=UTF-8''${safeFilename}`);
@@ -118,9 +142,16 @@ export default async function handler(req, res) {
         res.setHeader('Content-Security-Policy', "default-src 'none'; sandbox");
         res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
 
-        // Stream file
-        const buffer = await fileRes.arrayBuffer();
         return res.status(200).send(Buffer.from(buffer));
+      }
+
+      if (isDownload) {
+        const incremented = await callRpc('claim_drop', {
+          p_code: code,
+          p_password: password,
+          p_increment: true
+        });
+        return res.status(200).json(incremented);
       }
 
       return res.status(200).json(claimResult);
